@@ -700,11 +700,14 @@ function labelForma(f){
   return map[f]||f||'—';
 }
 
+function isAtivo(v){return v===true||String(v).toLowerCase()==='true';}
+
 function openDrawerLancamento(){
   editId=null;
+  _tipoLanc='entrada';
   const clienteOpts=DB.clientes.map(c=>`<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
-  const svcOpts=DB.servicos.filter(s=>s.ativo=='true'||s.ativo===true).map(s=>`<option value="${s.id}|${s.nome}|servico">${s.nome}</option>`).join('');
-  const prdOpts=DB.produtos.filter(p=>p.ativo=='true'||p.ativo===true).map(p=>`<option value="${p.id}|${p.nome}|produto">${p.nome}</option>`).join('');
+  const svcOpts=DB.servicos.filter(s=>isAtivo(s.ativo)).map(s=>`<option value="${s.id}|${s.nome}|servico">${s.nome}</option>`).join('');
+  const prdOpts=DB.produtos.filter(p=>isAtivo(p.ativo)).map(p=>`<option value="${p.id}|${p.nome}|produto">${p.nome}</option>`).join('');
   openDrawer(`
     <div class="drawer-title">Novo Lançamento</div>
     <div class="seg-control">
@@ -747,6 +750,11 @@ function openDrawerLancamento(){
       <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
       <button class="btn-save" onclick="saveLancamento()">Salvar</button>
     </div>`);
+  // Preencher data de hoje
+  setTimeout(()=>{
+    const df=document.getElementById('f-data');
+    if(df&&!df.value)df.value=fmtDataBR(today());
+  },30);
 }
 
 let _tipoLanc='entrada';
@@ -762,8 +770,8 @@ function editLancamento(l){
   editId=l.id;
   const dataFormatada=fmtDataBR(String(l.data).slice(0,10));
   const clienteOpts=DB.clientes.map(c=>`<option value="${c.id}|${c.nome}" ${c.id===l.clienteId?'selected':''}>${c.nome}</option>`).join('');
-  const svcOpts=DB.servicos.filter(s=>s.ativo=='true'||s.ativo===true).map(s=>`<option value="${s.id}|${s.nome}|servico" ${s.id===l.itemId?'selected':''}>${s.nome}</option>`).join('');
-  const prdOpts=DB.produtos.filter(p=>p.ativo=='true'||p.ativo===true).map(p=>`<option value="${p.id}|${p.nome}|produto" ${p.id===l.itemId?'selected':''}>${p.nome}</option>`).join('');
+  const svcOpts=DB.servicos.filter(s=>isAtivo(s.ativo)).map(s=>`<option value="${s.id}|${s.nome}|servico" ${s.id===l.itemId?'selected':''}>${s.nome}</option>`).join('');
+  const prdOpts=DB.produtos.filter(p=>isAtivo(p.ativo)).map(p=>`<option value="${p.id}|${p.nome}|produto" ${p.id===l.itemId?'selected':''}>${p.nome}</option>`).join('');
   openDrawer(`
     <div class="drawer-title">Editar Lançamento</div>
     <div class="seg-control">
@@ -1048,7 +1056,7 @@ function renderServicos(){
       <div class="card-avatar" style="font-size:18px">✂</div>
       <div class="card-body"><div class="card-name">${s.nome}</div><div class="card-meta">${s.descricao||'Sem descrição'}</div></div>
       <div class="card-actions">
-        <span class="badge ${s.ativo=='true'||s.ativo===true?'badge-on':'badge-off'}">${s.ativo=='true'||s.ativo===true?'Ativo':'Inativo'}</span>
+        <span class="badge ${isAtivo(s.ativo)?'badge-on':'badge-off'}">${isAtivo(s.ativo)?'Ativo':'Inativo'}</span>
         <button class="btn-edit" onclick='editServico(${JSON.stringify(s)})'><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         <button class="btn-del" onclick="deleteServico('${s.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
       </div>
@@ -1063,7 +1071,7 @@ function editServico(s){editId=s.id;openDrawer(`
   <div class="drawer-title">Editar Serviço</div>
   <div class="form-group"><label>Nome *</label><input id="f-svc-nome" type="text" value="${s.nome||''}"/></div>
   <div class="form-group"><label>Descrição</label><textarea id="f-svc-desc">${s.descricao||''}</textarea></div>
-  <div class="form-group"><label>Status</label><select id="f-svc-ativo"><option value="true" ${s.ativo=='true'||s.ativo===true?'selected':''}>Ativo</option><option value="false" ${s.ativo=='false'||s.ativo===false?'selected':''}>Inativo</option></select></div>
+  <div class="form-group"><label>Status</label><select id="f-svc-ativo"><option value="true" ${isAtivo(s.ativo)?'selected':''}>Ativo</option><option value="false" ${s.ativo=='false'||s.ativo===false?'selected':''}>Inativo</option></select></div>
   <div class="drawer-footer"><button class="btn-secondary" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="saveServico()">Salvar</button></div>`);}
 async function saveServico(){
   const nome=document.getElementById('f-svc-nome').value.trim();
@@ -1094,7 +1102,7 @@ function renderProdutos(){
       <div class="card-avatar" style="font-size:18px">🛍</div>
       <div class="card-body"><div class="card-name">${p.nome}</div><div class="card-meta">${p.descricao||'Sem descrição'}</div></div>
       <div class="card-actions">
-        <span class="badge ${p.ativo=='true'||p.ativo===true?'badge-on':'badge-off'}">${p.ativo=='true'||p.ativo===true?'Ativo':'Inativo'}</span>
+        <span class="badge ${isAtivo(p.ativo)?'badge-on':'badge-off'}">${isAtivo(p.ativo)?'Ativo':'Inativo'}</span>
         <button class="btn-edit" onclick='editProduto(${JSON.stringify(p)})'><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         <button class="btn-del" onclick="deleteProduto('${p.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
       </div>
@@ -1109,7 +1117,7 @@ function editProduto(p){editId=p.id;openDrawer(`
   <div class="drawer-title">Editar Produto</div>
   <div class="form-group"><label>Nome *</label><input id="f-prd-nome" type="text" value="${p.nome||''}"/></div>
   <div class="form-group"><label>Descrição</label><textarea id="f-prd-desc">${p.descricao||''}</textarea></div>
-  <div class="form-group"><label>Status</label><select id="f-prd-ativo"><option value="true" ${p.ativo=='true'||p.ativo===true?'selected':''}>Ativo</option><option value="false" ${p.ativo=='false'||p.ativo===false?'selected':''}>Inativo</option></select></div>
+  <div class="form-group"><label>Status</label><select id="f-prd-ativo"><option value="true" ${isAtivo(p.ativo)?'selected':''}>Ativo</option><option value="false" ${p.ativo=='false'||p.ativo===false?'selected':''}>Inativo</option></select></div>
   <div class="drawer-footer"><button class="btn-secondary" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="saveProduto()">Salvar</button></div>`);}
 async function saveProduto(){
   const nome=document.getElementById('f-prd-nome').value.trim();
@@ -1140,7 +1148,7 @@ function renderColaboradores(){
       <div class="card-avatar">${(c.nome||'?')[0].toUpperCase()}</div>
       <div class="card-body"><div class="card-name">${c.nome}</div><div class="card-meta">${c.cargo||'—'} · ${c.telefone||'—'}</div></div>
       <div class="card-actions">
-        <span class="badge ${c.ativo=='true'||c.ativo===true?'badge-on':'badge-off'}">${c.ativo=='true'||c.ativo===true?'Ativo':'Inativo'}</span>
+        <span class="badge ${isAtivo(c.ativo)?'badge-on':'badge-off'}">${isAtivo(c.ativo)?'Ativo':'Inativo'}</span>
         <button class="btn-edit" onclick='editColab(${JSON.stringify(c)})'><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         <button class="btn-del" onclick="deleteColab('${c.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
       </div>
@@ -1157,7 +1165,7 @@ function editColab(c){editId=c.id;openDrawer(`
   <div class="form-group"><label>Nome *</label><input id="f-col-nome" type="text" value="${c.nome||''}"/></div>
   <div class="form-group"><label>Cargo</label><input id="f-col-cargo" type="text" value="${c.cargo||''}"/></div>
   <div class="form-group"><label>Telefone</label><input id="f-col-tel" type="tel" value="${c.telefone||''}" oninput="applyTelMask(this)" maxlength="15"/></div>
-  <div class="form-group"><label>Status</label><select id="f-col-ativo"><option value="true" ${c.ativo=='true'||c.ativo===true?'selected':''}>Ativo</option><option value="false" ${c.ativo=='false'||c.ativo===false?'selected':''}>Inativo</option></select></div>
+  <div class="form-group"><label>Status</label><select id="f-col-ativo"><option value="true" ${isAtivo(c.ativo)?'selected':''}>Ativo</option><option value="false" ${c.ativo=='false'||c.ativo===false?'selected':''}>Inativo</option></select></div>
   <div class="drawer-footer"><button class="btn-secondary" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="saveColab()">Salvar</button></div>`);}
 async function saveColab(){
   const nome=document.getElementById('f-col-nome').value.trim();
