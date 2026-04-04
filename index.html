@@ -463,11 +463,19 @@ function renderClientes(list){
       </div>
     </div>`).join('');
 }
+
+function applyTelMask(el){
+  let v=el.value.replace(/\D/g,'').slice(0,11);
+  if(v.length>10)v=v.replace(/(\d{2})(\d{5})(\d{4})/,'($1) $2-$3');
+  else if(v.length>6)v=v.replace(/(\d{2})(\d{4})(\d*)/,'($1) $2-$3');
+  else if(v.length>2)v=v.replace(/(\d{2})(\d*)/,'($1) $2');
+  el.value=v;
+}
 function filterClientes(q){const l=q.toLowerCase();renderClientes(DB.clientes.filter(c=>(c.nome||'').toLowerCase().includes(l)||(c.telefone||'').includes(l)));}
 function openDrawerCliente(){editId=null;openDrawer(`
   <div class="drawer-title">Nova Cliente</div>
   <div class="form-group"><label>Nome *</label><input id="f-nome" type="text" placeholder="Nome completo"/></div>
-  <div class="form-group"><label>Telefone / WhatsApp</label><input id="f-tel" type="tel" placeholder="(00) 00000-0000"/></div>
+  <div class="form-group"><label>Telefone / WhatsApp</label><input id="f-tel" type="tel" placeholder="(00) 00000-0000" oninput="applyTelMask(this)" maxlength="15"/></div>
   <div class="form-group"><label>E-mail</label><input id="f-email" type="email" placeholder="email@exemplo.com"/></div>
   <div class="form-group"><label>Aniversário</label><input id="f-nasc" type="date"/></div>
   <div class="form-group"><label>Observações</label><textarea id="f-obs" placeholder="Alergias, preferências…"></textarea></div>
@@ -478,7 +486,7 @@ function openDrawerCliente(){editId=null;openDrawer(`
 function editCliente(c){editId=c.id;openDrawer(`
   <div class="drawer-title">Editar Cliente</div>
   <div class="form-group"><label>Nome *</label><input id="f-nome" type="text" value="${c.nome||''}"/></div>
-  <div class="form-group"><label>Telefone / WhatsApp</label><input id="f-tel" type="tel" value="${c.telefone||''}"/></div>
+  <div class="form-group"><label>Telefone / WhatsApp</label><input id="f-tel" type="tel" value="${c.telefone||''}" oninput="applyTelMask(this)" maxlength="15"/></div>
   <div class="form-group"><label>E-mail</label><input id="f-email" type="email" value="${c.email||''}"/></div>
   <div class="form-group"><label>Aniversário</label><input id="f-nasc" type="date" value="${c.aniversario||''}"/></div>
   <div class="form-group"><label>Observações</label><textarea id="f-obs">${c.observacoes||''}</textarea></div>
@@ -494,14 +502,23 @@ async function saveCliente(){
     email:document.getElementById('f-email').value.trim(),
     aniversario:document.getElementById('f-nasc').value,
     observacoes:document.getElementById('f-obs').value.trim()};
-  showLoading(true);
-  const r=await apiPost({action:'saveCliente',token:TOKEN,data});
-  showLoading(false);
-  if(r.status!=='ok')return toast(r.data?.message||'Erro ao salvar.','error');
-  closeDrawer();
-  toast(editId?'Cliente atualizada!':'Cliente cadastrada!','success');
-  const fresh=await api({action:'getClientes',token:TOKEN});
-  if(fresh.status==='ok'){DB.clientes=fresh.data;renderClientes();updateStats();}
+  const btn=document.querySelector('#drawer .btn-save');
+  if(btn){btn.textContent='Salvando…';btn.disabled=true;}
+  try{
+    const r=await apiPost({action:'saveCliente',token:TOKEN,data});
+    if(r.status!=='ok'){
+      toast(r.data?.message||'Erro ao salvar.','error');
+      if(btn){btn.textContent='Salvar';btn.disabled=false;}
+      return;
+    }
+    closeDrawer();
+    toast(editId?'Cliente atualizada!':'Cliente cadastrada!','success');
+    const fresh=await api({action:'getClientes',token:TOKEN});
+    if(fresh.status==='ok'){DB.clientes=fresh.data;renderClientes();updateStats();}
+  }catch(e){
+    toast('Erro de conexão. Tente novamente.','error');
+    if(btn){btn.textContent='Salvar';btn.disabled=false;}
+  }
 }
 async function deleteCliente(id){
   if(!confirm('Excluir esta cliente?'))return;
