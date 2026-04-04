@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#080806"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Sonia Cabral"/>
+<title>Sonia Cabral — Gestão</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:       #080806;
+  --bg2:      #111109;
+  --bg3:      #1a1a14;
+  --gold:     #c9a132;
+  --gold-lt:  #e8c96a;
+  --gold-dk:  #8a6a18;
+  --gold-glow:rgba(201,161,50,.18);
+  --text:     #f0ead8;
+  --text-dim: #7a7260;
+  --border:   #2a2818;
+  --danger:   #c96a6a;
+  --success:  #6ac98a;
+  --r:        12px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:14px;line-height:1.6;overflow:hidden}
+button{cursor:pointer;font-family:inherit;border:none;outline:none}
+input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:none}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+#app{width:100%;height:100%;display:flex;flex-direction:column;position:relative}
+
+/* Loading */
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:20px}
+.logo-mark{position:relative;width:80px;height:80px;display:flex;align-items:center;justify-content:center}
+.logo-ring{position:absolute;inset:0;border-radius:50%;border:1px solid var(--gold-dk);animation:pulse 2s ease-in-out infinite}
+.logo-ring2{position:absolute;inset:6px;border-radius:50%;border:1px solid var(--gold);opacity:.5;animation:pulse 2s ease-in-out infinite .4s}
+@keyframes pulse{0%,100%{opacity:.4;transform:scale(.97)}50%{opacity:1;transform:scale(1)}}
+.spinner{width:30px;height:30px;border:1.5px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Toast */
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 20px;border-radius:var(--r);font-size:12px;opacity:0;transition:all .3s;z-index:998;pointer-events:none;white-space:nowrap;max-width:90vw}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.error{border-color:var(--danger);color:var(--danger)}
+#toast.success{border-color:var(--gold);color:var(--gold-lt)}
+
+/* Login */
+#screen-login{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;background:var(--bg)}
+.login-ring{width:96px;height:96px;border-radius:50%;border:1px solid var(--gold-dk);display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 0 40px var(--gold-glow);margin-bottom:16px}
+.login-ring::before{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(201,161,50,.15)}
+.login-name{font-family:'Playfair Display',serif;font-size:26px;font-style:italic;color:var(--gold-lt);margin-bottom:4px}
+.login-tag{font-size:10px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:40px}
+.login-box{width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px}
+.login-box label{font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;display:block}
+.login-box input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:13px 16px;border-radius:var(--r);transition:border .2s}
+.login-box input:focus{border-color:var(--gold)}
+.btn-primary{background:linear-gradient(135deg,var(--gold-dk),var(--gold));color:#000;padding:14px;border-radius:var(--r);font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:500;width:100%;transition:opacity .2s;margin-top:4px}
+.btn-primary:active{opacity:.8}
+
+/* Header */
+#header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:54px;flex-shrink:0;z-index:10}
+.header-brand{display:flex;align-items:center;gap:10px}
+.header-dot{width:32px;height:32px;border-radius:50%;border:1px solid var(--gold-dk);display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px var(--gold-glow)}
+.header-title{font-family:'Playfair Display',serif;font-size:17px;font-style:italic;color:var(--gold-lt)}
+.btn-icon{background:transparent;color:var(--text-dim);padding:6px;border-radius:8px;transition:color .2s}
+.btn-icon:hover{color:var(--gold)}
+.btn-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block}
+
+/* Nav */
+#nav{background:var(--bg2);border-top:1px solid var(--border);display:flex;padding:6px 0 calc(6px + env(safe-area-inset-bottom));flex-shrink:0}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;background:transparent;color:var(--text-dim);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;transition:color .2s;border-radius:0}
+.nav-item svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.nav-item.active{color:var(--gold)}
+.nav-item.active svg{stroke:var(--gold);filter:drop-shadow(0 0 4px rgba(201,161,50,.5))}
+
+/* Pages */
+#pages{flex:1;overflow:hidden;position:relative}
+.page{position:absolute;inset:0;overflow-y:auto;padding:20px 16px 100px;display:none;animation:fadeIn .2s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* Page parts */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.page-title{font-family:'Playfair Display',serif;font-size:26px;font-style:italic;color:var(--gold-lt)}
+.btn-add{background:linear-gradient(135deg,var(--gold-dk),var(--gold));color:#000;width:38px;height:38px;border-radius:50%;font-size:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 16px var(--gold-glow);transition:transform .15s}
+.btn-add:active{transform:scale(.9)}
+.search-bar{position:relative;margin-bottom:16px}
+.search-bar input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:11px 14px 11px 38px;border-radius:var(--r)}
+.search-bar input::placeholder{color:var(--text-dim)}
+.search-bar input:focus{border-color:var(--gold)}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-dim);pointer-events:none}
+.search-icon svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* Cards */
+.card-list{display:flex;flex-direction:column;gap:8px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;align-items:center;gap:12px;transition:border-color .2s,transform .1s}
+.card:active{transform:scale(.98);border-color:var(--gold-dk)}
+.card-avatar{width:42px;height:42px;border-radius:50%;background:var(--bg3);border:1px solid var(--gold-dk);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:16px;font-style:italic;color:var(--gold);flex-shrink:0}
+.card-body{flex:1;min-width:0}
+.card-name{font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-meta{font-size:11px;color:var(--text-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-actions{display:flex;gap:4px;align-items:center}
+.btn-edit,.btn-del{background:transparent;padding:7px;border-radius:8px;color:var(--text-dim);transition:color .2s}
+.btn-edit svg,.btn-del svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.btn-edit:hover{color:var(--gold)}
+.btn-del:hover{color:var(--danger)}
+.badge{display:inline-block;font-size:9px;padding:2px 8px;border-radius:20px;letter-spacing:1px;text-transform:uppercase}
+.badge-on{background:rgba(106,201,138,.1);color:var(--success);border:1px solid rgba(106,201,138,.25)}
+.badge-off{background:rgba(201,106,106,.1);color:var(--danger);border:1px solid rgba(201,106,106,.2)}
+.empty{text-align:center;padding:60px 20px;color:var(--text-dim)}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:.35}
+
+/* Drawer */
+#drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;opacity:0;pointer-events:none;transition:opacity .3s}
+#drawer-overlay.open{opacity:1;pointer-events:auto}
+#drawer{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);border-radius:20px 20px 0 0;z-index:101;padding:20px 20px calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,0,1);max-height:90vh;overflow-y:auto}
+#drawer.open{transform:translateY(0)}
+.drawer-handle{width:36px;height:3px;background:var(--border);border-radius:2px;margin:0 auto 18px}
+.drawer-title{font-family:'Playfair Display',serif;font-size:22px;font-style:italic;color:var(--gold-lt);margin-bottom:18px}
+.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.form-group label{font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase}
+.form-group input,.form-group textarea,.form-group select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:11px 13px;border-radius:var(--r);width:100%;transition:border .2s}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--gold)}
+.form-group textarea{resize:vertical;min-height:72px}
+.form-group select option{background:var(--bg2)}
+.drawer-footer{display:flex;gap:10px;margin-top:18px}
+.btn-secondary{flex:1;background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:12px;border-radius:var(--r);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;transition:border-color .2s}
+.btn-secondary:hover{border-color:var(--gold-dk)}
+.btn-save{flex:2;background:linear-gradient(135deg,var(--gold-dk),var(--gold));color:#000;padding:12px;border-radius:var(--r);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500}
+.btn-save:active{opacity:.8}
+
+/* Dashboard */
+.dash-greeting{font-family:'Playfair Display',serif;font-size:22px;font-style:italic;color:var(--text);margin-bottom:2px}
+.dash-greeting em{color:var(--gold-lt)}
+.dash-date{font-size:11px;color:var(--text-dim)}
+.dash-divider{width:40px;height:1px;background:linear-gradient(90deg,var(--gold),transparent);margin:12px 0 20px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold-dk),transparent)}
+.stat-label{font-size:9px;color:var(--text-dim);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:8px}
+.stat-value{font-family:'Playfair Display',serif;font-size:34px;color:var(--gold-lt);line-height:1}
+.stat-value.sm{font-size:18px;padding-top:4px}
+.section-label{font-size:9px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px}
+.quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.quick-btn{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 6px;display:flex;flex-direction:column;align-items:center;gap:7px;color:var(--text-dim);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;transition:border-color .2s,color .2s}
+.quick-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.quick-btn:active{border-color:var(--gold);color:var(--gold)}
+
+/* Config */
+.config-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px}
+.config-section-title{font-size:9px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="loading">
+  <div class="logo-mark">
+    <div class="logo-ring"></div>
+    <div class="logo-ring2"></div>
+    <span style="font-family:'Playfair Display',serif;font-size:24px;font-style:italic;color:var(--gold);position:relative;z-index:1">SC</span>
+  </div>
+  <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--gold-lt)">Sonia Cabral</div>
+  <div class="spinner"></div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Login -->
+<div id="screen-login" style="display:none">
+  <div class="login-ring">
+    <span style="font-family:'Playfair Display',serif;font-size:32px;font-style:italic;color:var(--gold)">SC</span>
+  </div>
+  <div class="login-name">Sonia Cabral</div>
+  <div class="login-tag">Mega-Hair · Técnica Exclusiva</div>
+  <div class="login-box">
+    <div>
+      <label>Senha de acesso</label>
+      <input id="inp-senha" type="password" placeholder="••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- App -->
+<div id="screen-app" style="display:none;flex-direction:column;height:100%">
+
+  <div id="header">
+    <div class="header-brand">
+      <div class="header-dot">
+        <span style="font-family:'Playfair Display',serif;font-size:13px;font-style:italic;color:var(--gold)">SC</span>
+      </div>
+      <div class="header-title">Sonia Cabral</div>
+    </div>
+    <button class="btn-icon" onclick="logout()">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+
+  <div id="pages">
+
+    <!-- Home -->
+    <div class="page active" id="page-home">
+      <div class="dash-greeting">Olá, <em id="dash-hello">Sonia</em> ✨</div>
+      <div class="dash-date" id="dash-date"></div>
+      <div class="dash-divider"></div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Clientes</div>
+          <div class="stat-value" id="stat-clientes">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Serviços</div>
+          <div class="stat-value" id="stat-servicos">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Equipe</div>
+          <div class="stat-value" id="stat-colab">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Sistema</div>
+          <div class="stat-value sm">Etapa 1<br/><span style="font-size:10px;color:var(--text-dim)">Em expansão</span></div>
+        </div>
+      </div>
+      <div class="section-label">Ações rápidas</div>
+      <div class="quick-actions">
+        <button class="quick-btn" onclick="navTo('clientes');setTimeout(openDrawerCliente,300)">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Nova cliente
+        </button>
+        <button class="quick-btn" onclick="navTo('servicos');setTimeout(openDrawerServico,300)">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo serviço
+        </button>
+        <button class="quick-btn" onclick="navTo('config')">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Config
+        </button>
+      </div>
+    </div>
+
+    <!-- Clientes -->
+    <div class="page" id="page-clientes">
+      <div class="page-header">
+        <div class="page-title">Clientes</div>
+        <button class="btn-add" onclick="openDrawerCliente()">+</button>
+      </div>
+      <div class="search-bar">
+        <span class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        <input id="search-clientes" type="search" placeholder="Buscar nome ou telefone…" oninput="filterClientes(this.value)"/>
+      </div>
+      <div class="card-list" id="list-clientes"></div>
+    </div>
+
+    <!-- Serviços -->
+    <div class="page" id="page-servicos">
+      <div class="page-header">
+        <div class="page-title">Serviços</div>
+        <button class="btn-add" onclick="openDrawerServico()">+</button>
+      </div>
+      <div class="card-list" id="list-servicos"></div>
+    </div>
+
+    <!-- Colaboradores -->
+    <div class="page" id="page-colaboradores">
+      <div class="page-header">
+        <div class="page-title">Equipe</div>
+        <button class="btn-add" onclick="openDrawerColab()">+</button>
+      </div>
+      <div class="card-list" id="list-colaboradores"></div>
+    </div>
+
+    <!-- Config -->
+    <div class="page" id="page-config">
+      <div class="page-header"><div class="page-title">Configurações</div></div>
+      <div class="config-section">
+        <div class="config-section-title">Salão</div>
+        <div class="form-group"><label>Nome do salão</label><input id="cfg-nome" type="text"/></div>
+        <button class="btn-save" style="width:100%" onclick="saveConfig()">Salvar</button>
+      </div>
+      <div class="config-section">
+        <div class="config-section-title">Segurança</div>
+        <div class="form-group"><label>Nova senha</label><input id="cfg-senha" type="password" placeholder="Deixe em branco para manter"/></div>
+        <div class="form-group"><label>Confirmar</label><input id="cfg-senha2" type="password" placeholder="Repita a nova senha"/></div>
+        <button class="btn-save" style="width:100%" onclick="saveSenha()">Alterar Senha</button>
+      </div>
+      <div class="config-section" style="border-color:rgba(201,106,106,.3)">
+        <div class="config-section-title">Sessão</div>
+        <button class="btn-secondary" style="width:100%;border-color:rgba(201,106,106,.4);color:var(--danger)" onclick="logout()">Encerrar sessão</button>
+      </div>
+    </div>
+
+  </div>
+
+  <nav id="nav">
+    <button class="nav-item active" data-page="home" onclick="navTo('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Início
+    </button>
+    <button class="nav-item" data-page="clientes" onclick="navTo('clientes')">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Clientes
+    </button>
+    <button class="nav-item" data-page="servicos" onclick="navTo('servicos')">
+      <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      Serviços
+    </button>
+    <button class="nav-item" data-page="colaboradores" onclick="navTo('colaboradores')">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Equipe
+    </button>
+    <button class="nav-item" data-page="config" onclick="navTo('config')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Config
+    </button>
+  </nav>
+
+</div>
+
+<div id="drawer-overlay" onclick="closeDrawer()"></div>
+<div id="drawer"><div class="drawer-handle"></div><div id="drawer-content"></div></div>
+
+</div><!-- /app -->
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbwdgffUDDPyPXyE_4YRBf4wrfLXitwfFQ6Wn5zIwvb3z7YDhnHeZzFmnjt6U1m7bgSMBA/exec';
+let TOKEN = '';
+let DB = { clientes:[], servicos:[], colaboradores:[], config:{} };
+let editId = null;
+
+const store = {
+  get: k => { try{ return JSON.parse(localStorage.getItem(k)) }catch{ return null } },
+  set: (k,v) => localStorage.setItem(k, JSON.stringify(v)),
+  del: k => localStorage.removeItem(k)
+};
+
+window.onload = () => {
+  TOKEN = store.get('sc_token') || '';
+  const d = new Date();
+  document.getElementById('dash-date').textContent =
+    d.toLocaleDateString('pt-BR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  if (TOKEN) { showApp(); loadAll(); } else showLogin();
+};
+
+function showLogin(){
+  document.getElementById('loading').style.display='none';
+  document.getElementById('screen-login').style.display='flex';
+  document.getElementById('screen-app').style.display='none';
+}
+function showApp(){
+  document.getElementById('loading').style.display='none';
+  document.getElementById('screen-login').style.display='none';
+  document.getElementById('screen-app').style.display='flex';
+}
+function showLoading(v){ document.getElementById('loading').style.display=v?'flex':'none'; }
+
+async function api(params){
+  const url=new URL(API_URL);
+  Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));
+  const res=await fetch(url.toString());
+  return res.json();
+}
+async function apiPost(body){
+  const res=await fetch(API_URL,{method:'POST',body:JSON.stringify(body),headers:{'Content-Type':'application/json'}});
+  return res.json();
+}
+
+async function doLogin(){
+  const senha=document.getElementById('inp-senha').value.trim();
+  if(!senha) return toast('Informe a senha.','error');
+  showLoading(true);
+  try{
+    const r=await api({action:'login',senha});
+    if(r.status!=='ok'){showLoading(false);return toast(r.data?.message||'Senha incorreta.','error');}
+    TOKEN=r.data.token;
+    store.set('sc_token',TOKEN);
+    showApp(); loadAll();
+  }catch(e){showLoading(false);toast('Erro de conexão.','error');}
+}
+function logout(){store.del('sc_token');TOKEN='';showLogin();}
+
+async function loadAll(){
+  showLoading(true);
+  try{
+    const [cfg,cli,svc,col]=await Promise.all([
+      api({action:'getConfig',token:TOKEN}),
+      api({action:'getClientes',token:TOKEN}),
+      api({action:'getServicos',token:TOKEN}),
+      api({action:'getColaboradores',token:TOKEN}),
+    ]);
+    if(cfg.status==='ok'){
+      DB.config=cfg.data;
+      document.getElementById('dash-hello').textContent=cfg.data.salonName||'Sonia';
+      document.getElementById('cfg-nome').value=cfg.data.salonName||'';
+    }
+    if(cli.status==='ok'){DB.clientes=cli.data;renderClientes();}
+    if(svc.status==='ok'){DB.servicos=svc.data;renderServicos();}
+    if(col.status==='ok'){DB.colaboradores=col.data;renderColaboradores();}
+    updateStats();
+  }catch(e){toast('Erro ao carregar dados.','error');}
+  showLoading(false);
+}
+
+function updateStats(){
+  document.getElementById('stat-clientes').textContent=DB.clientes.length;
+  document.getElementById('stat-servicos').textContent=DB.servicos.length;
+  document.getElementById('stat-colab').textContent=DB.colaboradores.length;
+}
+
+function navTo(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  const btn=document.querySelector(`[data-page="${page}"]`);
+  if(btn)btn.classList.add('active');
+}
+
+let toastTimer;
+function toast(msg,type){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='show'+(type?' '+type:'');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.className='',3200);
+}
+
+function openDrawer(html){
+  document.getElementById('drawer-content').innerHTML=html;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('open');
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('open');
+  editId=null;
+}
+
+/* ── Clientes ── */
+function renderClientes(list){
+  const data=list||DB.clientes;
+  const el=document.getElementById('list-clientes');
+  if(!data.length){el.innerHTML=`<div class="empty"><div class="empty-icon">👤</div><p>Nenhuma cliente cadastrada</p></div>`;return;}
+  el.innerHTML=data.map(c=>`
+    <div class="card">
+      <div class="card-avatar">${(c.nome||'?')[0].toUpperCase()}</div>
+      <div class="card-body">
+        <div class="card-name">${c.nome}</div>
+        <div class="card-meta">${c.telefone||'—'}${c.aniversario?' · 🎂 '+c.aniversario:''}</div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-edit" onclick='editCliente(${JSON.stringify(c)})'>
+          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-del" onclick="deleteCliente('${c.id}')">
+          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+      </div>
+    </div>`).join('');
+}
+function filterClientes(q){const l=q.toLowerCase();renderClientes(DB.clientes.filter(c=>(c.nome||'').toLowerCase().includes(l)||(c.telefone||'').includes(l)));}
+function openDrawerCliente(){editId=null;openDrawer(`
+  <div class="drawer-title">Nova Cliente</div>
+  <div class="form-group"><label>Nome *</label><input id="f-nome" type="text" placeholder="Nome completo"/></div>
+  <div class="form-group"><label>Telefone / WhatsApp</label><input id="f-tel" type="tel" placeholder="(00) 00000-0000"/></div>
+  <div class="form-group"><label>E-mail</label><input id="f-email" type="email" placeholder="email@exemplo.com"/></div>
+  <div class="form-group"><label>Aniversário</label><input id="f-nasc" type="date"/></div>
+  <div class="form-group"><label>Observações</label><textarea id="f-obs" placeholder="Alergias, preferências…"></textarea></div>
+  <div class="drawer-footer">
+    <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
+    <button class="btn-save" onclick="saveCliente()">Salvar</button>
+  </div>`);}
+function editCliente(c){editId=c.id;openDrawer(`
+  <div class="drawer-title">Editar Cliente</div>
+  <div class="form-group"><label>Nome *</label><input id="f-nome" type="text" value="${c.nome||''}"/></div>
+  <div class="form-group"><label>Telefone / WhatsApp</label><input id="f-tel" type="tel" value="${c.telefone||''}"/></div>
+  <div class="form-group"><label>E-mail</label><input id="f-email" type="email" value="${c.email||''}"/></div>
+  <div class="form-group"><label>Aniversário</label><input id="f-nasc" type="date" value="${c.aniversario||''}"/></div>
+  <div class="form-group"><label>Observações</label><textarea id="f-obs">${c.observacoes||''}</textarea></div>
+  <div class="drawer-footer">
+    <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
+    <button class="btn-save" onclick="saveCliente()">Salvar</button>
+  </div>`);}
+async function saveCliente(){
+  const nome=document.getElementById('f-nome').value.trim();
+  if(!nome)return toast('Nome é obrigatório.','error');
+  const data={id:editId||null,nome,
+    telefone:document.getElementById('f-tel').value.trim(),
+    email:document.getElementById('f-email').value.trim(),
+    aniversario:document.getElementById('f-nasc').value,
+    observacoes:document.getElementById('f-obs').value.trim()};
+  showLoading(true);
+  const r=await apiPost({action:'saveCliente',token:TOKEN,data});
+  showLoading(false);
+  if(r.status!=='ok')return toast(r.data?.message||'Erro ao salvar.','error');
+  closeDrawer();
+  toast(editId?'Cliente atualizada!':'Cliente cadastrada!','success');
+  const fresh=await api({action:'getClientes',token:TOKEN});
+  if(fresh.status==='ok'){DB.clientes=fresh.data;renderClientes();updateStats();}
+}
+async function deleteCliente(id){
+  if(!confirm('Excluir esta cliente?'))return;
+  showLoading(true);
+  const r=await apiPost({action:'deleteCliente',token:TOKEN,id});
+  showLoading(false);
+  if(r.status!=='ok')return toast('Erro ao excluir.','error');
+  DB.clientes=DB.clientes.filter(c=>c.id!==id);
+  renderClientes();updateStats();
+  toast('Cliente excluída.','success');
+}
+
+/* ── Serviços ── */
+function renderServicos(){
+  const el=document.getElementById('list-servicos');
+  if(!DB.servicos.length){el.innerHTML=`<div class="empty"><div class="empty-icon">✂️</div><p>Nenhum serviço cadastrado</p></div>`;return;}
+  el.innerHTML=DB.servicos.map(s=>`
+    <div class="card">
+      <div class="card-avatar" style="font-size:18px">✂</div>
+      <div class="card-body">
+        <div class="card-name">${s.nome}</div>
+        <div class="card-meta">${s.descricao||'Sem descrição'}</div>
+      </div>
+      <div class="card-actions">
+        <span class="badge ${s.ativo=='true'||s.ativo===true?'badge-on':'badge-off'}">${s.ativo=='true'||s.ativo===true?'Ativo':'Inativo'}</span>
+        <button class="btn-edit" onclick='editServico(${JSON.stringify(s)})'>
+          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-del" onclick="deleteServico('${s.id}')">
+          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+      </div>
+    </div>`).join('');
+}
+function openDrawerServico(){editId=null;openDrawer(`
+  <div class="drawer-title">Novo Serviço</div>
+  <div class="form-group"><label>Nome *</label><input id="f-svc-nome" type="text" placeholder="Ex: Mega-hair completo"/></div>
+  <div class="form-group"><label>Descrição</label><textarea id="f-svc-desc" placeholder="Detalhes do serviço…"></textarea></div>
+  <div class="drawer-footer">
+    <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
+    <button class="btn-save" onclick="saveServico()">Salvar</button>
+  </div>`);}
+function editServico(s){editId=s.id;openDrawer(`
+  <div class="drawer-title">Editar Serviço</div>
+  <div class="form-group"><label>Nome *</label><input id="f-svc-nome" type="text" value="${s.nome||''}"/></div>
+  <div class="form-group"><label>Descrição</label><textarea id="f-svc-desc">${s.descricao||''}</textarea></div>
+  <div class="form-group"><label>Status</label>
+    <select id="f-svc-ativo">
+      <option value="true" ${s.ativo=='true'||s.ativo===true?'selected':''}>Ativo</option>
+      <option value="false" ${s.ativo=='false'||s.ativo===false?'selected':''}>Inativo</option>
+    </select></div>
+  <div class="drawer-footer">
+    <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
+    <button class="btn-save" onclick="saveServico()">Salvar</button>
+  </div>`);}
+async function saveServico(){
+  const nome=document.getElementById('f-svc-nome').value.trim();
+  if(!nome)return toast('Nome é obrigatório.','error');
+  const ativoEl=document.getElementById('f-svc-ativo');
+  const data={id:editId||null,nome,descricao:document.getElementById('f-svc-desc').value.trim(),ativo:ativoEl?ativoEl.value:true};
+  showLoading(true);
+  const r=await apiPost({action:'saveServico',token:TOKEN,data});
+  showLoading(false);
+  if(r.status!=='ok')return toast(r.data?.message||'Erro ao salvar.','error');
+  closeDrawer();
+  toast(editId?'Serviço atualizado!':'Serviço cadastrado!','success');
+  const fresh=await api({action:'getServicos',token:TOKEN});
+  if(fresh.status==='ok'){DB.servicos=fresh.data;renderServicos();updateStats();}
+}
+async function deleteServico(id){
+  if(!confirm('Excluir este serviço?'))return;
+  showLoading(true);
+  const r=await apiPost({action:'deleteServico',token:TOKEN,id});
+  showLoading(false);
+  if(r.status!=='ok')return toast('Erro ao excluir.','error');
+  DB.servicos=DB.servicos.filter(s=>s.id!==id);
+  renderServicos();updateStats();
+  toast('Serviço excluído.','success');
+}
+
+/* ── Colaboradores ── */
+function renderColaboradores(){
+  const el=document.getElementById('list-colaboradores');
+  if(!DB.colaboradores.length){el.innerHTML=`<div class="empty"><div class="empty-icon">💇‍♀️</div><p>Nenhuma colaboradora cadastrada</p></div>`;return;}
+  el.innerHTML=DB.colaboradores.map(c=>`
+    <div class="card">
+      <div class="card-avatar">${(c.nome||'?')[0].toUpperCase()}</div>
+      <div class="card-body">
+        <div class="card-name">${c.nome}</div>
+        <div class="card-meta">${c.cargo||'—'} · ${c.telefone||'—'}</div>
+      </div>
+      <div class="card-actions">
+        <span class="badge ${c.ativo=='true'||c.ativo===true?'badge-on':'badge-off'}">${c.ativo=='true'||c.ativo===true?'Ativo':'Inativo'}</span>
+        <button class="btn-edit" onclick='editColab(${JSON.stringify(c)})'>
+          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-del" onclick="deleteColab('${c.id}')">
+          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+      </div>
+    </div>`).join('');
+}
+function openDrawerColab(){editId=null;openDrawer(`
+  <div class="drawer-title">Nova Colaboradora</div>
+  <div class="form-group"><label>Nome *</label><input id="f-col-nome" type="text" placeholder="Nome completo"/></div>
+  <div class="form-group"><label>Cargo</label><input id="f-col-cargo" type="text" placeholder="Ex: Especialista Mega-hair"/></div>
+  <div class="form-group"><label>Telefone</label><input id="f-col-tel" type="tel" placeholder="(00) 00000-0000"/></div>
+  <div class="drawer-footer">
+    <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
+    <button class="btn-save" onclick="saveColab()">Salvar</button>
+  </div>`);}
+function editColab(c){editId=c.id;openDrawer(`
+  <div class="drawer-title">Editar Colaboradora</div>
+  <div class="form-group"><label>Nome *</label><input id="f-col-nome" type="text" value="${c.nome||''}"/></div>
+  <div class="form-group"><label>Cargo</label><input id="f-col-cargo" type="text" value="${c.cargo||''}"/></div>
+  <div class="form-group"><label>Telefone</label><input id="f-col-tel" type="tel" value="${c.telefone||''}"/></div>
+  <div class="form-group"><label>Status</label>
+    <select id="f-col-ativo">
+      <option value="true" ${c.ativo=='true'||c.ativo===true?'selected':''}>Ativo</option>
+      <option value="false" ${c.ativo=='false'||c.ativo===false?'selected':''}>Inativo</option>
+    </select></div>
+  <div class="drawer-footer">
+    <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
+    <button class="btn-save" onclick="saveColab()">Salvar</button>
+  </div>`);}
+async function saveColab(){
+  const nome=document.getElementById('f-col-nome').value.trim();
+  if(!nome)return toast('Nome é obrigatório.','error');
+  const ativoEl=document.getElementById('f-col-ativo');
+  const data={id:editId||null,nome,
+    cargo:document.getElementById('f-col-cargo').value.trim(),
+    telefone:document.getElementById('f-col-tel').value.trim(),
+    ativo:ativoEl?ativoEl.value:true};
+  showLoading(true);
+  const r=await apiPost({action:'saveColaborador',token:TOKEN,data});
+  showLoading(false);
+  if(r.status!=='ok')return toast(r.data?.message||'Erro ao salvar.','error');
+  closeDrawer();
+  toast(editId?'Colaboradora atualizada!':'Colaboradora cadastrada!','success');
+  const fresh=await api({action:'getColaboradores',token:TOKEN});
+  if(fresh.status==='ok'){DB.colaboradores=fresh.data;renderColaboradores();updateStats();}
+}
+async function deleteColab(id){
+  if(!confirm('Excluir esta colaboradora?'))return;
+  showLoading(true);
+  const r=await apiPost({action:'deleteColaborador',token:TOKEN,id});
+  showLoading(false);
+  if(r.status!=='ok')return toast('Erro ao excluir.','error');
+  DB.colaboradores=DB.colaboradores.filter(c=>c.id!==id);
+  renderColaboradores();updateStats();
+  toast('Colaboradora excluída.','success');
+}
+
+/* ── Config ── */
+async function saveConfig(){
+  const nome=document.getElementById('cfg-nome').value.trim();
+  if(!nome)return toast('Informe o nome.','error');
+  showLoading(true);
+  const r=await apiPost({action:'updateConfig',token:TOKEN,config:{salonName:nome}});
+  showLoading(false);
+  if(r.status!=='ok')return toast('Erro ao salvar.','error');
+  document.getElementById('dash-hello').textContent=nome;
+  toast('Salvo!','success');
+}
+async function saveSenha(){
+  const s1=document.getElementById('cfg-senha').value;
+  const s2=document.getElementById('cfg-senha2').value;
+  if(!s1)return toast('Informe a nova senha.','error');
+  if(s1!==s2)return toast('As senhas não coincidem.','error');
+  showLoading(true);
+  const r=await apiPost({action:'updateConfig',token:TOKEN,config:{senha:s1}});
+  showLoading(false);
+  if(r.status!=='ok')return toast('Erro ao salvar.','error');
+  document.getElementById('cfg-senha').value='';
+  document.getElementById('cfg-senha2').value='';
+  toast('Senha alterada!','success');
+}
+</script>
+</body>
+</html>
