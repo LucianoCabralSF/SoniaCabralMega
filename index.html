@@ -300,7 +300,7 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
         <button class="btn-add" onclick="openDrawerLancamento()">+</button>
       </div>
       <div class="caixa-date-bar">
-        <input type="date" id="caixa-data" onchange="loadCaixa()"/>
+        <input type="text" id="caixa-data" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" oninput="applyDataMask(this)" onchange="loadCaixa()"/>
         <button class="btn-icon" onclick="loadCaixa()" style="background:var(--bg3);border:1px solid var(--border);padding:10px;border-radius:var(--r)">
           <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </button>
@@ -470,7 +470,7 @@ window.onload=()=>{
   document.getElementById('dash-date').textContent=
     d.toLocaleDateString('pt-BR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const inp=document.getElementById('caixa-data');
-  if(inp)inp.value=today();
+  if(inp)inp.value=fmtDataBR(today());
   if(TOKEN){showApp();loadAll();}else showLogin();
 };
 
@@ -579,7 +579,9 @@ function btnSaving(btn,v){if(!btn)return;btn.textContent=v?'Salvando…':'Salvar
 
 // ── CAIXA ─────────────────────────────────────────
 async function loadCaixa(){
-  const data=document.getElementById('caixa-data')?.value||today();
+  const inp=document.getElementById('caixa-data');
+  if(inp&&!inp.value)inp.value=fmtDataBR(today());
+  const data=parseData(inp?.value||fmtDataBR(today()));
   try{
     const [res,lancs]=await Promise.all([
       api({action:'getCaixaResumo',token:TOKEN,data}),
@@ -665,8 +667,8 @@ function openDrawerLancamento(){
         </select></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Valor (R$) *</label><input id="f-valor" type="number" step="0.01" min="0" placeholder="0,00"/></div>
-      <div class="form-group"><label>Data</label><input id="f-data" type="date" value="${today()}"/></div>
+      <div class="form-group"><label>Valor (R$) *</label><input id="f-valor" type="text" inputmode="numeric" placeholder="0,00" oninput="applyValorMask(this)"/></div>
+      <div class="form-group"><label>Data</label><input id="f-data" type="text" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" oninput="applyDataMask(this)"/></div>
     </div>
     <div class="form-group"><label>Observações</label><input id="f-obs" type="text" placeholder="Opcional…"/></div>
     <div class="drawer-footer">
@@ -686,6 +688,7 @@ function setTipoLanc(tipo){
 
 function editLancamento(l){
   editId=l.id;
+  const dataFormatada=fmtDataBR(String(l.data).slice(0,10));
   const clienteOpts=DB.clientes.map(c=>`<option value="${c.id}|${c.nome}" ${c.id===l.clienteId?'selected':''}>${c.nome}</option>`).join('');
   const svcOpts=DB.servicos.filter(s=>s.ativo=='true'||s.ativo===true).map(s=>`<option value="${s.id}|${s.nome}|servico" ${s.id===l.itemId?'selected':''}>${s.nome}</option>`).join('');
   const prdOpts=DB.produtos.filter(p=>p.ativo=='true'||p.ativo===true).map(p=>`<option value="${p.id}|${p.nome}|produto" ${p.id===l.itemId?'selected':''}>${p.nome}</option>`).join('');
@@ -719,8 +722,8 @@ function editLancamento(l){
         </select></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Valor (R$) *</label><input id="f-valor" type="number" step="0.01" min="0" value="${l.valor||''}"/></div>
-      <div class="form-group"><label>Data</label><input id="f-data" type="date" value="${String(l.data).slice(0,10)||today()}"/></div>
+      <div class="form-group"><label>Valor (R$) *</label><input id="f-valor" type="text" inputmode="numeric" placeholder="0,00" oninput="applyValorMask(this)"/></div>
+      <div class="form-group"><label>Data</label><input id="f-data" type="text" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" oninput="applyDataMask(this)"/></div>
     </div>
     <div class="form-group"><label>Observações</label><input id="f-obs" type="text" value="${l.observacoes||''}"/></div>
     <div class="drawer-footer">
@@ -728,10 +731,21 @@ function editLancamento(l){
       <button class="btn-save" onclick="saveLancamento()">Salvar</button>
     </div>`);
   _tipoLanc=l.tipo;
+  setTimeout(()=>{
+    const df=document.getElementById('f-data');
+    if(df)df.value=fmtDataBR(String(l.data).slice(0,10));
+    const vf=document.getElementById('f-valor');
+    if(vf&&l.valor){
+      const cents=Math.round(parseFloat(l.valor)*100);
+      vf.value=String(cents);
+      applyValorMask(vf);
+    }
+  },50);
 }
 
 async function saveLancamento(){
-  const valor=parseFloat(document.getElementById('f-valor')?.value);
+  const valorEl=document.getElementById('f-valor');
+  const valor=getValorRaw(valorEl);
   if(!valor||valor<=0)return toast('Informe o valor.','error');
   const tipo=_tipoLanc;
   let clienteId='',clienteNome='',itemId='',itemNome='',itemTipo='',categoria='',formaPagamento='dinheiro';
@@ -748,7 +762,7 @@ async function saveLancamento(){
     id:editId||null,tipo,categoria,clienteId,clienteNome,
     itemId,itemNome,itemTipo,valor,formaPagamento,
     observacoes:document.getElementById('f-obs')?.value.trim()||'',
-    data:document.getElementById('f-data')?.value||today(),
+    data:parseData(document.getElementById('f-data')?.value),
   };
   const btn=document.querySelector('#drawer .btn-save');
   btnSaving(btn,true);
@@ -757,6 +771,9 @@ async function saveLancamento(){
     if(r.status!=='ok'){toast(r.data?.message||'Erro ao salvar.','error');btnSaving(btn,false);return;}
     closeDrawer();
     toast(editId?'Lançamento atualizado!':'Lançamento registrado!','success');
+    // Sincronizar o seletor de data com a data do lançamento salvo
+    const dataInp=document.getElementById('caixa-data');
+    if(dataInp&&data.data)dataInp.value=fmtDataBR(data.data);
     loadCaixa();updateStats();
     if(formaPagamento==='fiado'){const cred=await api({action:'getCrediario',token:TOKEN});if(cred.status==='ok'){DB.crediario=cred.data;renderCrediario();}}
   }catch(e){toast('Erro de conexão.','error');btnSaving(btn,false);}
@@ -809,6 +826,53 @@ function applyTelMask(el){
   else if(v.length>6)v=v.replace(/(\d{2})(\d{4})(\d*)/,'($1) $2-$3');
   else if(v.length>2)v=v.replace(/(\d{2})(\d*)/,'($1) $2');
   el.value=v;
+}
+
+// Máscara monetária: digita centavos e formata R$ 0,00
+function applyValorMask(el){
+  let v=el.value.replace(/\D/g,'');
+  if(!v){el.value='';el.dataset.raw='0';return;}
+  v=String(parseInt(v,10));// remove zeros à esquerda
+  if(v.length===1)v='0'+v;
+  const cents=v.slice(-2);
+  const reais=v.slice(0,-2)||'0';
+  const reaisFmt=reais.replace(/(\d)(?=(\d{3})+(?!\d))/g,'$1.');
+  el.dataset.raw=(parseInt(reais.replace(/\./g,''),10)+(parseInt(cents,10)/100)).toFixed(2);
+  el.value=reaisFmt+','+cents;
+}
+
+// Lê valor real do campo com máscara
+function getValorRaw(el){
+  if(el.dataset&&el.dataset.raw)return parseFloat(el.dataset.raw)||0;
+  return parseFloat((el.value||'').replace(/\./g,'').replace(',','.'))||0;
+}
+
+// Máscara de data DD/MM/AAAA com limite de 4 dígitos no ano
+function applyDataMask(el){
+  let v=el.value.replace(/\D/g,'');
+  if(v.length>8)v=v.slice(0,8);
+  let out='';
+  if(v.length>4)out=v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);
+  else if(v.length>2)out=v.slice(0,2)+'/'+v.slice(2);
+  else out=v;
+  el.value=out;
+}
+
+// Converte DD/MM/AAAA → AAAA-MM-DD para enviar ao backend
+function parseData(str){
+  if(!str)return today();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(str))return str;// já está no formato certo
+  const [d,m,a]=str.split('/');
+  if(!a||a.length<4)return today();
+  return a+'-'+m.padStart(2,'0')+'-'+d.padStart(2,'0');
+}
+
+// Converte AAAA-MM-DD → DD/MM/AAAA para exibição
+function fmtDataBR(str){
+  if(!str)return '';
+  const s=String(str).slice(0,10);
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)){const[a,m,d]=s.split('-');return d+'/'+m+'/'+a;}
+  return s;
 }
 
 function openDrawerCliente(){editId=null;openDrawer(`
