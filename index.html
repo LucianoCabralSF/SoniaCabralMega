@@ -208,6 +208,57 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 .hist-nome{font-size:13px;color:var(--text)}
 .hist-meta{font-size:11px;color:var(--text-dim);margin-top:1px}
 .hist-valor{font-family:'Playfair Display',serif;font-size:15px;color:var(--gold-lt)}
+
+/* Extrato */
+.extrato-header{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px;position:relative;overflow:hidden}
+.extrato-header::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.extrato-mes{font-family:'Playfair Display',serif;font-size:22px;font-style:italic;color:var(--gold-lt);margin-bottom:2px}
+.extrato-periodo{font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase}
+.extrato-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.extrato-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center}
+.extrato-card-label{font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.extrato-card-val{font-family:'Playfair Display',serif;font-size:17px;line-height:1.2}
+.extrato-card-val.pos{color:var(--success)}
+.extrato-card-val.neg{color:var(--danger)}
+.extrato-card-val.gold{color:var(--gold-lt)}
+.simples-box{background:var(--bg2);border:1px solid var(--gold-dk);border-radius:var(--r);padding:16px;margin-bottom:16px;position:relative;overflow:hidden}
+.simples-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.simples-title{font-size:9px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px}
+.simples-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
+.simples-row:last-child{border-bottom:none}
+.simples-label{font-size:11px;color:var(--text-dim)}
+.simples-val{font-size:12px;color:var(--text)}
+.simples-val.destaque{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold-lt)}
+.simples-val.danger{color:var(--danger)}
+.breakdown-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.breakdown-title{font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.breakdown-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
+.breakdown-row:last-child{border-bottom:none}
+.breakdown-label{font-size:12px;color:var(--text-dim)}
+.breakdown-val{font-size:12px;color:var(--text)}
+.breakdown-pct{font-size:10px;color:var(--text-dim);margin-left:6px}
+.dia-section{margin-bottom:8px}
+.dia-header{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);cursor:pointer}
+.dia-header-left{font-size:12px;color:var(--text-dim)}
+.dia-header-right{display:flex;gap:12px;font-size:12px}
+.dia-entradas{color:var(--success)}
+.dia-saidas{color:var(--danger)}
+.dia-items{border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r) var(--r);overflow:hidden}
+.dia-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);background:var(--bg2)}
+.dia-item:last-child{border-bottom:none}
+.dia-item-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.dia-item-icon.entrada{background:rgba(106,201,138,.1);border:1px solid rgba(106,201,138,.2)}
+.dia-item-icon.saida{background:rgba(201,106,106,.1);border:1px solid rgba(201,106,106,.2)}
+.dia-item-body{flex:1;min-width:0}
+.dia-item-nome{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dia-item-meta{font-size:10px;color:var(--text-dim)}
+.dia-item-val{font-size:13px;font-family:'Playfair Display',serif;flex-shrink:0}
+.dia-item-val.entrada{color:var(--success)}
+.dia-item-val.saida{color:var(--danger)}
+.mes-selector{display:flex;align-items:center;gap:8px;margin-bottom:20px}
+.mes-selector select{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 13px;border-radius:var(--r)}
+.mes-selector select:focus{border-color:var(--gold)}
+.btn-carregar{background:linear-gradient(135deg,var(--gold-dk),var(--gold));color:#000;padding:10px 18px;border-radius:var(--r);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -364,6 +415,27 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           Config
         </button>
+        <button class="quick-btn" onclick="navTo('extrato')">
+          <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Extrato
+        </button>
+      </div>
+    </div>
+
+
+    <!-- Extrato Mensal -->
+    <div class="page" id="page-extrato">
+      <div class="page-header">
+        <button class="btn-icon" onclick="navTo('mais')" style="margin-right:8px"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="page-title">Extrato</div>
+      </div>
+      <div class="mes-selector">
+        <select id="ext-mes"></select>
+        <select id="ext-ano"></select>
+        <button class="btn-carregar" onclick="loadExtrato()">Ver</button>
+      </div>
+      <div id="extrato-content">
+        <div class="empty"><div class="empty-icon">📊</div><p>Selecione o mês e clique em Ver</p></div>
       </div>
     </div>
 
@@ -545,7 +617,7 @@ async function updateStats(){
   }catch(_){}
 }
 
-const subPages=['servicos','produtos','colaboradores','config'];
+const subPages=['servicos','produtos','colaboradores','config','extrato'];
 function navTo(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
@@ -1190,6 +1262,160 @@ async function saveSenha(){
     toast('Senha alterada!','success');
   }catch(e){toast('Erro.','error');}
 }
+
+// ── EXTRATO MENSAL ─────────────────────────────────
+(function initExtratoSelectors(){
+  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const now=new Date();
+  const selMes=document.getElementById('ext-mes');
+  const selAno=document.getElementById('ext-ano');
+  if(!selMes||!selAno)return;
+  meses.forEach((m,i)=>{
+    const o=document.createElement('option');
+    o.value=i+1;o.textContent=m;
+    if(i+1===now.getMonth()+1)o.selected=true;
+    selMes.appendChild(o);
+  });
+  for(let a=now.getFullYear();a>=now.getFullYear()-3;a--){
+    const o=document.createElement('option');
+    o.value=a;o.textContent=a;
+    if(a===now.getFullYear())o.selected=true;
+    selAno.appendChild(o);
+  }
+})();
+
+const MESES_PT=['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+async function loadExtrato(){
+  const mes=document.getElementById('ext-mes')?.value;
+  const ano=document.getElementById('ext-ano')?.value;
+  if(!mes||!ano)return;
+  const el=document.getElementById('extrato-content');
+  el.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></div>';
+  try{
+    const r=await api({action:'getExtrato',token:TOKEN,mes,ano});
+    if(r.status!=='ok'){el.innerHTML='<div class="empty"><p>Erro ao carregar extrato.</p></div>';return;}
+    renderExtrato(r.data,el);
+  }catch(e){el.innerHTML='<div class="empty"><p>Erro de conexão.</p></div>';}
+}
+
+function renderExtrato(d,el){
+  const nomeMes=MESES_PT[(d.mes||1)-1];
+  const resultado=d.resultado||0;
+  const s=d.simples||{};
+
+  let html='';
+
+  // ── Cabeçalho ──
+  html+=`<div class="extrato-header">
+    <div class="extrato-mes">${nomeMes} ${d.ano}</div>
+    <div class="extrato-periodo">${d.totalLancamentos} lançamentos</div>
+  </div>`;
+
+  // ── Resumo 3 cards ──
+  html+=`<div class="extrato-grid">
+    <div class="extrato-card">
+      <div class="extrato-card-label">Entradas</div>
+      <div class="extrato-card-val pos">${fmt(d.faturamentoBruto)}</div>
+    </div>
+    <div class="extrato-card">
+      <div class="extrato-card-label">Saídas</div>
+      <div class="extrato-card-val neg">${fmt(d.totalSaidas)}</div>
+    </div>
+    <div class="extrato-card">
+      <div class="extrato-card-label">Resultado</div>
+      <div class="extrato-card-val ${resultado>=0?'pos':'neg'}">${fmt(resultado)}</div>
+    </div>
+  </div>`;
+
+  // ── Simples Nacional ──
+  if(s.aliquotaEfetiva>=0){
+    const aliq=(s.aliquotaEfetiva*100).toFixed(2).replace('.',',');
+    const aliqNom=((s.aliquota||0)*100).toFixed(1).replace('.',',');
+    html+=`<div class="simples-box">
+      <div class="simples-title">⚡ Simples Nacional — Anexo III</div>
+      <div class="simples-row"><span class="simples-label">Faturamento do mês</span><span class="simples-val">${fmt(d.faturamentoBruto)}</span></div>
+      <div class="simples-row"><span class="simples-label">RBA estimado (×12)</span><span class="simples-val">${fmt(s.rbaBruta)}</span></div>
+      <div class="simples-row"><span class="simples-label">Faixa</span><span class="simples-val">${s.faixa||'—'}</span></div>
+      <div class="simples-row"><span class="simples-label">Alíquota nominal</span><span class="simples-val">${aliqNom}%</span></div>
+      <div class="simples-row"><span class="simples-label">Alíquota efetiva</span><span class="simples-val">${aliq}%</span></div>
+      <div class="simples-row"><span class="simples-label">DAS estimado</span><span class="simples-val destaque danger">${fmt(s.valorDevido)}</span></div>
+      <div style="font-size:10px;color:var(--text-dim);margin-top:10px;line-height:1.5">⚠️ Cálculo estimado com base no faturamento mensal × 12. Consulte seu contador para o valor exato do DAS.</div>
+    </div>`;
+  }
+
+  // ── Entradas por forma ──
+  const pf=d.porForma||{};
+  if(Object.keys(pf).length){
+    html+=`<div class="breakdown-box">
+      <div class="breakdown-title">Entradas por forma de pagamento</div>`;
+    Object.entries(pf).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{
+      const pct=d.faturamentoBruto>0?((v/d.faturamentoBruto)*100).toFixed(1):0;
+      html+=`<div class="breakdown-row">
+        <span class="breakdown-label">${labelForma(k)}</span>
+        <span class="breakdown-val">${fmt(v)}<span class="breakdown-pct">${pct}%</span></span>
+      </div>`;
+    });
+    html+='</div>';
+  }
+
+  // ── Saídas por categoria ──
+  const pc=d.porCategoria||{};
+  if(Object.keys(pc).length){
+    html+=`<div class="breakdown-box">
+      <div class="breakdown-title">Saídas por categoria</div>`;
+    Object.entries(pc).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{
+      const pct=d.totalSaidas>0?((v/d.totalSaidas)*100).toFixed(1):0;
+      html+=`<div class="breakdown-row">
+        <span class="breakdown-label">${k}</span>
+        <span class="breakdown-val neg">${fmt(v)}<span class="breakdown-pct">${pct}%</span></span>
+      </div>`;
+    });
+    html+='</div>';
+  }
+
+  // ── Detalhamento dia a dia ──
+  if(d.dias&&d.dias.length){
+    html+=`<div style="font-size:9px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px">Detalhamento por dia</div>`;
+    d.dias.forEach((dia,idx)=>{
+      const dtParts=dia.data.split('-');
+      const dtFmt=dtParts[2]+'/'+dtParts[1]+'/'+dtParts[0];
+      const aberto=idx===0;
+      html+=`<div class="dia-section">
+        <div class="dia-header" onclick="toggleDia('dia-${idx}')">
+          <span class="dia-header-left">${dtFmt}</span>
+          <span class="dia-header-right">
+            <span class="dia-entradas">+${fmt(dia.entradas)}</span>
+            ${dia.saidas>0?`<span class="dia-saidas">-${fmt(dia.saidas)}</span>`:''}
+          </span>
+        </div>
+        <div class="dia-items" id="dia-${idx}" style="display:${aberto?'block':'none'}">`;
+      (dia.lancamentos||[]).forEach(l=>{
+        html+=`<div class="dia-item">
+          <div class="dia-item-icon ${l.tipo}">${l.tipo==='entrada'?'↑':'↓'}</div>
+          <div class="dia-item-body">
+            <div class="dia-item-nome">${l.itemNome||l.categoria||'—'}${l.clienteNome?' · '+l.clienteNome:''}</div>
+            <div class="dia-item-meta">${labelForma(l.formaPagamento)}${l.observacoes?' · '+l.observacoes:''}</div>
+          </div>
+          <div class="dia-item-val ${l.tipo}">${l.tipo==='saida'?'-':''}${fmt(l.valor)}</div>
+        </div>`;
+      });
+      html+='</div></div>';
+    });
+  }else{
+    html+=`<div class="empty"><div class="empty-icon">📭</div><p>Nenhum lançamento neste mês</p></div>`;
+  }
+
+  el.innerHTML=html;
+}
+
+function toggleDia(id){
+  const el=document.getElementById(id);
+  if(el)el.style.display=el.style.display==='none'?'block':'none';
+}
+
 </script>
 </body>
 </html>
