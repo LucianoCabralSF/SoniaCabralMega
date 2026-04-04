@@ -680,7 +680,7 @@ async function loadCaixa(){
         <div class="lancamento-card">
           <div class="lanc-icon ${l.tipo}">${l.tipo==='entrada'?'↑':'↓'}</div>
           <div class="lanc-body">
-            <div class="lanc-nome">${l.itemNome||l.categoria||'—'}${l.clienteNome?' · '+l.clienteNome:''}</div>
+            <div class="lanc-nome">${l.itemNome||l.categoria||'—'}${l.clienteNome?' · '+l.clienteNome:''}${l.categoria==='Retirada Pessoal'?' <span style="font-size:9px;background:rgba(201,161,50,.15);color:var(--gold);border:1px solid rgba(201,161,50,.3);padding:1px 6px;border-radius:10px;letter-spacing:1px">PESSOAL</span>':''}</div>
             <div class="lanc-meta">${labelForma(l.formaPagamento)}${l.observacoes?' · '+l.observacoes:''}</div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
@@ -713,6 +713,7 @@ function openDrawerLancamento(){
     <div class="seg-control">
       <button class="seg-btn active" id="seg-entrada" onclick="setTipoLanc('entrada')">Entrada</button>
       <button class="seg-btn" id="seg-saida" onclick="setTipoLanc('saida')">Saída</button>
+      <button class="seg-btn" id="seg-retirada" onclick="setTipoLanc('retirada')">Retirada</button>
     </div>
     <div id="lanc-entrada-fields">
       <div class="form-group"><label>Cliente (opcional)</label>
@@ -741,6 +742,14 @@ function openDrawerLancamento(){
           <option value="Outros">Outros</option>
         </select></div>
     </div>
+    <div id="lanc-retirada-fields" style="display:none">
+      <div style="background:rgba(201,161,50,.08);border:1px solid rgba(201,161,50,.2);border-radius:var(--r);padding:12px;margin-bottom:14px;font-size:11px;color:var(--text-dim);line-height:1.6">
+        💼 <strong style="color:var(--gold-lt)">Retirada pessoal</strong> — valor retirado do caixa para uso pessoal. Aparece separado no extrato mensal.
+      </div>
+      <div class="form-group"><label>Descrição</label>
+        <input id="f-ret-desc" type="text" placeholder="Ex: Farmácia, supermercado, combustível…"/>
+      </div>
+    </div>
     <div class="form-row">
       <div class="form-group"><label>Valor (R$) *</label><input id="f-valor" type="text" inputmode="numeric" placeholder="0,00" oninput="applyValorMask(this)"/></div>
       <div class="form-group"><label>Data</label><input id="f-data" type="text" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" oninput="applyDataMask(this)"/></div>
@@ -762,8 +771,12 @@ function setTipoLanc(tipo){
   _tipoLanc=tipo;
   document.getElementById('seg-entrada').classList.toggle('active',tipo==='entrada');
   document.getElementById('seg-saida').classList.toggle('active',tipo==='saida');
+  const segRet=document.getElementById('seg-retirada');
+  if(segRet)segRet.classList.toggle('active',tipo==='retirada');
   document.getElementById('lanc-entrada-fields').style.display=tipo==='entrada'?'block':'none';
   document.getElementById('lanc-saida-fields').style.display=tipo==='saida'?'block':'none';
+  const retFields=document.getElementById('lanc-retirada-fields');
+  if(retFields)retFields.style.display=tipo==='retirada'?'block':'none';
 }
 
 function editLancamento(l){
@@ -835,14 +848,20 @@ async function saveLancamento(){
     const item=document.getElementById('f-item')?.value||'';
     if(item){const p=item.split('|');itemId=p[0];itemNome=p[1];itemTipo=p[2]||'';}
     formaPagamento=document.getElementById('f-forma')?.value||'dinheiro';
+  }else if(tipo==='retirada'){
+    categoria='Retirada Pessoal';
+    const retDesc=document.getElementById('f-ret-desc')?.value.trim();
+    if(retDesc)itemNome=retDesc;
   }else{
     categoria=document.getElementById('f-cat')?.value||'Outros';
   }
+  const tipoBackend=tipo==='retirada'?'saida':tipo;
   const data={
-    id:editId||null,tipo,categoria,clienteId,clienteNome,
+    id:editId||null,tipo:tipoBackend,categoria,clienteId,clienteNome,
     itemId,itemNome,itemTipo,valor,formaPagamento,
     observacoes:document.getElementById('f-obs')?.value.trim()||'',
     data:parseData(document.getElementById('f-data')?.value),
+    isRetirada: tipo==='retirada',
   };
   const btn=document.querySelector('#drawer .btn-save');
   btnSaving(btn,true);
@@ -1310,6 +1329,7 @@ async function loadExtrato(){
 }
 
 function renderExtrato(d,el){
+  // d.totalRetiradas e d.resultadoOperacional vêm do backend
   const nomeMes=MESES_PT[(d.mes||1)-1];
   const resultado=d.resultado||0;
   const s=d.simples||{};
@@ -1323,20 +1343,38 @@ function renderExtrato(d,el){
   </div>`;
 
   // ── Resumo 3 cards ──
+  const resultadoOp=d.resultadoOperacional!==undefined?d.resultadoOperacional:resultado;
+  const totalRet=d.totalRetiradas||0;
   html+=`<div class="extrato-grid">
     <div class="extrato-card">
       <div class="extrato-card-label">Entradas</div>
       <div class="extrato-card-val pos">${fmt(d.faturamentoBruto)}</div>
     </div>
     <div class="extrato-card">
-      <div class="extrato-card-label">Saídas</div>
+      <div class="extrato-card-label">Despesas</div>
       <div class="extrato-card-val neg">${fmt(d.totalSaidas)}</div>
     </div>
     <div class="extrato-card">
-      <div class="extrato-card-label">Resultado</div>
-      <div class="extrato-card-val ${resultado>=0?'pos':'neg'}">${fmt(resultado)}</div>
+      <div class="extrato-card-label">Res. Operacional</div>
+      <div class="extrato-card-val ${resultadoOp>=0?'pos':'neg'}">${fmt(resultadoOp)}</div>
     </div>
   </div>`;
+  if(totalRet>0){
+    html+=`<div style="background:rgba(201,161,50,.08);border:1px solid rgba(201,161,50,.25);border-radius:var(--r);padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px">Retiradas Pessoais</div>
+        <div style="font-size:11px;color:var(--text-dim)">Impacto no caixa da empresa</div>
+      </div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--gold-lt)">-${fmt(totalRet)}</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px">Resultado Final</div>
+        <div style="font-size:11px;color:var(--text-dim)">Após retiradas pessoais</div>
+      </div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;color:${resultado>=0?'var(--success)':'var(--danger)'}">${fmt(resultado)}</div>
+    </div>`;
+  }
 
   // ── Simples Nacional ──
   if(s.aliquotaEfetiva>=0){
