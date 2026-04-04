@@ -13,26 +13,16 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:       #080806;
-  --bg2:      #111109;
-  --bg3:      #1a1a14;
-  --gold:     #c9a132;
-  --gold-lt:  #e8c96a;
-  --gold-dk:  #8a6a18;
+  --bg:#080806;--bg2:#111109;--bg3:#1a1a14;
+  --gold:#c9a132;--gold-lt:#e8c96a;--gold-dk:#8a6a18;
   --gold-glow:rgba(201,161,50,.18);
-  --text:     #f0ead8;
-  --text-dim: #7a7260;
-  --border:   #2a2818;
-  --danger:   #c96a6a;
-  --success:  #6ac98a;
-  --r:        12px;
+  --text:#f0ead8;--text-dim:#7a7260;--border:#2a2818;
+  --danger:#c96a6a;--success:#6ac98a;--info:#6ab4c9;--r:12px;
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:14px;line-height:1.6;overflow:hidden}
 button{cursor:pointer;font-family:inherit;border:none;outline:none}
 input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:none}
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 #app{width:100%;height:100%;display:flex;flex-direction:column;position:relative}
 
 /* Loading */
@@ -60,7 +50,7 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 .login-box label{font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;display:block}
 .login-box input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:13px 16px;border-radius:var(--r);transition:border .2s}
 .login-box input:focus{border-color:var(--gold)}
-.btn-primary{background:linear-gradient(135deg,var(--gold-dk),var(--gold));color:#000;padding:14px;border-radius:var(--r);font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:500;width:100%;transition:opacity .2s;margin-top:4px}
+.btn-primary{background:linear-gradient(135deg,var(--gold-dk),var(--gold));color:#000;padding:14px;border-radius:var(--r);font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:500;width:100%;transition:opacity .2s}
 .btn-primary:active{opacity:.8}
 
 /* Header */
@@ -106,20 +96,22 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 .card-name{font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-meta{font-size:11px;color:var(--text-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-actions{display:flex;gap:4px;align-items:center}
-.btn-edit,.btn-del{background:transparent;padding:7px;border-radius:8px;color:var(--text-dim);transition:color .2s}
-.btn-edit svg,.btn-del svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.btn-edit:hover{color:var(--gold)}
-.btn-del:hover{color:var(--danger)}
+.btn-edit,.btn-del,.btn-sm{background:transparent;padding:7px;border-radius:8px;color:var(--text-dim);transition:color .2s}
+.btn-edit svg,.btn-del svg,.btn-sm svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.btn-edit:hover{color:var(--gold)}.btn-del:hover{color:var(--danger)}.btn-sm:hover{color:var(--info)}
 .badge{display:inline-block;font-size:9px;padding:2px 8px;border-radius:20px;letter-spacing:1px;text-transform:uppercase}
 .badge-on{background:rgba(106,201,138,.1);color:var(--success);border:1px solid rgba(106,201,138,.25)}
 .badge-off{background:rgba(201,106,106,.1);color:var(--danger);border:1px solid rgba(201,106,106,.2)}
+.badge-entrada{background:rgba(106,201,138,.1);color:var(--success);border:1px solid rgba(106,201,138,.25)}
+.badge-saida{background:rgba(201,106,106,.1);color:var(--danger);border:1px solid rgba(201,106,106,.2)}
+.badge-fiado{background:rgba(106,180,201,.1);color:var(--info);border:1px solid rgba(106,180,201,.25)}
 .empty{text-align:center;padding:60px 20px;color:var(--text-dim)}
 .empty-icon{font-size:36px;margin-bottom:12px;opacity:.35}
 
 /* Drawer */
 #drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;opacity:0;pointer-events:none;transition:opacity .3s}
 #drawer-overlay.open{opacity:1;pointer-events:auto}
-#drawer{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);border-radius:20px 20px 0 0;z-index:101;padding:20px 20px calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,0,1);max-height:90vh;overflow-y:auto}
+#drawer{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);border-radius:20px 20px 0 0;z-index:101;padding:20px 20px calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,0,1);max-height:92vh;overflow-y:auto}
 #drawer.open{transform:translateY(0)}
 .drawer-handle{width:36px;height:3px;background:var(--border);border-radius:2px;margin:0 auto 18px}
 .drawer-title{font-family:'Playfair Display',serif;font-size:22px;font-style:italic;color:var(--gold-lt);margin-bottom:18px}
@@ -129,11 +121,13 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 .form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--gold)}
 .form-group textarea{resize:vertical;min-height:72px}
 .form-group select option{background:var(--bg2)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .drawer-footer{display:flex;gap:10px;margin-top:18px}
 .btn-secondary{flex:1;background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:12px;border-radius:var(--r);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;transition:border-color .2s}
 .btn-secondary:hover{border-color:var(--gold-dk)}
 .btn-save{flex:2;background:linear-gradient(135deg,var(--gold-dk),var(--gold));color:#000;padding:12px;border-radius:var(--r);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500}
 .btn-save:active{opacity:.8}
+.btn-save:disabled{opacity:.5;cursor:default}
 
 /* Dashboard */
 .dash-greeting{font-family:'Playfair Display',serif;font-size:22px;font-style:italic;color:var(--text);margin-bottom:2px}
@@ -144,17 +138,76 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;position:relative;overflow:hidden}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold-dk),transparent)}
 .stat-label{font-size:9px;color:var(--text-dim);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:8px}
-.stat-value{font-family:'Playfair Display',serif;font-size:34px;color:var(--gold-lt);line-height:1}
-.stat-value.sm{font-size:18px;padding-top:4px}
+.stat-value{font-family:'Playfair Display',serif;font-size:30px;color:var(--gold-lt);line-height:1}
+.stat-value.sm{font-size:16px;padding-top:4px}
 .section-label{font-size:9px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px}
 .quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .quick-btn{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 6px;display:flex;flex-direction:column;align-items:center;gap:7px;color:var(--text-dim);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;transition:border-color .2s,color .2s}
 .quick-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .quick-btn:active{border-color:var(--gold);color:var(--gold)}
 
+/* Caixa */
+.caixa-date-bar{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.caixa-date-bar input[type=date]{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 13px;border-radius:var(--r)}
+.caixa-date-bar input[type=date]:focus{border-color:var(--gold)}
+.resumo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.resumo-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center}
+.resumo-label{font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.resumo-value{font-family:'Playfair Display',serif;font-size:20px;line-height:1}
+.resumo-value.entrada{color:var(--success)}
+.resumo-value.saida{color:var(--danger)}
+.resumo-value.saldo{color:var(--gold-lt)}
+.forma-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.forma-row:last-child{border-bottom:none}
+.forma-label{font-size:12px;color:var(--text-dim)}
+.forma-value{font-size:12px;color:var(--text)}
+.lancamento-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.lanc-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.lanc-icon.entrada{background:rgba(106,201,138,.1);border:1px solid rgba(106,201,138,.25)}
+.lanc-icon.saida{background:rgba(201,106,106,.1);border:1px solid rgba(201,106,106,.2)}
+.lanc-body{flex:1;min-width:0}
+.lanc-nome{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lanc-meta{font-size:11px;color:var(--text-dim);margin-top:1px}
+.lanc-valor{font-family:'Playfair Display',serif;font-size:16px;flex-shrink:0}
+.lanc-valor.entrada{color:var(--success)}
+.lanc-valor.saida{color:var(--danger)}
+
+/* Crediário */
+.cred-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:8px}
+.cred-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.cred-name{font-size:14px;color:var(--text)}
+.cred-status{font-size:9px;padding:3px 10px;border-radius:20px;letter-spacing:1px;text-transform:uppercase}
+.cred-status.aberto{background:rgba(201,106,106,.1);color:var(--danger);border:1px solid rgba(201,106,106,.2)}
+.cred-status.quitado{background:rgba(106,201,138,.1);color:var(--success);border:1px solid rgba(106,201,138,.25)}
+.cred-valores{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.cred-val-item{text-align:center}
+.cred-val-label{font-size:9px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.cred-val-num{font-family:'Playfair Display',serif;font-size:16px;color:var(--gold-lt)}
+.cred-val-num.danger{color:var(--danger)}
+.btn-pagar{background:linear-gradient(135deg,var(--gold-dk),var(--gold));color:#000;padding:9px 16px;border-radius:var(--r);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:500;width:100%}
+
 /* Config */
 .config-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px}
 .config-section-title{font-size:9px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
+
+/* Segmented control */
+.seg-control{display:flex;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+.seg-btn{flex:1;padding:10px;font-size:11px;letter-spacing:1px;text-transform:uppercase;background:transparent;color:var(--text-dim);transition:all .2s;border-radius:0}
+.seg-btn.active{background:var(--gold);color:#000;font-weight:500}
+
+/* Tag tipo item */
+.tipo-tabs{display:flex;gap:8px;margin-bottom:14px}
+.tipo-tab{flex:1;padding:9px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);transition:all .2s}
+.tipo-tab.active{border-color:var(--gold);color:var(--gold)}
+
+/* Histórico */
+.hist-item{padding:12px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.hist-item:last-child{border-bottom:none}
+.hist-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0}
+.hist-body{flex:1}
+.hist-nome{font-size:13px;color:var(--text)}
+.hist-meta{font-size:11px;color:var(--text-dim);margin-top:1px}
+.hist-valor{font-family:'Playfair Display',serif;font-size:15px;color:var(--gold-lt)}
 </style>
 </head>
 <body>
@@ -162,8 +215,7 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 
 <div id="loading">
   <div class="logo-mark">
-    <div class="logo-ring"></div>
-    <div class="logo-ring2"></div>
+    <div class="logo-ring"></div><div class="logo-ring2"></div>
     <span style="font-family:'Playfair Display',serif;font-size:24px;font-style:italic;color:var(--gold);position:relative;z-index:1">SC</span>
   </div>
   <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--gold-lt)">Sonia Cabral</div>
@@ -180,10 +232,8 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
   <div class="login-name">Sonia Cabral</div>
   <div class="login-tag">Mega-Hair · Técnica Exclusiva</div>
   <div class="login-box">
-    <div>
-      <label>Senha de acesso</label>
-      <input id="inp-senha" type="password" placeholder="••••" onkeydown="if(event.key==='Enter')doLogin()"/>
-    </div>
+    <div><label>Senha de acesso</label>
+    <input id="inp-senha" type="password" placeholder="••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
     <button class="btn-primary" onclick="doLogin()">Entrar</button>
   </div>
 </div>
@@ -193,9 +243,7 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 
   <div id="header">
     <div class="header-brand">
-      <div class="header-dot">
-        <span style="font-family:'Playfair Display',serif;font-size:13px;font-style:italic;color:var(--gold)">SC</span>
-      </div>
+      <div class="header-dot"><span style="font-family:'Playfair Display',serif;font-size:13px;font-style:italic;color:var(--gold)">SC</span></div>
       <div class="header-title">Sonia Cabral</div>
     </div>
     <button class="btn-icon" onclick="logout()">
@@ -216,33 +264,58 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
           <div class="stat-value" id="stat-clientes">—</div>
         </div>
         <div class="stat-card">
+          <div class="stat-label">Caixa Hoje</div>
+          <div class="stat-value sm" id="stat-caixa">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Fiados</div>
+          <div class="stat-value sm" id="stat-fiados">—</div>
+        </div>
+        <div class="stat-card">
           <div class="stat-label">Serviços</div>
           <div class="stat-value" id="stat-servicos">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Equipe</div>
-          <div class="stat-value" id="stat-colab">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Sistema</div>
-          <div class="stat-value sm">Etapa 1<br/><span style="font-size:10px;color:var(--text-dim)">Em expansão</span></div>
         </div>
       </div>
       <div class="section-label">Ações rápidas</div>
       <div class="quick-actions">
+        <button class="quick-btn" onclick="navTo('caixa');setTimeout(openDrawerLancamento,300)">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Lançamento
+        </button>
         <button class="quick-btn" onclick="navTo('clientes');setTimeout(openDrawerCliente,300)">
           <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Nova cliente
         </button>
-        <button class="quick-btn" onclick="navTo('servicos');setTimeout(openDrawerServico,300)">
-          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Novo serviço
-        </button>
-        <button class="quick-btn" onclick="navTo('config')">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          Config
+        <button class="quick-btn" onclick="navTo('crediario')">
+          <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Crediário
         </button>
       </div>
+    </div>
+
+    <!-- Caixa -->
+    <div class="page" id="page-caixa">
+      <div class="page-header">
+        <div class="page-title">Caixa</div>
+        <button class="btn-add" onclick="openDrawerLancamento()">+</button>
+      </div>
+      <div class="caixa-date-bar">
+        <input type="date" id="caixa-data" onchange="loadCaixa()"/>
+        <button class="btn-icon" onclick="loadCaixa()" style="background:var(--bg3);border:1px solid var(--border);padding:10px;border-radius:var(--r)">
+          <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+      </div>
+      <!-- Resumo -->
+      <div class="resumo-grid">
+        <div class="resumo-card"><div class="resumo-label">Entradas</div><div class="resumo-value entrada" id="res-entrada">R$0</div></div>
+        <div class="resumo-card"><div class="resumo-label">Saídas</div><div class="resumo-value saida" id="res-saida">R$0</div></div>
+        <div class="resumo-card"><div class="resumo-label">Saldo</div><div class="resumo-value saldo" id="res-saldo">R$0</div></div>
+      </div>
+      <!-- Por forma -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:16px" id="res-formas"></div>
+      <!-- Lançamentos -->
+      <div class="section-label">Lançamentos</div>
+      <div id="list-lancamentos"></div>
     </div>
 
     <!-- Clientes -->
@@ -258,27 +331,75 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
       <div class="card-list" id="list-clientes"></div>
     </div>
 
-    <!-- Serviços -->
+    <!-- Crediário -->
+    <div class="page" id="page-crediario">
+      <div class="page-header">
+        <div class="page-title">Crediário</div>
+      </div>
+      <div class="seg-control" style="margin-bottom:16px">
+        <button class="seg-btn active" onclick="filtrarCred('aberto',this)">Em aberto</button>
+        <button class="seg-btn" onclick="filtrarCred('quitado',this)">Quitados</button>
+        <button class="seg-btn" onclick="filtrarCred('todos',this)">Todos</button>
+      </div>
+      <div id="list-crediario"></div>
+    </div>
+
+    <!-- Mais (Serviços, Produtos, Equipe, Config) -->
+    <div class="page" id="page-mais">
+      <div class="page-header"><div class="page-title">Mais</div></div>
+      <div class="quick-actions" style="margin-bottom:24px">
+        <button class="quick-btn" onclick="navTo('servicos')">
+          <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          Serviços
+        </button>
+        <button class="quick-btn" onclick="navTo('produtos')">
+          <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          Produtos
+        </button>
+        <button class="quick-btn" onclick="navTo('colaboradores')">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Equipe
+        </button>
+        <button class="quick-btn" onclick="navTo('config')">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Config
+        </button>
+      </div>
+    </div>
+
+    <!-- Sub-páginas (sem nav) -->
     <div class="page" id="page-servicos">
       <div class="page-header">
+        <button class="btn-icon" onclick="navTo('mais')" style="margin-right:8px"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
         <div class="page-title">Serviços</div>
         <button class="btn-add" onclick="openDrawerServico()">+</button>
       </div>
       <div class="card-list" id="list-servicos"></div>
     </div>
 
-    <!-- Colaboradores -->
+    <div class="page" id="page-produtos">
+      <div class="page-header">
+        <button class="btn-icon" onclick="navTo('mais')" style="margin-right:8px"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="page-title">Produtos</div>
+        <button class="btn-add" onclick="openDrawerProduto()">+</button>
+      </div>
+      <div class="card-list" id="list-produtos"></div>
+    </div>
+
     <div class="page" id="page-colaboradores">
       <div class="page-header">
+        <button class="btn-icon" onclick="navTo('mais')" style="margin-right:8px"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
         <div class="page-title">Equipe</div>
         <button class="btn-add" onclick="openDrawerColab()">+</button>
       </div>
       <div class="card-list" id="list-colaboradores"></div>
     </div>
 
-    <!-- Config -->
     <div class="page" id="page-config">
-      <div class="page-header"><div class="page-title">Configurações</div></div>
+      <div class="page-header">
+        <button class="btn-icon" onclick="navTo('mais')" style="margin-right:8px"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="page-title">Configurações</div>
+      </div>
       <div class="config-section">
         <div class="config-section-title">Salão</div>
         <div class="form-group"><label>Nome do salão</label><input id="cfg-nome" type="text"/></div>
@@ -296,32 +417,32 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
       </div>
     </div>
 
-  </div>
+  </div><!-- /pages -->
 
   <nav id="nav">
     <button class="nav-item active" data-page="home" onclick="navTo('home')">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Início
     </button>
+    <button class="nav-item" data-page="caixa" onclick="navTo('caixa')">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Caixa
+    </button>
     <button class="nav-item" data-page="clientes" onclick="navTo('clientes')">
       <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Clientes
     </button>
-    <button class="nav-item" data-page="servicos" onclick="navTo('servicos')">
-      <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-      Serviços
+    <button class="nav-item" data-page="crediario" onclick="navTo('crediario')">
+      <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      Fiado
     </button>
-    <button class="nav-item" data-page="colaboradores" onclick="navTo('colaboradores')">
-      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Equipe
-    </button>
-    <button class="nav-item" data-page="config" onclick="navTo('config')">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Config
+    <button class="nav-item" data-page="mais" onclick="navTo('mais')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      Mais
     </button>
   </nav>
 
-</div>
+</div><!-- /screen-app -->
 
 <div id="drawer-overlay" onclick="closeDrawer()"></div>
 <div id="drawer"><div class="drawer-handle"></div><div id="drawer-content"></div></div>
@@ -329,23 +450,28 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 </div><!-- /app -->
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbwdgffUDDPyPXyE_4YRBf4wrfLXitwfFQ6Wn5zIwvb3z7YDhnHeZzFmnjt6U1m7bgSMBA/exec';
-let TOKEN = '';
-let DB = { clientes:[], servicos:[], colaboradores:[], config:{} };
-let editId = null;
+const API_URL='https://script.google.com/macros/s/AKfycbwdgffUDDPyPXyE_4YRBf4wrfLXitwfFQ6Wn5zIwvb3z7YDhnHeZzFmnjt6U1m7bgSMBA/exec';
+let TOKEN='';
+let DB={clientes:[],servicos:[],produtos:[],colaboradores:[],config:{},crediario:[]};
+let editId=null;
 
-const store = {
-  get: k => { try{ return JSON.parse(localStorage.getItem(k)) }catch{ return null } },
-  set: (k,v) => localStorage.setItem(k, JSON.stringify(v)),
-  del: k => localStorage.removeItem(k)
+const store={
+  get:k=>{try{return JSON.parse(localStorage.getItem(k))}catch{return null}},
+  set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)),
+  del:k=>localStorage.removeItem(k)
 };
 
-window.onload = () => {
-  TOKEN = store.get('sc_token') || '';
-  const d = new Date();
-  document.getElementById('dash-date').textContent =
+const fmt=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
+const today=()=>new Date().toISOString().slice(0,10);
+
+window.onload=()=>{
+  TOKEN=store.get('sc_token')||'';
+  const d=new Date();
+  document.getElementById('dash-date').textContent=
     d.toLocaleDateString('pt-BR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  if (TOKEN) { showApp(); loadAll(); } else showLogin();
+  const inp=document.getElementById('caixa-data');
+  if(inp)inp.value=today();
+  if(TOKEN){showApp();loadAll();}else showLogin();
 };
 
 function showLogin(){
@@ -358,7 +484,7 @@ function showApp(){
   document.getElementById('screen-login').style.display='none';
   document.getElementById('screen-app').style.display='flex';
 }
-function showLoading(v){ document.getElementById('loading').style.display=v?'flex':'none'; }
+function showLoading(v){document.getElementById('loading').style.display=v?'flex':'none';}
 
 async function api(params){
   const url=new URL(API_URL);
@@ -373,14 +499,13 @@ async function apiPost(body){
 
 async function doLogin(){
   const senha=document.getElementById('inp-senha').value.trim();
-  if(!senha) return toast('Informe a senha.','error');
+  if(!senha)return toast('Informe a senha.','error');
   showLoading(true);
   try{
     const r=await api({action:'login',senha});
     if(r.status!=='ok'){showLoading(false);return toast(r.data?.message||'Senha incorreta.','error');}
-    TOKEN=r.data.token;
-    store.set('sc_token',TOKEN);
-    showApp(); loadAll();
+    TOKEN=r.data.token;store.set('sc_token',TOKEN);
+    showApp();loadAll();
   }catch(e){showLoading(false);toast('Erro de conexão.','error');}
 }
 function logout(){store.del('sc_token');TOKEN='';showLogin();}
@@ -388,46 +513,55 @@ function logout(){store.del('sc_token');TOKEN='';showLogin();}
 async function loadAll(){
   showLoading(true);
   try{
-    const [cfg,cli,svc,col]=await Promise.all([
+    const [cfg,cli,svc,prd,col,cred]=await Promise.all([
       api({action:'getConfig',token:TOKEN}),
       api({action:'getClientes',token:TOKEN}),
       api({action:'getServicos',token:TOKEN}),
+      api({action:'getProdutos',token:TOKEN}),
       api({action:'getColaboradores',token:TOKEN}),
+      api({action:'getCrediario',token:TOKEN}),
     ]);
-    if(cfg.status==='ok'){
-      DB.config=cfg.data;
-      document.getElementById('dash-hello').textContent=cfg.data.salonName||'Sonia';
-      document.getElementById('cfg-nome').value=cfg.data.salonName||'';
-    }
+    if(cfg.status==='ok'){DB.config=cfg.data;document.getElementById('dash-hello').textContent=cfg.data.salonName||'Sonia';document.getElementById('cfg-nome').value=cfg.data.salonName||'';}
     if(cli.status==='ok'){DB.clientes=cli.data;renderClientes();}
     if(svc.status==='ok'){DB.servicos=svc.data;renderServicos();}
+    if(prd.status==='ok'){DB.produtos=prd.data;renderProdutos();}
     if(col.status==='ok'){DB.colaboradores=col.data;renderColaboradores();}
+    if(cred.status==='ok'){DB.crediario=cred.data;renderCrediario();}
     updateStats();
+    loadCaixa();
   }catch(e){toast('Erro ao carregar dados.','error');}
   showLoading(false);
 }
 
-function updateStats(){
+async function updateStats(){
   document.getElementById('stat-clientes').textContent=DB.clientes.length;
   document.getElementById('stat-servicos').textContent=DB.servicos.length;
-  document.getElementById('stat-colab').textContent=DB.colaboradores.length;
+  const abertos=DB.crediario.filter(c=>c.status==='aberto');
+  document.getElementById('stat-fiados').textContent=fmt(abertos.reduce((s,c)=>s+(parseFloat(c.saldoDevedor)||0),0));
+  // caixa hoje
+  try{
+    const r=await api({action:'getCaixaResumo',token:TOKEN,data:today()});
+    if(r.status==='ok')document.getElementById('stat-caixa').textContent=fmt(r.data.saldo);
+  }catch(_){}
 }
 
+const subPages=['servicos','produtos','colaboradores','config'];
 function navTo(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
-  const btn=document.querySelector(`[data-page="${page}"]`);
+  const navPage=subPages.includes(page)?'mais':page;
+  const btn=document.querySelector(`[data-page="${navPage}"]`);
   if(btn)btn.classList.add('active');
+  if(page==='caixa')loadCaixa();
+  if(page==='crediario'){loadCrediario();}
 }
 
 let toastTimer;
 function toast(msg,type){
   const el=document.getElementById('toast');
-  el.textContent=msg;
-  el.className='show'+(type?' '+type:'');
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>el.className='',3200);
+  el.textContent=msg;el.className='show'+(type?' '+type:'');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className='',3200);
 }
 
 function openDrawer(html){
@@ -441,7 +575,204 @@ function closeDrawer(){
   editId=null;
 }
 
-/* ── Clientes ── */
+function btnSaving(btn,v){if(!btn)return;btn.textContent=v?'Salvando…':'Salvar';btn.disabled=v;}
+
+// ── CAIXA ─────────────────────────────────────────
+async function loadCaixa(){
+  const data=document.getElementById('caixa-data')?.value||today();
+  try{
+    const [res,lancs]=await Promise.all([
+      api({action:'getCaixaResumo',token:TOKEN,data}),
+      api({action:'getCaixa',token:TOKEN,data}),
+    ]);
+    if(res.status==='ok'){
+      const d=res.data;
+      document.getElementById('res-entrada').textContent=fmt(d.entradas);
+      document.getElementById('res-saida').textContent=fmt(d.saidas);
+      document.getElementById('res-saldo').textContent=fmt(d.saldo);
+      const formas=document.getElementById('res-formas');
+      const pf=d.porForma||{};
+      const keys=Object.keys(pf);
+      if(keys.length===0){formas.innerHTML='<div style="font-size:11px;color:var(--text-dim);text-align:center">Nenhuma entrada registrada</div>';}
+      else{
+        formas.innerHTML='<div style="font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Por forma de pagamento</div>'+
+          keys.map(k=>`<div class="forma-row"><span class="forma-label">${labelForma(k)}</span><span class="forma-value">${fmt(pf[k])}</span></div>`).join('');
+      }
+    }
+    if(lancs.status==='ok'){
+      const el=document.getElementById('list-lancamentos');
+      if(!lancs.data.length){el.innerHTML=`<div class="empty"><div class="empty-icon">💰</div><p>Nenhum lançamento neste dia</p></div>`;return;}
+      el.innerHTML=lancs.data.slice().reverse().map(l=>`
+        <div class="lancamento-card">
+          <div class="lanc-icon ${l.tipo}">${l.tipo==='entrada'?'↑':'↓'}</div>
+          <div class="lanc-body">
+            <div class="lanc-nome">${l.itemNome||l.categoria||'—'}${l.clienteNome?' · '+l.clienteNome:''}</div>
+            <div class="lanc-meta">${labelForma(l.formaPagamento)}${l.observacoes?' · '+l.observacoes:''}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <div class="lanc-valor ${l.tipo}">${l.tipo==='saida'?'-':''}${fmt(l.valor)}</div>
+            <div style="display:flex;gap:2px">
+              <button class="btn-edit" onclick='editLancamento(${JSON.stringify(l)})'><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button class="btn-del" onclick="deleteLancamento('${l.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+  }catch(e){toast('Erro ao carregar caixa.','error');}
+}
+
+function labelForma(f){
+  const map={dinheiro:'Dinheiro',pix:'PIX',debito:'Débito',credito:'Crédito',fiado:'Fiado'};
+  return map[f]||f||'—';
+}
+
+function openDrawerLancamento(){
+  editId=null;
+  const clienteOpts=DB.clientes.map(c=>`<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
+  const svcOpts=DB.servicos.filter(s=>s.ativo=='true'||s.ativo===true).map(s=>`<option value="${s.id}|${s.nome}|servico">${s.nome}</option>`).join('');
+  const prdOpts=DB.produtos.filter(p=>p.ativo=='true'||p.ativo===true).map(p=>`<option value="${p.id}|${p.nome}|produto">${p.nome}</option>`).join('');
+  openDrawer(`
+    <div class="drawer-title">Novo Lançamento</div>
+    <div class="seg-control">
+      <button class="seg-btn active" id="seg-entrada" onclick="setTipoLanc('entrada')">Entrada</button>
+      <button class="seg-btn" id="seg-saida" onclick="setTipoLanc('saida')">Saída</button>
+    </div>
+    <div id="lanc-entrada-fields">
+      <div class="form-group"><label>Cliente (opcional)</label>
+        <select id="f-cli"><option value="">— Sem vínculo —</option>${clienteOpts}</select></div>
+      <div class="form-group"><label>Serviço ou Produto</label>
+        <select id="f-item"><option value="">— Selecione —</option>
+          <optgroup label="Serviços">${svcOpts}</optgroup>
+          <optgroup label="Produtos">${prdOpts}</optgroup>
+        </select></div>
+      <div class="form-group"><label>Forma de Pagamento</label>
+        <select id="f-forma">
+          <option value="dinheiro">Dinheiro</option>
+          <option value="pix">PIX</option>
+          <option value="debito">Débito</option>
+          <option value="credito">Crédito</option>
+          <option value="fiado">Fiado</option>
+        </select></div>
+    </div>
+    <div id="lanc-saida-fields" style="display:none">
+      <div class="form-group"><label>Categoria</label>
+        <select id="f-cat">
+          <option value="Aluguel">Aluguel</option>
+          <option value="Material">Material</option>
+          <option value="Produto">Compra de produto</option>
+          <option value="Manutenção">Manutenção</option>
+          <option value="Outros">Outros</option>
+        </select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor (R$) *</label><input id="f-valor" type="number" step="0.01" min="0" placeholder="0,00"/></div>
+      <div class="form-group"><label>Data</label><input id="f-data" type="date" value="${today()}"/></div>
+    </div>
+    <div class="form-group"><label>Observações</label><input id="f-obs" type="text" placeholder="Opcional…"/></div>
+    <div class="drawer-footer">
+      <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
+      <button class="btn-save" onclick="saveLancamento()">Salvar</button>
+    </div>`);
+}
+
+let _tipoLanc='entrada';
+function setTipoLanc(tipo){
+  _tipoLanc=tipo;
+  document.getElementById('seg-entrada').classList.toggle('active',tipo==='entrada');
+  document.getElementById('seg-saida').classList.toggle('active',tipo==='saida');
+  document.getElementById('lanc-entrada-fields').style.display=tipo==='entrada'?'block':'none';
+  document.getElementById('lanc-saida-fields').style.display=tipo==='saida'?'block':'none';
+}
+
+function editLancamento(l){
+  editId=l.id;
+  const clienteOpts=DB.clientes.map(c=>`<option value="${c.id}|${c.nome}" ${c.id===l.clienteId?'selected':''}>${c.nome}</option>`).join('');
+  const svcOpts=DB.servicos.filter(s=>s.ativo=='true'||s.ativo===true).map(s=>`<option value="${s.id}|${s.nome}|servico" ${s.id===l.itemId?'selected':''}>${s.nome}</option>`).join('');
+  const prdOpts=DB.produtos.filter(p=>p.ativo=='true'||p.ativo===true).map(p=>`<option value="${p.id}|${p.nome}|produto" ${p.id===l.itemId?'selected':''}>${p.nome}</option>`).join('');
+  openDrawer(`
+    <div class="drawer-title">Editar Lançamento</div>
+    <div class="seg-control">
+      <button class="seg-btn ${l.tipo==='entrada'?'active':''}" id="seg-entrada" onclick="setTipoLanc('entrada')">Entrada</button>
+      <button class="seg-btn ${l.tipo==='saida'?'active':''}" id="seg-saida" onclick="setTipoLanc('saida')">Saída</button>
+    </div>
+    <div id="lanc-entrada-fields" style="display:${l.tipo==='entrada'?'block':'none'}">
+      <div class="form-group"><label>Cliente (opcional)</label>
+        <select id="f-cli"><option value="">— Sem vínculo —</option>${clienteOpts}</select></div>
+      <div class="form-group"><label>Serviço ou Produto</label>
+        <select id="f-item"><option value="">— Selecione —</option>
+          <optgroup label="Serviços">${svcOpts}</optgroup>
+          <optgroup label="Produtos">${prdOpts}</optgroup>
+        </select></div>
+      <div class="form-group"><label>Forma de Pagamento</label>
+        <select id="f-forma">
+          <option value="dinheiro" ${l.formaPagamento==='dinheiro'?'selected':''}>Dinheiro</option>
+          <option value="pix" ${l.formaPagamento==='pix'?'selected':''}>PIX</option>
+          <option value="debito" ${l.formaPagamento==='debito'?'selected':''}>Débito</option>
+          <option value="credito" ${l.formaPagamento==='credito'?'selected':''}>Crédito</option>
+          <option value="fiado" ${l.formaPagamento==='fiado'?'selected':''}>Fiado</option>
+        </select></div>
+    </div>
+    <div id="lanc-saida-fields" style="display:${l.tipo==='saida'?'block':'none'}">
+      <div class="form-group"><label>Categoria</label>
+        <select id="f-cat">
+          ${['Aluguel','Material','Produto','Manutenção','Outros'].map(c=>`<option ${l.categoria===c?'selected':''}>${c}</option>`).join('')}
+        </select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor (R$) *</label><input id="f-valor" type="number" step="0.01" min="0" value="${l.valor||''}"/></div>
+      <div class="form-group"><label>Data</label><input id="f-data" type="date" value="${String(l.data).slice(0,10)||today()}"/></div>
+    </div>
+    <div class="form-group"><label>Observações</label><input id="f-obs" type="text" value="${l.observacoes||''}"/></div>
+    <div class="drawer-footer">
+      <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
+      <button class="btn-save" onclick="saveLancamento()">Salvar</button>
+    </div>`);
+  _tipoLanc=l.tipo;
+}
+
+async function saveLancamento(){
+  const valor=parseFloat(document.getElementById('f-valor')?.value);
+  if(!valor||valor<=0)return toast('Informe o valor.','error');
+  const tipo=_tipoLanc;
+  let clienteId='',clienteNome='',itemId='',itemNome='',itemTipo='',categoria='',formaPagamento='dinheiro';
+  if(tipo==='entrada'){
+    const cli=document.getElementById('f-cli')?.value||'';
+    if(cli){[clienteId,clienteNome]=cli.split('|');}
+    const item=document.getElementById('f-item')?.value||'';
+    if(item){const p=item.split('|');itemId=p[0];itemNome=p[1];itemTipo=p[2]||'';}
+    formaPagamento=document.getElementById('f-forma')?.value||'dinheiro';
+  }else{
+    categoria=document.getElementById('f-cat')?.value||'Outros';
+  }
+  const data={
+    id:editId||null,tipo,categoria,clienteId,clienteNome,
+    itemId,itemNome,itemTipo,valor,formaPagamento,
+    observacoes:document.getElementById('f-obs')?.value.trim()||'',
+    data:document.getElementById('f-data')?.value||today(),
+  };
+  const btn=document.querySelector('#drawer .btn-save');
+  btnSaving(btn,true);
+  try{
+    const r=await apiPost({action:'saveLancamento',token:TOKEN,data});
+    if(r.status!=='ok'){toast(r.data?.message||'Erro ao salvar.','error');btnSaving(btn,false);return;}
+    closeDrawer();
+    toast(editId?'Lançamento atualizado!':'Lançamento registrado!','success');
+    loadCaixa();updateStats();
+    if(formaPagamento==='fiado'){const cred=await api({action:'getCrediario',token:TOKEN});if(cred.status==='ok'){DB.crediario=cred.data;renderCrediario();}}
+  }catch(e){toast('Erro de conexão.','error');btnSaving(btn,false);}
+}
+
+async function deleteLancamento(id){
+  if(!confirm('Excluir este lançamento?'))return;
+  try{
+    const r=await apiPost({action:'deleteLancamento',token:TOKEN,id});
+    if(r.status!=='ok')return toast('Erro ao excluir.','error');
+    toast('Lançamento excluído.','success');
+    loadCaixa();updateStats();
+  }catch(e){toast('Erro de conexão.','error');}
+}
+
+// ── CLIENTES ───────────────────────────────────────
 function renderClientes(list){
   const data=list||DB.clientes;
   const el=document.getElementById('list-clientes');
@@ -454,6 +785,9 @@ function renderClientes(list){
         <div class="card-meta">${c.telefone||'—'}${c.aniversario?' · 🎂 '+c.aniversario:''}</div>
       </div>
       <div class="card-actions">
+        <button class="btn-sm" onclick="verHistorico('${c.id}','${c.nome.replace(/'/g,"\\'")}')">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </button>
         <button class="btn-edit" onclick='editCliente(${JSON.stringify(c)})'>
           <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
@@ -464,6 +798,11 @@ function renderClientes(list){
     </div>`).join('');
 }
 
+function filterClientes(q){
+  const l=q.toLowerCase();
+  renderClientes(DB.clientes.filter(c=>(c.nome||'').toLowerCase().includes(l)||(c.telefone||'').includes(l)));
+}
+
 function applyTelMask(el){
   let v=el.value.replace(/\D/g,'').slice(0,11);
   if(v.length>10)v=v.replace(/(\d{2})(\d{5})(\d{4})/,'($1) $2-$3');
@@ -471,7 +810,7 @@ function applyTelMask(el){
   else if(v.length>2)v=v.replace(/(\d{2})(\d*)/,'($1) $2');
   el.value=v;
 }
-function filterClientes(q){const l=q.toLowerCase();renderClientes(DB.clientes.filter(c=>(c.nome||'').toLowerCase().includes(l)||(c.telefone||'').includes(l)));}
+
 function openDrawerCliente(){editId=null;openDrawer(`
   <div class="drawer-title">Nova Cliente</div>
   <div class="form-group"><label>Nome *</label><input id="f-nome" type="text" placeholder="Nome completo"/></div>
@@ -483,6 +822,7 @@ function openDrawerCliente(){editId=null;openDrawer(`
     <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
     <button class="btn-save" onclick="saveCliente()">Salvar</button>
   </div>`);}
+
 function editCliente(c){editId=c.id;openDrawer(`
   <div class="drawer-title">Editar Cliente</div>
   <div class="form-group"><label>Nome *</label><input id="f-nome" type="text" value="${c.nome||''}"/></div>
@@ -494,6 +834,7 @@ function editCliente(c){editId=c.id;openDrawer(`
     <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
     <button class="btn-save" onclick="saveCliente()">Salvar</button>
   </div>`);}
+
 async function saveCliente(){
   const nome=document.getElementById('f-nome').value.trim();
   if(!nome)return toast('Nome é obrigatório.','error');
@@ -503,198 +844,287 @@ async function saveCliente(){
     aniversario:document.getElementById('f-nasc').value,
     observacoes:document.getElementById('f-obs').value.trim()};
   const btn=document.querySelector('#drawer .btn-save');
-  if(btn){btn.textContent='Salvando…';btn.disabled=true;}
+  btnSaving(btn,true);
   try{
     const r=await apiPost({action:'saveCliente',token:TOKEN,data});
-    if(r.status!=='ok'){
-      toast(r.data?.message||'Erro ao salvar.','error');
-      if(btn){btn.textContent='Salvar';btn.disabled=false;}
-      return;
-    }
+    if(r.status!=='ok'){toast(r.data?.message||'Erro ao salvar.','error');btnSaving(btn,false);return;}
     closeDrawer();
     toast(editId?'Cliente atualizada!':'Cliente cadastrada!','success');
     const fresh=await api({action:'getClientes',token:TOKEN});
     if(fresh.status==='ok'){DB.clientes=fresh.data;renderClientes();updateStats();}
-  }catch(e){
-    toast('Erro de conexão. Tente novamente.','error');
-    if(btn){btn.textContent='Salvar';btn.disabled=false;}
-  }
-}
-async function deleteCliente(id){
-  if(!confirm('Excluir esta cliente?'))return;
-  showLoading(true);
-  const r=await apiPost({action:'deleteCliente',token:TOKEN,id});
-  showLoading(false);
-  if(r.status!=='ok')return toast('Erro ao excluir.','error');
-  DB.clientes=DB.clientes.filter(c=>c.id!==id);
-  renderClientes();updateStats();
-  toast('Cliente excluída.','success');
+  }catch(e){toast('Erro de conexão. Tente novamente.','error');btnSaving(btn,false);}
 }
 
-/* ── Serviços ── */
+async function deleteCliente(id){
+  if(!confirm('Excluir esta cliente?'))return;
+  try{
+    const r=await apiPost({action:'deleteCliente',token:TOKEN,id});
+    if(r.status!=='ok')return toast('Erro ao excluir.','error');
+    DB.clientes=DB.clientes.filter(c=>c.id!==id);renderClientes();updateStats();
+    toast('Cliente excluída.','success');
+  }catch(e){toast('Erro de conexão.','error');}
+}
+
+async function verHistorico(clienteId,clienteNome){
+  openDrawer(`<div class="drawer-title">Histórico</div><div style="color:var(--text-dim);font-size:13px">${clienteNome}</div><div style="margin-top:16px;color:var(--text-dim);font-size:12px">Carregando…</div>`);
+  try{
+    const [hist,cred]=await Promise.all([
+      api({action:'getHistoricoCliente',token:TOKEN,clienteId}),
+      api({action:'getCrediario',token:TOKEN,clienteId}),
+    ]);
+    let html=`<div class="drawer-title">Histórico</div><div style="font-size:12px;color:var(--text-dim);margin-bottom:16px">${clienteNome}</div>`;
+    // Crediário deste cliente
+    if(cred.status==='ok'&&cred.data.length){
+      const c=cred.data[0];
+      html+=`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:16px">
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Fiado em aberto</div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:12px;color:var(--text-dim)">Saldo devedor</span>
+          <span style="font-family:'Playfair Display',serif;font-size:18px;color:var(--danger)">${fmt(c.saldoDevedor)}</span>
+        </div>
+      </div>`;
+    }
+    if(hist.status==='ok'&&hist.data.length){
+      html+=`<div style="font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Serviços e produtos</div>`;
+      html+=hist.data.slice().reverse().map(h=>`
+        <div class="hist-item">
+          <div class="hist-dot"></div>
+          <div class="hist-body">
+            <div class="hist-nome">${h.itemNome||h.categoria||'—'}</div>
+            <div class="hist-meta">${String(h.data).slice(0,10)} · ${labelForma(h.formaPagamento)}</div>
+          </div>
+          <div class="hist-valor">${fmt(h.valor)}</div>
+        </div>`).join('');
+    }else{
+      html+=`<div class="empty"><div class="empty-icon">📋</div><p>Nenhum histórico encontrado</p></div>`;
+    }
+    html+=`<div class="drawer-footer"><button class="btn-save" style="width:100%" onclick="closeDrawer()">Fechar</button></div>`;
+    document.getElementById('drawer-content').innerHTML=html;
+  }catch(e){toast('Erro ao carregar histórico.','error');}
+}
+
+// ── SERVIÇOS ───────────────────────────────────────
 function renderServicos(){
   const el=document.getElementById('list-servicos');
   if(!DB.servicos.length){el.innerHTML=`<div class="empty"><div class="empty-icon">✂️</div><p>Nenhum serviço cadastrado</p></div>`;return;}
   el.innerHTML=DB.servicos.map(s=>`
     <div class="card">
       <div class="card-avatar" style="font-size:18px">✂</div>
-      <div class="card-body">
-        <div class="card-name">${s.nome}</div>
-        <div class="card-meta">${s.descricao||'Sem descrição'}</div>
-      </div>
+      <div class="card-body"><div class="card-name">${s.nome}</div><div class="card-meta">${s.descricao||'Sem descrição'}</div></div>
       <div class="card-actions">
         <span class="badge ${s.ativo=='true'||s.ativo===true?'badge-on':'badge-off'}">${s.ativo=='true'||s.ativo===true?'Ativo':'Inativo'}</span>
-        <button class="btn-edit" onclick='editServico(${JSON.stringify(s)})'>
-          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-        <button class="btn-del" onclick="deleteServico('${s.id}')">
-          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-        </button>
+        <button class="btn-edit" onclick='editServico(${JSON.stringify(s)})'><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="btn-del" onclick="deleteServico('${s.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
       </div>
     </div>`).join('');
 }
 function openDrawerServico(){editId=null;openDrawer(`
   <div class="drawer-title">Novo Serviço</div>
   <div class="form-group"><label>Nome *</label><input id="f-svc-nome" type="text" placeholder="Ex: Mega-hair completo"/></div>
-  <div class="form-group"><label>Descrição</label><textarea id="f-svc-desc" placeholder="Detalhes do serviço…"></textarea></div>
-  <div class="drawer-footer">
-    <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
-    <button class="btn-save" onclick="saveServico()">Salvar</button>
-  </div>`);}
+  <div class="form-group"><label>Descrição</label><textarea id="f-svc-desc" placeholder="Detalhes…"></textarea></div>
+  <div class="drawer-footer"><button class="btn-secondary" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="saveServico()">Salvar</button></div>`);}
 function editServico(s){editId=s.id;openDrawer(`
   <div class="drawer-title">Editar Serviço</div>
   <div class="form-group"><label>Nome *</label><input id="f-svc-nome" type="text" value="${s.nome||''}"/></div>
   <div class="form-group"><label>Descrição</label><textarea id="f-svc-desc">${s.descricao||''}</textarea></div>
-  <div class="form-group"><label>Status</label>
-    <select id="f-svc-ativo">
-      <option value="true" ${s.ativo=='true'||s.ativo===true?'selected':''}>Ativo</option>
-      <option value="false" ${s.ativo=='false'||s.ativo===false?'selected':''}>Inativo</option>
-    </select></div>
-  <div class="drawer-footer">
-    <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
-    <button class="btn-save" onclick="saveServico()">Salvar</button>
-  </div>`);}
+  <div class="form-group"><label>Status</label><select id="f-svc-ativo"><option value="true" ${s.ativo=='true'||s.ativo===true?'selected':''}>Ativo</option><option value="false" ${s.ativo=='false'||s.ativo===false?'selected':''}>Inativo</option></select></div>
+  <div class="drawer-footer"><button class="btn-secondary" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="saveServico()">Salvar</button></div>`);}
 async function saveServico(){
   const nome=document.getElementById('f-svc-nome').value.trim();
   if(!nome)return toast('Nome é obrigatório.','error');
   const ativoEl=document.getElementById('f-svc-ativo');
   const data={id:editId||null,nome,descricao:document.getElementById('f-svc-desc').value.trim(),ativo:ativoEl?ativoEl.value:true};
-  showLoading(true);
-  const r=await apiPost({action:'saveServico',token:TOKEN,data});
-  showLoading(false);
-  if(r.status!=='ok')return toast(r.data?.message||'Erro ao salvar.','error');
-  closeDrawer();
-  toast(editId?'Serviço atualizado!':'Serviço cadastrado!','success');
-  const fresh=await api({action:'getServicos',token:TOKEN});
-  if(fresh.status==='ok'){DB.servicos=fresh.data;renderServicos();updateStats();}
+  const btn=document.querySelector('#drawer .btn-save');btnSaving(btn,true);
+  try{
+    const r=await apiPost({action:'saveServico',token:TOKEN,data});
+    if(r.status!=='ok'){toast(r.data?.message||'Erro.','error');btnSaving(btn,false);return;}
+    closeDrawer();toast(editId?'Serviço atualizado!':'Serviço cadastrado!','success');
+    const fresh=await api({action:'getServicos',token:TOKEN});
+    if(fresh.status==='ok'){DB.servicos=fresh.data;renderServicos();updateStats();}
+  }catch(e){toast('Erro de conexão.','error');btnSaving(btn,false);}
 }
 async function deleteServico(id){
   if(!confirm('Excluir este serviço?'))return;
-  showLoading(true);
-  const r=await apiPost({action:'deleteServico',token:TOKEN,id});
-  showLoading(false);
-  if(r.status!=='ok')return toast('Erro ao excluir.','error');
-  DB.servicos=DB.servicos.filter(s=>s.id!==id);
-  renderServicos();updateStats();
-  toast('Serviço excluído.','success');
+  try{const r=await apiPost({action:'deleteServico',token:TOKEN,id});if(r.status!=='ok')return toast('Erro.','error');DB.servicos=DB.servicos.filter(s=>s.id!==id);renderServicos();toast('Excluído.','success');}
+  catch(e){toast('Erro.','error');}
 }
 
-/* ── Colaboradores ── */
+// ── PRODUTOS ───────────────────────────────────────
+function renderProdutos(){
+  const el=document.getElementById('list-produtos');
+  if(!DB.produtos.length){el.innerHTML=`<div class="empty"><div class="empty-icon">🛍️</div><p>Nenhum produto cadastrado</p></div>`;return;}
+  el.innerHTML=DB.produtos.map(p=>`
+    <div class="card">
+      <div class="card-avatar" style="font-size:18px">🛍</div>
+      <div class="card-body"><div class="card-name">${p.nome}</div><div class="card-meta">${p.descricao||'Sem descrição'}</div></div>
+      <div class="card-actions">
+        <span class="badge ${p.ativo=='true'||p.ativo===true?'badge-on':'badge-off'}">${p.ativo=='true'||p.ativo===true?'Ativo':'Inativo'}</span>
+        <button class="btn-edit" onclick='editProduto(${JSON.stringify(p)})'><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="btn-del" onclick="deleteProduto('${p.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      </div>
+    </div>`).join('');
+}
+function openDrawerProduto(){editId=null;openDrawer(`
+  <div class="drawer-title">Novo Produto</div>
+  <div class="form-group"><label>Nome *</label><input id="f-prd-nome" type="text" placeholder="Ex: Shampoo profissional"/></div>
+  <div class="form-group"><label>Descrição</label><textarea id="f-prd-desc" placeholder="Detalhes…"></textarea></div>
+  <div class="drawer-footer"><button class="btn-secondary" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="saveProduto()">Salvar</button></div>`);}
+function editProduto(p){editId=p.id;openDrawer(`
+  <div class="drawer-title">Editar Produto</div>
+  <div class="form-group"><label>Nome *</label><input id="f-prd-nome" type="text" value="${p.nome||''}"/></div>
+  <div class="form-group"><label>Descrição</label><textarea id="f-prd-desc">${p.descricao||''}</textarea></div>
+  <div class="form-group"><label>Status</label><select id="f-prd-ativo"><option value="true" ${p.ativo=='true'||p.ativo===true?'selected':''}>Ativo</option><option value="false" ${p.ativo=='false'||p.ativo===false?'selected':''}>Inativo</option></select></div>
+  <div class="drawer-footer"><button class="btn-secondary" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="saveProduto()">Salvar</button></div>`);}
+async function saveProduto(){
+  const nome=document.getElementById('f-prd-nome').value.trim();
+  if(!nome)return toast('Nome é obrigatório.','error');
+  const ativoEl=document.getElementById('f-prd-ativo');
+  const data={id:editId||null,nome,descricao:document.getElementById('f-prd-desc').value.trim(),ativo:ativoEl?ativoEl.value:true};
+  const btn=document.querySelector('#drawer .btn-save');btnSaving(btn,true);
+  try{
+    const r=await apiPost({action:'saveProduto',token:TOKEN,data});
+    if(r.status!=='ok'){toast(r.data?.message||'Erro.','error');btnSaving(btn,false);return;}
+    closeDrawer();toast(editId?'Produto atualizado!':'Produto cadastrado!','success');
+    const fresh=await api({action:'getProdutos',token:TOKEN});
+    if(fresh.status==='ok'){DB.produtos=fresh.data;renderProdutos();}
+  }catch(e){toast('Erro de conexão.','error');btnSaving(btn,false);}
+}
+async function deleteProduto(id){
+  if(!confirm('Excluir este produto?'))return;
+  try{const r=await apiPost({action:'deleteProduto',token:TOKEN,id});if(r.status!=='ok')return toast('Erro.','error');DB.produtos=DB.produtos.filter(p=>p.id!==id);renderProdutos();toast('Excluído.','success');}
+  catch(e){toast('Erro.','error');}
+}
+
+// ── COLABORADORES ──────────────────────────────────
 function renderColaboradores(){
   const el=document.getElementById('list-colaboradores');
-  if(!DB.colaboradores.length){el.innerHTML=`<div class="empty"><div class="empty-icon">💇‍♀️</div><p>Nenhuma colaboradora cadastrada</p></div>`;return;}
+  if(!DB.colaboradores.length){el.innerHTML=`<div class="empty"><div class="empty-icon">💇‍♀️</div><p>Nenhuma colaboradora</p></div>`;return;}
   el.innerHTML=DB.colaboradores.map(c=>`
     <div class="card">
       <div class="card-avatar">${(c.nome||'?')[0].toUpperCase()}</div>
-      <div class="card-body">
-        <div class="card-name">${c.nome}</div>
-        <div class="card-meta">${c.cargo||'—'} · ${c.telefone||'—'}</div>
-      </div>
+      <div class="card-body"><div class="card-name">${c.nome}</div><div class="card-meta">${c.cargo||'—'} · ${c.telefone||'—'}</div></div>
       <div class="card-actions">
         <span class="badge ${c.ativo=='true'||c.ativo===true?'badge-on':'badge-off'}">${c.ativo=='true'||c.ativo===true?'Ativo':'Inativo'}</span>
-        <button class="btn-edit" onclick='editColab(${JSON.stringify(c)})'>
-          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-        <button class="btn-del" onclick="deleteColab('${c.id}')">
-          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-        </button>
+        <button class="btn-edit" onclick='editColab(${JSON.stringify(c)})'><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="btn-del" onclick="deleteColab('${c.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
       </div>
     </div>`).join('');
 }
 function openDrawerColab(){editId=null;openDrawer(`
   <div class="drawer-title">Nova Colaboradora</div>
-  <div class="form-group"><label>Nome *</label><input id="f-col-nome" type="text" placeholder="Nome completo"/></div>
+  <div class="form-group"><label>Nome *</label><input id="f-col-nome" type="text"/></div>
   <div class="form-group"><label>Cargo</label><input id="f-col-cargo" type="text" placeholder="Ex: Especialista Mega-hair"/></div>
-  <div class="form-group"><label>Telefone</label><input id="f-col-tel" type="tel" placeholder="(00) 00000-0000"/></div>
-  <div class="drawer-footer">
-    <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
-    <button class="btn-save" onclick="saveColab()">Salvar</button>
-  </div>`);}
+  <div class="form-group"><label>Telefone</label><input id="f-col-tel" type="tel" placeholder="(00) 00000-0000" oninput="applyTelMask(this)" maxlength="15"/></div>
+  <div class="drawer-footer"><button class="btn-secondary" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="saveColab()">Salvar</button></div>`);}
 function editColab(c){editId=c.id;openDrawer(`
   <div class="drawer-title">Editar Colaboradora</div>
   <div class="form-group"><label>Nome *</label><input id="f-col-nome" type="text" value="${c.nome||''}"/></div>
   <div class="form-group"><label>Cargo</label><input id="f-col-cargo" type="text" value="${c.cargo||''}"/></div>
-  <div class="form-group"><label>Telefone</label><input id="f-col-tel" type="tel" value="${c.telefone||''}"/></div>
-  <div class="form-group"><label>Status</label>
-    <select id="f-col-ativo">
-      <option value="true" ${c.ativo=='true'||c.ativo===true?'selected':''}>Ativo</option>
-      <option value="false" ${c.ativo=='false'||c.ativo===false?'selected':''}>Inativo</option>
-    </select></div>
-  <div class="drawer-footer">
-    <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
-    <button class="btn-save" onclick="saveColab()">Salvar</button>
-  </div>`);}
+  <div class="form-group"><label>Telefone</label><input id="f-col-tel" type="tel" value="${c.telefone||''}" oninput="applyTelMask(this)" maxlength="15"/></div>
+  <div class="form-group"><label>Status</label><select id="f-col-ativo"><option value="true" ${c.ativo=='true'||c.ativo===true?'selected':''}>Ativo</option><option value="false" ${c.ativo=='false'||c.ativo===false?'selected':''}>Inativo</option></select></div>
+  <div class="drawer-footer"><button class="btn-secondary" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="saveColab()">Salvar</button></div>`);}
 async function saveColab(){
   const nome=document.getElementById('f-col-nome').value.trim();
   if(!nome)return toast('Nome é obrigatório.','error');
   const ativoEl=document.getElementById('f-col-ativo');
-  const data={id:editId||null,nome,
-    cargo:document.getElementById('f-col-cargo').value.trim(),
-    telefone:document.getElementById('f-col-tel').value.trim(),
-    ativo:ativoEl?ativoEl.value:true};
-  showLoading(true);
-  const r=await apiPost({action:'saveColaborador',token:TOKEN,data});
-  showLoading(false);
-  if(r.status!=='ok')return toast(r.data?.message||'Erro ao salvar.','error');
-  closeDrawer();
-  toast(editId?'Colaboradora atualizada!':'Colaboradora cadastrada!','success');
-  const fresh=await api({action:'getColaboradores',token:TOKEN});
-  if(fresh.status==='ok'){DB.colaboradores=fresh.data;renderColaboradores();updateStats();}
+  const data={id:editId||null,nome,cargo:document.getElementById('f-col-cargo').value.trim(),telefone:document.getElementById('f-col-tel').value.trim(),ativo:ativoEl?ativoEl.value:true};
+  const btn=document.querySelector('#drawer .btn-save');btnSaving(btn,true);
+  try{
+    const r=await apiPost({action:'saveColaborador',token:TOKEN,data});
+    if(r.status!=='ok'){toast(r.data?.message||'Erro.','error');btnSaving(btn,false);return;}
+    closeDrawer();toast(editId?'Atualizada!':'Cadastrada!','success');
+    const fresh=await api({action:'getColaboradores',token:TOKEN});
+    if(fresh.status==='ok'){DB.colaboradores=fresh.data;renderColaboradores();}
+  }catch(e){toast('Erro de conexão.','error');btnSaving(btn,false);}
 }
 async function deleteColab(id){
-  if(!confirm('Excluir esta colaboradora?'))return;
-  showLoading(true);
-  const r=await apiPost({action:'deleteColaborador',token:TOKEN,id});
-  showLoading(false);
-  if(r.status!=='ok')return toast('Erro ao excluir.','error');
-  DB.colaboradores=DB.colaboradores.filter(c=>c.id!==id);
-  renderColaboradores();updateStats();
-  toast('Colaboradora excluída.','success');
+  if(!confirm('Excluir?'))return;
+  try{const r=await apiPost({action:'deleteColaborador',token:TOKEN,id});if(r.status!=='ok')return toast('Erro.','error');DB.colaboradores=DB.colaboradores.filter(c=>c.id!==id);renderColaboradores();toast('Excluída.','success');}
+  catch(e){toast('Erro.','error');}
 }
 
-/* ── Config ── */
+// ── CREDIÁRIO ──────────────────────────────────────
+let _credFiltro='aberto';
+async function loadCrediario(){
+  try{
+    const r=await api({action:'getCrediario',token:TOKEN});
+    if(r.status==='ok'){DB.crediario=r.data;renderCrediario();}
+  }catch(e){}
+}
+function filtrarCred(tipo,btn){
+  _credFiltro=tipo;
+  document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCrediario();
+}
+function renderCrediario(){
+  const el=document.getElementById('list-crediario');
+  if(!el)return;
+  let data=DB.crediario;
+  if(_credFiltro!=='todos')data=data.filter(c=>c.status===_credFiltro);
+  if(!data.length){el.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><p>${_credFiltro==='aberto'?'Nenhum fiado em aberto':'Nenhum registro'}</p></div>`;return;}
+  el.innerHTML=data.map(c=>`
+    <div class="cred-card">
+      <div class="cred-header">
+        <div class="cred-name">${c.clienteNome}</div>
+        <span class="cred-status ${c.status}">${c.status}</span>
+      </div>
+      <div class="cred-valores">
+        <div class="cred-val-item"><div class="cred-val-label">Total</div><div class="cred-val-num">${fmt(c.valorTotal)}</div></div>
+        <div class="cred-val-item"><div class="cred-val-label">Pago</div><div class="cred-val-num">${fmt(c.valorPago)}</div></div>
+        <div class="cred-val-item"><div class="cred-val-label">Saldo</div><div class="cred-val-num danger">${fmt(c.saldoDevedor)}</div></div>
+      </div>
+      ${c.status==='aberto'?`<button class="btn-pagar" onclick="abrirPagamento('${c.id}','${c.clienteNome.replace(/'/g,"\\'")}',${c.saldoDevedor})">Registrar Pagamento</button>`:''}
+    </div>`).join('');
+}
+function abrirPagamento(crediarioId,nome,saldo){
+  openDrawer(`
+    <div class="drawer-title">Receber Pagamento</div>
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px">${nome}</div>
+    <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--danger);margin-bottom:20px">Saldo: ${fmt(saldo)}</div>
+    <div class="form-group"><label>Valor recebido (R$) *</label><input id="f-pag-valor" type="number" step="0.01" min="0.01" max="${saldo}" placeholder="0,00"/></div>
+    <div class="form-group"><label>Observações</label><input id="f-pag-obs" type="text" placeholder="Opcional…"/></div>
+    <div class="drawer-footer">
+      <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
+      <button class="btn-save" onclick="registrarPagamento('${crediarioId}')">Confirmar</button>
+    </div>`);
+}
+async function registrarPagamento(crediarioId){
+  const valor=parseFloat(document.getElementById('f-pag-valor')?.value);
+  if(!valor||valor<=0)return toast('Informe o valor.','error');
+  const obs=document.getElementById('f-pag-obs')?.value.trim()||'';
+  const btn=document.querySelector('#drawer .btn-save');btnSaving(btn,true);
+  try{
+    const r=await apiPost({action:'pagarCrediario',token:TOKEN,crediarioId,valor,observacoes:obs});
+    if(r.status!=='ok'){toast(r.data?.message||'Erro.','error');btnSaving(btn,false);return;}
+    closeDrawer();
+    toast('Pagamento registrado!','success');
+    loadCrediario();updateStats();
+  }catch(e){toast('Erro de conexão.','error');btnSaving(btn,false);}
+}
+
+// ── CONFIG ─────────────────────────────────────────
 async function saveConfig(){
   const nome=document.getElementById('cfg-nome').value.trim();
   if(!nome)return toast('Informe o nome.','error');
-  showLoading(true);
-  const r=await apiPost({action:'updateConfig',token:TOKEN,config:{salonName:nome}});
-  showLoading(false);
-  if(r.status!=='ok')return toast('Erro ao salvar.','error');
-  document.getElementById('dash-hello').textContent=nome;
-  toast('Salvo!','success');
+  try{
+    const r=await apiPost({action:'updateConfig',token:TOKEN,config:{salonName:nome}});
+    if(r.status!=='ok')return toast('Erro.','error');
+    document.getElementById('dash-hello').textContent=nome;
+    toast('Salvo!','success');
+  }catch(e){toast('Erro.','error');}
 }
 async function saveSenha(){
   const s1=document.getElementById('cfg-senha').value;
   const s2=document.getElementById('cfg-senha2').value;
   if(!s1)return toast('Informe a nova senha.','error');
   if(s1!==s2)return toast('As senhas não coincidem.','error');
-  showLoading(true);
-  const r=await apiPost({action:'updateConfig',token:TOKEN,config:{senha:s1}});
-  showLoading(false);
-  if(r.status!=='ok')return toast('Erro ao salvar.','error');
-  document.getElementById('cfg-senha').value='';
-  document.getElementById('cfg-senha2').value='';
-  toast('Senha alterada!','success');
+  try{
+    const r=await apiPost({action:'updateConfig',token:TOKEN,config:{senha:s1}});
+    if(r.status!=='ok')return toast('Erro.','error');
+    document.getElementById('cfg-senha').value='';document.getElementById('cfg-senha2').value='';
+    toast('Senha alterada!','success');
+  }catch(e){toast('Erro.','error');}
 }
 </script>
 </body>
