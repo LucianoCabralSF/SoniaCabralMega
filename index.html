@@ -263,6 +263,12 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 .result-box.destaque{background:var(--dark);border-color:var(--gold-dk)}
 .result-box.destaque .result-label,.result-box.destaque .result-sub{color:rgba(255,255,255,.7)}
 .result-box.destaque .result-val{color:var(--gold-lt)}
+.result-box.destaque-ok{background:var(--ok-bg);border-color:var(--ok)}
+.result-box.destaque-ok .result-label{color:var(--ok)}
+.result-box.destaque-ok .result-sub{color:var(--dim)}
+.result-box.destaque-err{background:var(--err-bg);border-color:var(--err)}
+.result-box.destaque-err .result-label{color:var(--err)}
+.result-box.destaque-err .result-sub{color:var(--dim)}
 .result-label{font-size:11px;color:var(--dim);font-weight:500}
 .result-sub{font-size:10px;color:var(--dim);margin-top:2px}
 .result-val{font-family:'Playfair Display',serif;font-size:22px;font-weight:600}
@@ -813,11 +819,24 @@ async function loadExtrato(){
 
 function renderExtrato(d,el){
   let html=`<div class="ext-header"><div class="ext-label">${d.label||'Extrato'}</div><div class="ext-sub">${d.total||0} lançamentos</div></div>`;
+  const resOp=d.resultadoOp||0;
+  const dizimo=Math.max(0,resOp)*0.10;
   html+=`<div class="ext-rg">
     <div class="ext-rc"><div class="ext-rc-label">Entradas</div><div class="ext-rc-val pos">${fmt(d.faturamento)}</div></div>
     <div class="ext-rc"><div class="ext-rc-label">Despesas Op.</div><div class="ext-rc-val neg">${fmt(d.saidasOp)}</div></div>
-    <div class="ext-rc"><div class="ext-rc-label">Res. Operacional</div><div class="ext-rc-val ${(d.resultadoOp||0)>=0?'pos':'neg'}">${fmt(d.resultadoOp)}</div></div>
-    <div class="ext-rc"><div class="ext-rc-label">Retiradas</div><div class="ext-rc-val warn">${fmt(d.retiradas)}</div></div>
+  </div>
+  <div class="result-box ${resOp>=0?'destaque-ok':'destaque-err'}" style="margin-bottom:12px">
+    <div><div class="result-label">Resultado Operacional</div><div class="result-sub">Entradas − Despesas da empresa</div></div>
+    <div class="result-val ${resOp>=0?'pos':'neg'}" style="font-size:26px">${fmt(resOp)}</div>
+  </div>
+  ${dizimo>0?`
+  <div style="background:var(--info-bg);border:1.5px solid var(--info);border-radius:var(--r);padding:14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+    <div><div style="font-size:9px;color:var(--info);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:2px">🙏 Dízimo (10%)</div><div style="font-size:11px;color:var(--dim)">Sobre o resultado operacional</div></div>
+    <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--info);font-weight:600">${fmt(dizimo)}</div>
+  </div>`:''}
+  <div class="ext-rg" style="margin-bottom:12px">
+    <div class="ext-rc"><div class="ext-rc-label">Retiradas Pessoais</div><div class="ext-rc-val warn">${fmt(d.retiradas||0)}</div></div>
+    <div class="ext-rc"><div class="ext-rc-label">Dízimo estimado</div><div class="ext-rc-val" style="color:var(--info)">${fmt(dizimo)}</div></div>
   </div>`;
   if((d.retiradas||0)>0){
     html+=`<div class="result-box destaque"><div><div class="result-label">Resultado Final</div><div class="result-sub">Após retiradas pessoais</div></div><div class="result-val ${(d.resultadoFinal||0)>=0?'pos':'neg'}">${fmt(d.resultadoFinal)}</div></div>`;
@@ -856,10 +875,11 @@ async function loadAgenda(){
   else if(_agView==='semana'){const d=new Date(dataBase+'T00:00:00');d.setDate(d.getDate()-d.getDay());const di=d.toISOString().slice(0,10);d.setDate(d.getDate()+6);params.dataInicio=di;params.dataFim=d.toISOString().slice(0,10);}
   else{const[a,m]=dataBase.split('-');params.dataInicio=`${a}-${m}-01`;const ld=new Date(parseInt(a),parseInt(m),0).getDate();params.dataFim=`${a}-${m}-${ld}`;}
   const el=document.getElementById('ag-content');
+  el.innerHTML='<div style="text-align:center;padding:30px"><div class="spinner" style="margin:0 auto"></div></div>';
   try{
     const r=await api(params);
-    if(r.status!=='ok'){el.innerHTML='<div class="empty"><p>Erro.</p></div>';return;}
-    if(!r.data.length){el.innerHTML='<div class="empty"><div class="empty-icon">📅</div><p>Nenhum agendamento</p></div>';return;}
+    if(r.status!=='ok'){el.innerHTML=`<div class="empty"><p>Erro: ${r.data?.message||'falha na consulta'}</p></div>`;return;}
+    if(!r.data||!r.data.length){el.innerHTML='<div class="empty"><div class="empty-icon">📅</div><p>Nenhum agendamento</p></div>';return;}
     const grupos={};r.data.forEach(a=>{const d=String(a.data).slice(0,10);if(!grupos[d])grupos[d]=[];grupos[d].push(a);});
     el.innerHTML=Object.keys(grupos).sort().map(data=>{
       const br=fmtBR(data),isHoje=data===today();
