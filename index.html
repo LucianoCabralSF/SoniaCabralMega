@@ -604,10 +604,24 @@ function apiTimeout(params,ms=10000){
   ]).catch(()=>({status:'err'}));
 }
 
+function limparSessao(){
+  store.del('sc_tok');store.del('sc_ltok');
+  TOKEN='';LONG_TOKEN='';
+  showLogin();
+}
+
 async function loadAll(){
   try{
-    const[cfg,cli,svc,prd,col,cred,plan]=await Promise.all([
-      apiTimeout({action:'getConfig',token:TOKEN}),
+    // Primeiro testa se o token ainda é válido
+    const testCfg=await apiTimeout({action:'getConfig',token:TOKEN},8000);
+    if(testCfg.status==='error'){
+      // Token expirou no servidor — limpa e vai pro login
+      limparSessao();
+      return;
+    }
+    if(testCfg.status==='ok'){DB.config=testCfg.data;applyConfig();}
+    // Carrega o resto em paralelo
+    const[cli,svc,prd,col,cred,plan]=await Promise.all([
       apiTimeout({action:'getClientes',token:TOKEN}),
       apiTimeout({action:'getServicos',token:TOKEN}),
       apiTimeout({action:'getProdutos',token:TOKEN}),
@@ -615,18 +629,18 @@ async function loadAll(){
       apiTimeout({action:'getCrediario',token:TOKEN}),
       apiTimeout({action:'getPlanejamento',token:TOKEN}),
     ]);
-    if(cfg.status==='ok'){DB.config=cfg.data;applyConfig();}
     if(cli.status==='ok'){DB.clientes=cli.data;renderCli();}
     if(svc.status==='ok'){DB.servicos=svc.data;renderSvc();}
     if(prd.status==='ok'){DB.produtos=prd.data;renderPrd();}
     if(col.status==='ok'){DB.colaboradores=col.data;renderColab();}
     if(cred.status==='ok'){DB.crediario=cred.data;renderCred();}
     if(plan.status==='ok'){DB.planejamento=plan.data;renderPlan();}
-  }catch(e){console.error('loadAll error:',e);}
-  // Essas chamadas secundárias não bloqueiam mais o loading
-  showLoading(false);
-  // Carrega em paralelo sem bloquear UI
-  Promise.all([updateStats(),loadCaixa(),loadVencHome(),loadAgenda()]).catch(console.error);
+    Promise.all([updateStats(),loadCaixa(),loadVencHome(),loadAgenda()]).catch(console.error);
+  }catch(e){
+    console.error('loadAll error:',e);
+    // Em caso de falha total, vai pro login
+    limparSessao();
+  }
 }
 
 function applyConfig(){
