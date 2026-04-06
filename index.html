@@ -875,11 +875,17 @@ function onFormaChange(val){
   if(!fe)return;
   if(val==='fiado'){
     fe.style.display='block';
-    // Pré-preencher valor do fiado com o valor já digitado
     setTimeout(()=>{
+      // Preencher 1ª venc com a data do lançamento
       const vd=document.getElementById('f-data');
       const v1=document.getElementById('ff-venc1');
       if(v1&&!v1.value)v1.value=vd?.value||fmtBR(today());
+      // Preencher valor total automaticamente com a soma dos itens
+      const totalItens=(_itensLanc||[]).reduce(function(s,i){return s+(parseFloat(i.valor)||0);},0);
+      const fft=document.getElementById('ff-total');
+      if(fft&&totalItens>0){
+        setValorMask(fft,totalItens);
+      }
       gerarVencimentosInline();
     },30);
   }else{
