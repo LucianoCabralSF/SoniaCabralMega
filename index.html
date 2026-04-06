@@ -720,8 +720,6 @@ async function loadCaixa(){
 function openDrawerLanc(){
   editId=null;_tipoLanc='entrada';_itensLanc=[];
   const cliOpts=DB.clientes.map(c=>`<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
-  const svcOpts=DB.servicos.filter(s=>isAtivo(s.ativo)).map(s=>`<option value="${s.id}|${s.nome}|servico">${s.nome}</option>`).join('');
-  const prdOpts=DB.produtos.filter(p=>isAtivo(p.ativo)).map(p=>`<option value="${p.id}|${p.nome}|produto|${p.preco||0}">${p.nome}${p.preco>0?' ('+fmt(p.preco)+')':''}</option>`).join('');
   openDrawer(`
     <div class="dtitle">Novo Lançamento</div>
     <div class="seg"><button class="seg-btn active" id="seg-e" onclick="setTipoLanc('entrada')">Entrada</button><button class="seg-btn" id="seg-s" onclick="setTipoLanc('saida')">Saída</button><button class="seg-btn" id="seg-r" onclick="setTipoLanc('retirada')">Retirada</button></div>
@@ -730,7 +728,6 @@ function openDrawerLanc(){
       <div class="itens-list" id="itens-list"></div>
       <button class="btn-add-item" onclick="abrirSeletorItem()">＋ Adicionar serviço ou produto</button>
       <div class="total-bar"><span class="total-bar-label">Total</span><span class="total-bar-val" id="f-total-display">R$ 0,00</span></div>
-      <input type="hidden" id="f-valor"/>
       <div class="fg"><span class="lbl">Forma de Pagamento</span><select id="f-forma" onchange="onFormaChange(this.value)"><option value="dinheiro">Dinheiro</option><option value="pix">PIX</option><option value="debito">Débito</option><option value="credito">Crédito</option><option value="fiado">Fiado / Parcelado</option></select></div>
       <div id="f-fiado-expand" style="display:none;background:var(--bg3);border:1.5px solid var(--gold-dk);border-radius:var(--r);padding:14px;margin-bottom:2px">
         <div style="font-size:10px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:12px">📋 Detalhes do Fiado</div>
@@ -753,17 +750,14 @@ function openDrawerLanc(){
     </div>
     <div class="fg"><span class="lbl">Observações</span><input id="f-obs" type="text" class="inp" placeholder="Opcional…"/></div>
     <div class="dfooter"><button class="btn-sec" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="saveLanc()">Salvar</button></div>`);
-  setTimeout(()=>{const d=document.getElementById('f-data');if(d)d.value=fmtBR(today());},30);
+  setTimeout(()=>{
+    const d=document.getElementById('f-data');
+    if(d)d.value=fmtBR(today());
+    renderItens();
+  },30);
 }
 
 // ── GESTÃO DE ITENS DO LANÇAMENTO ───────────────────────────
-function addItemFromSelect(sel){
-  const val=sel.value;if(!val)return;
-  const parts=val.split('|');
-  addItemDireto(parts[0],parts[1],parts[2]||'servico',parseFloat(parts[3])||0);
-  sel.value='';
-}
-
 function abrirSeletorItem(){
   var svcOpts=DB.servicos.filter(function(s){return isAtivo(s.ativo);});
   var prdOpts=DB.produtos.filter(function(p){return isAtivo(p.ativo);});
