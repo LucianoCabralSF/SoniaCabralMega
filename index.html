@@ -85,10 +85,10 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 .icon-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;display:block}
 
 /* ── Nav ── */
-#nav{background:var(--dark);display:flex;padding:6px 0 calc(6px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid rgba(154,111,30,.2)}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 2px;background:transparent;color:rgba(255,255,255,.45);font-size:10px;letter-spacing:.5px;text-transform:uppercase;transition:color .2s}
-.nav-item svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.nav-item.active{color:var(--gold-lt)}
+#nav{background:var(--dark);display:flex;padding:0 0 env(safe-area-inset-bottom);flex-shrink:0;border-top:2px solid rgba(154,111,30,.3);gap:0}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 4px 8px;background:transparent;color:rgba(255,255,255,.5);font-size:10px;letter-spacing:.3px;text-transform:uppercase;transition:all .2s;border-top:3px solid transparent;margin-top:-1px}
+.nav-item svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.nav-item.active{color:var(--gold-lt);border-top-color:var(--gold);background:rgba(201,161,50,.08)}
 
 /* ── Pages ── */
 #pages{flex:1;overflow:hidden;position:relative}
@@ -472,12 +472,27 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
     </div>
   </div>
 
-  <nav id="nav">
-    <button class="nav-item active" data-page="home" onclick="navTo('home')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Início</button>
-    <button class="nav-item" data-page="caixa" onclick="navTo('caixa')"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Caixa</button>
-    <button class="nav-item" data-page="agenda" onclick="navTo('agenda')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agenda</button>
-    <button class="nav-item" data-page="clientes" onclick="navTo('clientes')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Clientes</button>
-    <button class="nav-item" data-page="mais" onclick="navTo('mais')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>Mais</button>
+  <nav id="nav" style="position:relative">
+    <button class="nav-item active" data-page="home" onclick="navTo('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Início</span>
+    </button>
+    <button class="nav-item" data-page="caixa" onclick="navTo('caixa')">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span>Caixa</span>
+    </button>
+    <button class="nav-item" data-page="agenda" onclick="navTo('agenda')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Agenda</span>
+    </button>
+    <button class="nav-item" data-page="clientes" onclick="navTo('clientes')">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Clientes</span>
+    </button>
+    <button class="nav-item" data-page="mais" onclick="navTo('mais')">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <span>Mais</span>
+    </button>
   </nav>
 </div>
 
@@ -750,17 +765,42 @@ function openDrawerLanc(){
 
 // ── GESTÃO DE ITENS DO LANÇAMENTO ───────────────────────────
 function addItemFromSelect(sel){
-  const val=sel.value;if(!val){return;}
+  const val=sel.value;if(!val)return;
   const parts=val.split('|');
-  const id=parts[0],nome=parts[1],tipo=parts[2]||'servico',preco=parseFloat(parts[3])||0;
-  _itensLanc.push({id,nome,tipo,valor:preco});
-  renderItens();
+  addItemDireto(parts[0],parts[1],parts[2]||'servico',parseFloat(parts[3])||0);
   sel.value='';
 }
 
 function abrirSeletorItem(){
-  const sel=document.getElementById('f-item-sel');
-  if(sel)sel.focus();
+  var svcOpts=DB.servicos.filter(function(s){return isAtivo(s.ativo);});
+  var prdOpts=DB.produtos.filter(function(p){return isAtivo(p.ativo);});
+  var html='<div style="font-family:Playfair Display,serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:16px">Adicionar item</div>';
+  html+='<div style="font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">SERVICOS</div>';
+  svcOpts.forEach(function(s){
+    var preco=parseFloat(s.preco)||0;
+    html+='<div onclick="addItemDireto(this)" data-id="'+s.id+'" data-nome="'+s.nome.replace(/"/g,'&quot;')+'" data-tipo="servico" data-preco="'+preco
+      +'" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)">'
+      +'<span style="font-size:15px;color:var(--text);font-weight:500">'+s.nome+'</span>'
+      +'<span style="color:var(--ok);font-weight:600;font-size:14px">'+(preco>0?fmt(preco):'')+'</span></div>';
+  });
+  if(!svcOpts.length)html+='<div style="color:var(--dim);font-size:12px;padding:12px">Nenhum servico cadastrado</div>';
+  html+='<div style="font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin:14px 0 8px">PRODUTOS</div>';
+  prdOpts.forEach(function(p){
+    var preco=parseFloat(p.preco)||0;
+    html+='<div onclick="addItemDireto(this)" data-id="'+p.id+'" data-nome="'+p.nome.replace(/"/g,'&quot;')+'" data-tipo="produto" data-preco="'+preco
+      +'" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)">'
+      +'<span style="font-size:15px;color:var(--text);font-weight:500">'+p.nome+'</span>'
+      +'<span style="color:var(--ok);font-weight:600;font-size:14px">'+(preco>0?fmt(preco):'')+'</span></div>';
+  });
+  if(!prdOpts.length)html+='<div style="color:var(--dim);font-size:12px;padding:12px">Nenhum produto cadastrado</div>';
+  html+='<button onclick="closeModal()" class="btn-sec" style="width:100%;margin-top:16px">Fechar</button>';
+  openModal(html);
+}
+function addItemDireto(el){
+  var id=el.dataset.id,nome=el.dataset.nome,tipo=el.dataset.tipo,preco=parseFloat(el.dataset.preco)||0;
+  _itensLanc.push({id:id,nome:nome,tipo:tipo,valor:preco});
+  renderItens();
+  closeModal();
 }
 
 function removeItem(idx){
