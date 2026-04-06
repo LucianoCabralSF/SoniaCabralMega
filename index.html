@@ -727,13 +727,6 @@ function openDrawerLanc(){
     <div class="seg"><button class="seg-btn active" id="seg-e" onclick="setTipoLanc('entrada')">Entrada</button><button class="seg-btn" id="seg-s" onclick="setTipoLanc('saida')">Saída</button><button class="seg-btn" id="seg-r" onclick="setTipoLanc('retirada')">Retirada</button></div>
     <div id="f-entrada">
       <div class="fg"><span class="lbl">Cliente (opcional)</span><select id="f-cli"><option value="">— Sem vínculo —</option>${cliOpts}</select></div>
-      <div class="fg"><span class="lbl">Selecionar item</span>
-        <select id="f-item-sel" onchange="addItemFromSelect(this)">
-          <option value="">— Toque para adicionar item —</option>
-          <optgroup label="Serviços">${svcOpts}</optgroup>
-          <optgroup label="Produtos">${prdOpts}</optgroup>
-        </select>
-      </div>
       <div class="itens-list" id="itens-list"></div>
       <button class="btn-add-item" onclick="abrirSeletorItem()">＋ Adicionar serviço ou produto</button>
       <div class="total-bar"><span class="total-bar-label">Total</span><span class="total-bar-val" id="f-total-display">R$ 0,00</span></div>
@@ -832,20 +825,24 @@ function renderItens(){
     el.innerHTML='<div style="font-size:12px;color:var(--dim);text-align:center;padding:8px">Nenhum item adicionado ainda</div>';
     atualizarTotal();return;
   }
-  el.innerHTML=_itensLanc.map((item,i)=>{
-    const cents=Math.round(item.valor*100);
-    return`<div class="item-row">
-      <div class="item-row-body">
-        <div class="item-row-nome">${item.nome}</div>
-        <div class="item-row-val">${item.tipo==='servico'?'Serviço':'Produto'}</div>
-      </div>
-      <input class="item-val-input" type="text" inputmode="numeric"
-        value="${item.valor>0?(String(cents)):''}"
-        placeholder="0,00" oninput="updateItemValor(${i},this)"
-        onfocus="if(!this.dataset.raw)this.value=''"/>
-      <button class="btn-remove-item" onclick="removeItem(${i})">✕</button>
-    </div>`;
-  }).join('');
+  var rows='';
+  _itensLanc.forEach(function(item,i){
+    var cents=Math.round(item.valor*100);
+    var semPreco=item.valor<=0;
+    rows+='<div class="item-row" style="border-color:'+(semPreco?'var(--warn)':'var(--border)')+'">';
+    rows+='<div class="item-row-body">';
+    rows+='<div class="item-row-nome">'+item.nome+'</div>';
+    rows+='<div class="item-row-val" style="color:'+(semPreco?'var(--warn)':'var(--dim)')+'">'+(item.tipo==='servico'?'Serviço':'Produto')+(semPreco?' · informe o valor':'')+'</div>';
+    rows+='</div>';
+    rows+='<input class="item-val-input" type="text" inputmode="numeric"';
+    rows+=' value="'+(item.valor>0?String(cents):'')+'"';
+    rows+=' placeholder="R$ ?"';
+    rows+=' style="border-color:'+(semPreco?'var(--warn)':'var(--border)')+'"';
+    rows+=' oninput="updateItemValor('+i+',this)">';
+    rows+='<button class="btn-remove-item" onclick="removeItem('+i+')">✕</button>';
+    rows+='</div>';
+  });
+  el.innerHTML=rows;
   // Aplicar máscaras após render
   setTimeout(()=>{
     _itensLanc.forEach((item,i)=>{
