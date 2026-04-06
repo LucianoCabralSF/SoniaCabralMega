@@ -63,7 +63,7 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 #modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:100%;max-width:380px;max-height:88vh;overflow-y:auto;padding:24px;box-shadow:var(--shadow-md)}
 
 /* ── Login ── */
-#screen-login{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;background:var(--bg)}
+#screen-login{position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;background:var(--bg)}
 .login-emblem{width:96px;height:96px;border-radius:50%;background:var(--dark);border:2px solid var(--gold-dk);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-md);margin-bottom:16px}
 .login-name{font-family:'Playfair Display',serif;font-size:26px;font-style:italic;color:var(--dark);margin-bottom:4px}
 .login-tag{font-size:10px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:40px}
@@ -322,7 +322,7 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 <div id="modal-overlay"><div id="modal-box"><div id="modal-content"></div></div></div>
 
 <!-- LOGIN -->
-<div id="screen-login" style="display:none">
+<div id="screen-login" style="display:none!important">
   <div class="login-emblem"><span style="font-family:'Playfair Display',serif;font-size:32px;font-style:italic;color:var(--gold-lt)">SC</span></div>
   <div class="login-name">Sonia Cabral</div>
   <div class="login-tag">Mega-Hair · Técnica Exclusiva</div>
@@ -334,7 +334,7 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 </div>
 
 <!-- APP -->
-<div id="screen-app" style="display:none;flex-direction:column;height:100%">
+<div id="screen-app" style="display:none!important">
   <div id="header">
     <div class="hbrand">
       <div class="hdot"><span style="font-family:'Playfair Display',serif;font-size:13px;font-style:italic;color:var(--gold-lt)">SC</span></div>
@@ -538,33 +538,45 @@ function renderItensMini(itemNome,obs){
 
 // ── INIT ──────────────────────────────────────────────────────
 window.onload=()=>{
-  TOKEN=store.get('sc_tok')||'';
-  LONG_TOKEN=store.get('sc_ltok')||'';
-  document.getElementById('dg-date').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  initExtSelectors();
-  const cx=document.getElementById('cx-data');if(cx)cx.value=fmtBR(today());
-  const ag=document.getElementById('ag-data');if(ag)ag.value=fmtBR(today());
-  // Timeout de segurança: se demorar mais de 12s, vai pro login
-  const safetyTimer=setTimeout(()=>{
-    if(document.getElementById('loading').style.display!=='none'){
-      console.warn('Timeout de carregamento — indo para login');
-      store.del('sc_tok');store.del('sc_ltok');TOKEN='';showLogin();
-    }
-  },12000);
-  if(TOKEN||LONG_TOKEN){
+  try{
+    TOKEN=store.get('sc_tok')||'';
+    LONG_TOKEN=store.get('sc_ltok')||'';
     TOKEN=TOKEN||LONG_TOKEN;
-    // Mostra app imediatamente sem validar token — mais rápido
-    showApp();
-    loadAll().then(()=>clearTimeout(safetyTimer)).catch(()=>{
-      store.del('sc_tok');store.del('sc_ltok');TOKEN='';showLogin();
-    });
-  }else{
-    clearTimeout(safetyTimer);
+    const dgd=document.getElementById('dg-date');
+    if(dgd)dgd.textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    initExtSelectors();
+    const cx=document.getElementById('cx-data');if(cx)cx.value=fmtBR(today());
+    const ag=document.getElementById('ag-data');if(ag)ag.value=fmtBR(today());
+    if(TOKEN){
+      showApp();
+      setTimeout(()=>loadAll().catch(err=>{
+        console.error('loadAll failed:',err);
+        store.del('sc_tok');store.del('sc_ltok');TOKEN='';showLogin();
+      }),100);
+    }else{
+      showLogin();
+    }
+  }catch(err){
+    console.error('Init error:',err);
     showLogin();
   }
 };
-function showLogin(){document.getElementById('loading').style.display='none';document.getElementById('screen-login').style.display='flex';document.getElementById('screen-app').style.display='none';}
-function showApp(){document.getElementById('loading').style.display='none';document.getElementById('screen-login').style.display='none';document.getElementById('screen-app').style.display='flex';}
+function showLogin(){
+  const L=document.getElementById('loading');
+  const SL=document.getElementById('screen-login');
+  const SA=document.getElementById('screen-app');
+  if(L)L.style.cssText='display:none!important';
+  if(SL)SL.style.cssText='display:flex!important;flex-direction:column';
+  if(SA)SA.style.cssText='display:none!important';
+}
+function showApp(){
+  const L=document.getElementById('loading');
+  const SL=document.getElementById('screen-login');
+  const SA=document.getElementById('screen-app');
+  if(L)L.style.cssText='display:none!important';
+  if(SL)SL.style.cssText='display:none!important';
+  if(SA)SA.style.cssText='display:flex!important;flex-direction:column;height:100%';
+}
 
 // ── AUTH ──────────────────────────────────────────────────────
 async function doLogin(){
@@ -593,7 +605,6 @@ function apiTimeout(params,ms=10000){
 }
 
 async function loadAll(){
-  showLoading(true);
   try{
     const[cfg,cli,svc,prd,col,cred,plan]=await Promise.all([
       apiTimeout({action:'getConfig',token:TOKEN}),
