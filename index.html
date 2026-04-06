@@ -71,7 +71,7 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 .lbl{font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;display:block}
 .inp{width:100%;background:var(--bg3);border:1.5px solid var(--border);color:var(--text);padding:12px 14px;border-radius:var(--r);transition:border .2s}
 .inp:focus{border-color:var(--gold)}
-.btn-gold{background:var(--dark);color:var(--gold-lt);padding:13px;border-radius:var(--r);font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:500;width:100%;transition:opacity .2s;border:1.5px solid var(--gold-dk)}
+.btn-gold{background:var(--dark);color:var(--gold-lt);padding:15px;border-radius:var(--r);font-size:13px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:100%;transition:opacity .2s;border:1.5px solid var(--gold-dk)}
 .btn-gold:active{opacity:.8}
 .btn-gold:disabled{opacity:.5;cursor:default}
 
@@ -86,8 +86,8 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 
 /* ── Nav ── */
 #nav{background:var(--dark);display:flex;padding:6px 0 calc(6px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid rgba(154,111,30,.2)}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;background:transparent;color:rgba(255,255,255,.4);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;transition:color .2s}
-.nav-item svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 2px;background:transparent;color:rgba(255,255,255,.45);font-size:10px;letter-spacing:.5px;text-transform:uppercase;transition:color .2s}
+.nav-item svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .nav-item.active{color:var(--gold-lt)}
 
 /* ── Pages ── */
@@ -120,23 +120,34 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 #drawer.open{transform:translateY(0)}
 .dhandle{width:36px;height:3px;background:var(--border);border-radius:2px;margin:0 auto 18px}
 .dtitle{font-family:'Playfair Display',serif;font-size:22px;font-style:italic;color:var(--dark);margin-bottom:18px}
-.dfooter{display:flex;gap:10px;margin-top:18px}
-.btn-sec{flex:1;background:transparent;border:1.5px solid var(--border);color:var(--dim);padding:12px;border-radius:var(--r);font-size:11px;letter-spacing:1px;text-transform:uppercase}
-.btn-save{flex:2;background:var(--dark);color:var(--gold-lt);padding:12px;border-radius:var(--r);font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:500;border:1.5px solid var(--gold-dk)}
+.dfooter{display:flex;gap:10px;margin-top:20px}
+.btn-sec{flex:1;background:transparent;border:1.5px solid var(--border);color:var(--dim);padding:15px;border-radius:var(--r);font-size:13px;letter-spacing:.5px;text-transform:uppercase}
+.btn-save{flex:2;background:var(--dark);color:var(--gold-lt);padding:15px;border-radius:var(--r);font-size:13px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;border:1.5px solid var(--gold-dk)}
 .btn-save:disabled{opacity:.5;cursor:default}
 
 /* ── Cards ── */
-.card-list{display:flex;flex-direction:column;gap:8px}
-.card{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);padding:14px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);transition:border-color .2s,transform .1s}
-.card:active{transform:scale(.98)}
-.cavatar{width:42px;height:42px;border-radius:50%;background:var(--dark);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:16px;font-style:italic;color:var(--gold-lt);flex-shrink:0}
+.card-list{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);padding:14px 14px 12px;display:flex;flex-direction:column;gap:0;box-shadow:var(--shadow);transition:border-color .2s}
+.card-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.card-bottom{display:flex;align-items:center;justify-content:flex-end;gap:6px;padding-top:10px;border-top:1px solid var(--border)}
+.cavatar{width:44px;height:44px;border-radius:50%;background:var(--dark);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:17px;font-style:italic;color:var(--gold-lt);flex-shrink:0}
 .cbody{flex:1;min-width:0}
-.cname{font-size:14px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cmeta{font-size:11px;color:var(--dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cactions{display:flex;gap:4px;align-items:center}
-.btn-e,.btn-d,.btn-s{background:transparent;padding:7px;border-radius:8px;color:var(--dim);transition:color .2s}
-.btn-e svg,.btn-d svg,.btn-s svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.btn-e:hover{color:var(--gold)}.btn-d:hover{color:var(--err)}.btn-s:hover{color:var(--info)}
+.cname{font-size:15px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmeta{font-size:12px;color:var(--dim);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cactions{display:flex;gap:6px;align-items:center}
+.btn-e,.btn-d,.btn-s{
+  display:flex;align-items:center;gap:4px;
+  padding:7px 11px;border-radius:8px;
+  font-size:11px;letter-spacing:.5px;font-weight:500;
+  transition:all .15s;border:1.5px solid transparent;
+}
+.btn-e{background:var(--bg3);color:var(--gold-dk);border-color:var(--border)}
+.btn-d{background:var(--bg3);color:var(--err);border-color:var(--border)}
+.btn-s{background:var(--bg3);color:var(--info);border-color:var(--border)}
+.btn-e:hover{background:var(--gold-bg);border-color:var(--gold-dk)}
+.btn-d:hover{background:var(--err-bg);border-color:var(--err)}
+.btn-s:hover{background:var(--info-bg);border-color:var(--info)}
+.btn-e svg,.btn-d svg,.btn-s svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* ── Badges ── */
 .badge{display:inline-block;font-size:9px;padding:3px 8px;border-radius:20px;letter-spacing:1px;text-transform:uppercase;font-weight:500}
@@ -150,9 +161,10 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 .empty-icon{font-size:36px;margin-bottom:12px;opacity:.5}
 
 /* ── Seg control ── */
-.seg{display:flex;background:var(--bg4);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
-.seg-btn{flex:1;padding:10px 6px;font-size:10px;letter-spacing:1px;text-transform:uppercase;background:transparent;color:var(--dim);transition:all .2s;border-radius:0}
-.seg-btn.active{background:var(--dark);color:var(--gold-lt);font-weight:500}
+.seg{display:flex;background:var(--bg4);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px;gap:0}
+.seg-btn{flex:1;padding:13px 6px;font-size:12px;letter-spacing:.5px;text-transform:uppercase;background:transparent;color:var(--dim);transition:all .2s;border-radius:0;border-right:1px solid var(--border)}
+.seg-btn:last-child{border-right:none}
+.seg-btn.active{background:var(--dark);color:var(--gold-lt);font-weight:600}
 
 /* ── Info box ── */
 .info-box{background:var(--gold-bg);border:1px solid var(--gold-dk);border-radius:var(--r);padding:12px;margin-bottom:14px;font-size:11px;color:var(--dark);line-height:1.6}
@@ -169,9 +181,9 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 .sc-val{font-family:'Playfair Display',serif;font-size:28px;color:var(--dark);line-height:1}
 .sc-val.sm{font-size:16px;padding-top:4px}
 .slabel{font-size:9px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px}
-.qa{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
-.qb{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);padding:14px 6px;display:flex;flex-direction:column;align-items:center;gap:7px;color:var(--dim);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;transition:all .2s;box-shadow:var(--shadow)}
-.qb svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.qa{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.qb{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);padding:18px 6px;display:flex;flex-direction:column;align-items:center;gap:9px;color:var(--dark);font-size:11px;letter-spacing:.5px;text-transform:uppercase;transition:all .2s;box-shadow:var(--shadow);font-weight:500}
+.qb svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .qb:active{background:var(--dark);color:var(--gold-lt);border-color:var(--gold-dk)}
 
 /* ── Vencimentos ── */
@@ -239,7 +251,7 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 .cv-label{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
 .cv-num{font-family:'Playfair Display',serif;font-size:16px;color:var(--dark);font-weight:600}
 .cv-num.err{color:var(--err)}
-.btn-pagar{background:var(--dark);color:var(--gold-lt);padding:10px 16px;border-radius:var(--r);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:500;width:100%;border:1px solid var(--gold-dk)}
+.btn-pagar{background:var(--dark);color:var(--gold-lt);padding:14px 16px;border-radius:var(--r);font-size:13px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:100%;border:1.5px solid var(--gold-dk)}
 
 /* ── Agenda ── */
 .ag-card{background:var(--bg2);border:1.5px solid var(--border);border-left:4px solid var(--gold);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow)}
@@ -470,9 +482,9 @@ const fmtBR=iso=>{if(!iso)return'';const s=String(iso).slice(0,10);const[a,m,d]=
 const parseISO=str=>{if(!str)return today();if(/^\d{2}\/\d{2}\/\d{4}$/.test(str)){const[d,m,a]=str.split('/');return`${a}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;}return str.slice(0,10);};
 const isAtivo=v=>v===true||String(v).toLowerCase()==='true';
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const svgEdit=`<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-const svgDel=`<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
-const svgHist=`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+const svgEdit=`<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Editar`;
+const svgDel=`<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Excluir`;
+const svgHist=`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Histórico`;
 function applyDataMask(el){let v=el.value.replace(/\D/g,'').slice(0,8);let o='';if(v.length>4)o=v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);else if(v.length>2)o=v.slice(0,2)+'/'+v.slice(2);else o=v;el.value=o;}
 function applyTelMask(el){let v=el.value.replace(/\D/g,'').slice(0,11);if(v.length>10)v=v.replace(/(\d{2})(\d{5})(\d{4})/,'($1) $2-$3');else if(v.length>6)v=v.replace(/(\d{2})(\d{4})(\d*)/,'($1) $2-$3');else if(v.length>2)v=v.replace(/(\d{2})(\d*)/,'($1) $2');el.value=v;}
 function applyValorMask(el){let v=el.value.replace(/\D/g,'');if(!v){el.value='';el.dataset.raw='0';return;}v=String(parseInt(v,10));if(v.length===1)v='0'+v;const c=v.slice(-2),r=v.slice(0,-2)||'0';el.dataset.raw=(parseInt(r.replace(/\./g,''),10)+(parseInt(c,10)/100)).toFixed(2);el.value=r.replace(/(\d)(?=(\d{3})+(?!\d))/g,'$1.')+','+c;}
@@ -619,14 +631,21 @@ function openDrawerLanc(){
   editId=null;_tipoLanc='entrada';
   const cliOpts=DB.clientes.map(c=>`<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
   const svcOpts=DB.servicos.filter(s=>isAtivo(s.ativo)).map(s=>`<option value="${s.id}|${s.nome}|servico">${s.nome}</option>`).join('');
-  const prdOpts=DB.produtos.filter(p=>isAtivo(p.ativo)).map(p=>`<option value="${p.id}|${p.nome}|produto">${p.nome}</option>`).join('');
+  const prdOpts=DB.produtos.filter(p=>isAtivo(p.ativo)).map(p=>`<option value="${p.id}|${p.nome}|produto|${p.preco||0}">${p.nome}${p.preco>0?' ('+fmt(p.preco)+')':''}</option>`).join('');
   openDrawer(`
     <div class="dtitle">Novo Lançamento</div>
     <div class="seg"><button class="seg-btn active" id="seg-e" onclick="setTipoLanc('entrada')">Entrada</button><button class="seg-btn" id="seg-s" onclick="setTipoLanc('saida')">Saída</button><button class="seg-btn" id="seg-r" onclick="setTipoLanc('retirada')">Retirada</button></div>
     <div id="f-entrada">
       <div class="fg"><span class="lbl">Cliente (opcional)</span><select id="f-cli"><option value="">— Sem vínculo —</option>${cliOpts}</select></div>
       <div class="fg"><span class="lbl">Serviço / Produto</span><select id="f-item"><option value="">— Selecione —</option><optgroup label="Serviços">${svcOpts}</optgroup><optgroup label="Produtos">${prdOpts}</optgroup></select></div>
-      <div class="fg"><span class="lbl">Forma de Pagamento</span><select id="f-forma" onchange="if(this.value==='fiado'){closeDrawer();openDrawerFiadoLanc();}"><option value="dinheiro">Dinheiro</option><option value="pix">PIX</option><option value="debito">Débito</option><option value="credito">Crédito</option><option value="fiado">Fiado / Parcelado</option></select></div>
+      <div class="fg"><span class="lbl">Forma de Pagamento</span><select id="f-forma" onchange="onFormaChange(this.value)"><option value="dinheiro">Dinheiro</option><option value="pix">PIX</option><option value="debito">Débito</option><option value="credito">Crédito</option><option value="fiado">Fiado / Parcelado</option></select></div>
+      <div id="f-fiado-expand" style="display:none;background:var(--bg3);border:1.5px solid var(--gold-dk);border-radius:var(--r);padding:14px;margin-bottom:2px">
+        <div style="font-size:10px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:12px">📋 Detalhes do Fiado</div>
+        <div class="form-row"><div class="fg"><span class="lbl">Valor total *</span><input id="ff-total" type="text" class="inp" inputmode="numeric" placeholder="0,00" oninput="applyValorMask(this);calcFiadoInline()"/></div><div class="fg"><span class="lbl">Entrada (R$)</span><input id="ff-entrada" type="text" class="inp" inputmode="numeric" placeholder="0,00" oninput="applyValorMask(this);calcFiadoInline()"/></div></div>
+        <div class="form-row"><div class="fg"><span class="lbl">Nº parcelas</span><input id="ff-parcelas" type="number" class="inp" min="1" max="36" value="1" oninput="gerarVencimentosInline()"/></div><div class="fg"><span class="lbl">1ª venc.</span><input id="ff-venc1" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" oninput="applyDataMask(this);gerarVencimentosInline()"/></div></div>
+        <div id="ff-resumo" style="display:none;font-size:12px;margin-bottom:10px"></div>
+        <div id="parcelas-container"></div>
+      </div>
     </div>
     <div id="f-saida" style="display:none">
       <div class="fg"><span class="lbl">Categoria</span><select id="f-cat"><option>Aluguel</option><option>Material</option><option>Compra de produto</option><option>Manutenção</option><option>Salário</option><option>Outros</option></select></div>
@@ -651,6 +670,59 @@ function setTipoLanc(t){
   document.getElementById('f-entrada').style.display=t==='entrada'?'block':'none';
   document.getElementById('f-saida').style.display=t==='saida'?'block':'none';
   document.getElementById('f-retirada').style.display=t==='retirada'?'block':'none';
+  // Resetar fiado ao trocar tipo
+  const fe=document.getElementById('f-fiado-expand');
+  if(fe)fe.style.display='none';
+  const forma=document.getElementById('f-forma');
+  if(forma&&t!=='entrada')forma.value='dinheiro';
+}
+
+function onFormaChange(val){
+  const fe=document.getElementById('f-fiado-expand');
+  if(!fe)return;
+  if(val==='fiado'){
+    fe.style.display='block';
+    // Pré-preencher valor do fiado com o valor já digitado
+    setTimeout(()=>{
+      const vd=document.getElementById('f-data');
+      const v1=document.getElementById('ff-venc1');
+      if(v1&&!v1.value)v1.value=vd?.value||fmtBR(today());
+      gerarVencimentosInline();
+    },30);
+  }else{
+    fe.style.display='none';
+  }
+}
+
+function calcFiadoInline(){
+  const total=getValorRaw(document.getElementById('ff-total'));
+  const entrada=getValorRaw(document.getElementById('ff-entrada'));
+  const n=parseInt(document.getElementById('ff-parcelas')?.value)||1;
+  const saldo=Math.max(0,total-entrada);
+  const parc=n>0?saldo/n:0;
+  const el=document.getElementById('ff-resumo');
+  if(total>0&&el){el.style.display='block';el.innerHTML=`<div style='display:flex;justify-content:space-between;margin-bottom:3px'><span style='color:var(--dim)'>Saldo a parcelar</span><span style='font-weight:500'>${fmt(saldo)}</span></div><div style='display:flex;justify-content:space-between'><span style='color:var(--dim)'>Valor por parcela</span><span style='color:var(--ok);font-weight:600'>${fmt(parc)}</span></div>`;}
+}
+
+function gerarVencimentosInline(){
+  calcFiadoInline();
+  const n=parseInt(document.getElementById('ff-parcelas')?.value)||1;
+  const v1=document.getElementById('ff-venc1')?.value||fmtBR(today());
+  const venc1=parseISO(v1);
+  const total=getValorRaw(document.getElementById('ff-total'));
+  const entrada=getValorRaw(document.getElementById('ff-entrada'));
+  const saldo=Math.max(0,total-entrada);
+  const parc=n>0?(saldo/n):0;
+  const ct=document.getElementById('parcelas-container');if(!ct||n<=0){if(ct)ct.innerHTML='';return;}
+  const tdISO=today();
+  let html='<div class="slabel" style="margin-bottom:6px">Vencimentos</div>';
+  for(let i=0;i<Math.min(n,24);i++){
+    const d=new Date(venc1+'T00:00:00');d.setMonth(d.getMonth()+i);
+    const iso=d.toISOString().slice(0,10);
+    const retro=iso<tdISO;
+    html+=`<div class='parc-row'><span style='color:${retro?'var(--err)':'var(--dim)'}'>Parc.${i+1} · ${fmt(parc)}${retro?' ⚠️':''}</span><input type='text' class='inp' id='venc-${i}' inputmode='numeric' placeholder='DD/MM/AAAA' maxlength='10' value='${fmtBR(iso)}' style='border-color:${retro?'var(--err)':'var(--border)'}' oninput='applyDataMask(this);verificarDataRetro(this)'/></div>`;
+  }
+  ct.innerHTML=html;
 }
 
 function editLanc(l){
@@ -694,6 +766,25 @@ async function saveLanc(){
     const cli=document.getElementById('f-cli')?.value||'';if(cli){[clienteId,clienteNome]=cli.split('|');}
     const item=document.getElementById('f-item')?.value||'';if(item){const p=item.split('|');itemId=p[0];itemNome=p[1];itemTipo=p[2]||'';}
     formaPagamento=document.getElementById('f-forma')?.value||'dinheiro';
+    // Se for fiado, salva via fluxo especial
+    if(formaPagamento==='fiado'){
+      const valorTotal=getValorRaw(document.getElementById('ff-total'))||valor;
+      const valorEntrada=getValorRaw(document.getElementById('ff-entrada'))||0;
+      const numParcelas=parseInt(document.getElementById('ff-parcelas')?.value)||1;
+      const vencimentos=[];
+      let temRetro=false;
+      for(let i=0;i<numParcelas;i++){const el=document.getElementById(`venc-${i}`);const iso=el?parseISO(el.value):'';vencimentos.push(iso);if(iso&&iso<today())temRetro=true;}
+      if(temRetro&&!confirm('⚠️ Uma ou mais parcelas têm datas no passado. Continuar mesmo assim?'))return;
+      const btn2=document.querySelector('#drawer .btn-save');btnSv(btn2,true);
+      try{
+        const r2=await post({action:'saveFiado',token:TOKEN,data:{clienteId,clienteNome,itemId,itemNome,itemTipo,valorTotal,valorEntrada,numParcelas,vencimentos,observacoes:document.getElementById('f-obs')?.value.trim()||''}});
+        if(r2.status!=='ok'){toast(r2.data?.message||'Erro.','err');btnSv(btn2,false);return;}
+        closeDrawer();toast('Fiado registrado!','ok');
+        const di=document.getElementById('cx-data');if(di)di.value=fmtBR(data.data);
+        loadCaixa();updateStats();loadCred();
+      }catch(e){toast('Erro.','err');btnSv(btn2,false);}
+      return;
+    }
   }else if(tipo==='retirada'){categoria='Retirada Pessoal';itemNome=document.getElementById('f-ret-desc')?.value.trim()||'';isRetirada=true;}
   else{categoria=document.getElementById('f-cat')?.value||'Outros';}
   const data={id:editId||null,tipo:tipoBack,categoria,clienteId,clienteNome,itemId,itemNome,itemTipo,valor,formaPagamento,isRetirada,observacoes:document.getElementById('f-obs')?.value.trim()||'',data:parseISO(document.getElementById('f-data')?.value)};
@@ -713,7 +804,7 @@ async function delLanc(id){if(!confirm('Excluir este lançamento?'))return;try{c
 function openDrawerFiadoLanc(){
   const cliOpts=DB.clientes.map(c=>`<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
   const svcOpts=DB.servicos.filter(s=>isAtivo(s.ativo)).map(s=>`<option value="${s.id}|${s.nome}|servico">${s.nome}</option>`).join('');
-  const prdOpts=DB.produtos.filter(p=>isAtivo(p.ativo)).map(p=>`<option value="${p.id}|${p.nome}|produto">${p.nome}</option>`).join('');
+  const prdOpts=DB.produtos.filter(p=>isAtivo(p.ativo)).map(p=>`<option value="${p.id}|${p.nome}|produto|${p.preco||0}">${p.nome}${p.preco>0?' ('+fmt(p.preco)+')':''}</option>`).join('');
   openDrawer(`
     <div class="dtitle">Fiado / Parcelado</div>
     <div class="fg"><span class="lbl">Cliente *</span><select id="ff-cli"><option value="">— Selecione —</option>${cliOpts}</select></div>
@@ -754,12 +845,29 @@ function gerarVencimentos(){
   const c=document.getElementById('parcelas-container');if(!c)return;
   if(n<=0){c.innerHTML='';return;}
   let html='<div class="slabel" style="margin-bottom:8px">Vencimentos das parcelas</div>';
+  const tdISO=today();
   for(let i=0;i<Math.min(n,24);i++){
     const d=new Date(venc1+'T00:00:00');d.setMonth(d.getMonth()+i);
     const iso=d.toISOString().slice(0,10);
-    html+=`<div class="parc-row"><span>Parc. ${i+1} · ${fmt(parc)}</span><input type="text" class="inp" id="venc-${i}" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${fmtBR(iso)}" oninput="applyDataMask(this)"/></div>`;
+    const retroativo=iso<tdISO;
+    html+=`<div class="parc-row">
+      <span style="color:${retroativo?'var(--err)':'var(--dim)'}">Parc. ${i+1} · ${fmt(parc)}${retroativo?' ⚠️':''}</span>
+      <input type="text" class="inp" id="venc-${i}" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${fmtBR(iso)}"
+        style="border-color:${retroativo?'var(--err)':'var(--border)'}" oninput="applyDataMask(this);verificarDataRetro(this)"/>
+    </div>`;
   }
   c.innerHTML=html;
+}
+
+function verificarDataRetro(el){
+  const iso=parseISO(el.value);
+  if(iso&&iso<today()){
+    el.style.borderColor='var(--err)';
+    el.title='⚠️ Data no passado';
+  }else{
+    el.style.borderColor='var(--border)';
+    el.title='';
+  }
 }
 
 async function saveFiado(){
@@ -774,7 +882,9 @@ async function saveFiado(){
   const valorEntrada=getValorRaw(document.getElementById('ff-entrada'));
   const numParcelas=parseInt(document.getElementById('ff-parcelas')?.value)||1;
   const vencimentos=[];
-  for(let i=0;i<numParcelas;i++){const el=document.getElementById(`venc-${i}`);vencimentos.push(el?parseISO(el.value):'');}
+  let temRetroativo=false;
+  for(let i=0;i<numParcelas;i++){const el=document.getElementById(`venc-${i}`);const iso=el?parseISO(el.value):'';vencimentos.push(iso);if(iso&&iso<today())temRetroativo=true;}
+  if(temRetroativo&&!confirm('⚠️ Atenção! Uma ou mais parcelas têm datas de vencimento no passado. Deseja continuar mesmo assim?'))return;
   const btn=document.querySelector('#drawer .btn-save');btnSv(btn,true);
   try{
     const r=await post({action:'saveFiado',token:TOKEN,data:{clienteId,clienteNome,itemId,itemNome,itemTipo,valorTotal,valorEntrada,numParcelas,vencimentos,observacoes:document.getElementById('ff-obs')?.value.trim()||''}});
@@ -956,7 +1066,7 @@ async function delAgend(id){if(!confirm('Excluir?'))return;try{await post({actio
 function renderCli(list){
   const data=list||DB.clientes,el=document.getElementById('list-cli');
   if(!data.length){el.innerHTML='<div class="empty"><div class="empty-icon">👤</div><p>Nenhuma cliente</p></div>';return;}
-  el.innerHTML=data.map(c=>`<div class="card"><div class="cavatar">${(c.nome||'?')[0].toUpperCase()}</div><div class="cbody"><div class="cname">${c.nome}</div><div class="cmeta">${c.telefone||'—'}${c.aniversario?' · 🎂 '+c.aniversario:''}</div></div><div class="cactions"><button class="btn-s" onclick="verHist('${c.id}','${(c.nome||'').replace(/'/g,"\\'")}'')">${svgHist}</button><button class="btn-e" onclick='editCli(${JSON.stringify(c)})'>${svgEdit}</button><button class="btn-d" onclick="delCli('${c.id}')">${svgDel}</button></div></div>`).join('');
+  el.innerHTML=data.map(c=>`<div class="card"><div class="card-top"><div class="cavatar">${(c.nome||'?')[0].toUpperCase()}</div><div class="cbody"><div class="cname">${c.nome}</div><div class="cmeta">${c.telefone||'—'}${c.aniversario?' · 🎂 '+c.aniversario:''}</div></div></div><div class="card-bottom"><button class="btn-s" onclick="verHist('${c.id}','${(c.nome||'').replace(/'/g,\"\\\'\")}'')">${svgHist}</button><button class="btn-e" onclick='editCli(${JSON.stringify(c)})'>${svgEdit}</button><button class="btn-d" onclick="delCli('${c.id}')">${svgDel}</button></div></div>`).join('');
 }
 function filterCli(q){const l=q.toLowerCase();renderCli(DB.clientes.filter(c=>(c.nome||'').toLowerCase().includes(l)||(c.telefone||'').includes(l)));}
 function openDrawerCliente(){editId=null;openDrawer(`<div class="dtitle">Nova Cliente</div><div class="fg"><span class="lbl">Nome *</span><input id="fc-nome" type="text" class="inp"/></div><div class="fg"><span class="lbl">Telefone</span><input id="fc-tel" type="tel" class="inp" placeholder="(00) 00000-0000" oninput="applyTelMask(this)" maxlength="15"/></div><div class="fg"><span class="lbl">E-mail</span><input id="fc-email" type="email" class="inp"/></div><div class="fg"><span class="lbl">Aniversário</span><input id="fc-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" oninput="applyDataMask(this)"/></div><div class="fg"><span class="lbl">Observações</span><textarea id="fc-obs" class="inp"></textarea></div><div class="dfooter"><button class="btn-sec" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="saveCli()">Salvar</button></div>`);}
@@ -1043,21 +1153,21 @@ async function loadVencHome(){
 }
 
 // ── SERVIÇOS ──────────────────────────────────────────────────
-function renderSvc(){const el=document.getElementById('list-svc');if(!el)return;if(!DB.servicos.length){el.innerHTML='<div class="empty"><div class="empty-icon">✂️</div><p>Nenhum serviço</p></div>';return;}el.innerHTML=DB.servicos.map(s=>`<div class="card"><div class="cavatar" style="font-size:18px">✂</div><div class="cbody"><div class="cname">${s.nome}</div><div class="cmeta">${s.descricao||'—'} · ${s.duracaoMin||60}min</div></div><div class="cactions"><span class="badge ${isAtivo(s.ativo)?'b-on':'b-off'}">${isAtivo(s.ativo)?'Ativo':'Inativo'}</span><button class="btn-e" onclick='editSvc(${JSON.stringify(s)})'>${svgEdit}</button><button class="btn-d" onclick="delSvc('${s.id}')">${svgDel}</button></div></div>`).join('');}
+function renderSvc(){const el=document.getElementById('list-svc');if(!el)return;if(!DB.servicos.length){el.innerHTML='<div class="empty"><div class="empty-icon">✂️</div><p>Nenhum serviço</p></div>';return;}el.innerHTML=DB.servicos.map(s=>`<div class="card"><div class="card-top"><div class="cavatar" style="font-size:18px">✂</div><div class="cbody"><div class="cname">${s.nome}</div><div class="cmeta">${s.descricao||'—'} · ${s.duracaoMin||60}min</div></div><span class="badge ${isAtivo(s.ativo)?'b-on':'b-off'}">${isAtivo(s.ativo)?'Ativo':'Inativo'}</span></div><div class="card-bottom"><button class="btn-e" onclick='editSvc(${JSON.stringify(s)})'>${svgEdit}</button><button class="btn-d" onclick="delSvc('${s.id}')">${svgDel}</button></div></div>`).join('');}
 function openDrawerSvc(){editId=null;openDrawer(`<div class="dtitle">Novo Serviço</div><div class="fg"><span class="lbl">Nome *</span><input id="sv-nome" type="text" class="inp"/></div><div class="form-row"><div class="fg"><span class="lbl">Descrição</span><input id="sv-desc" type="text" class="inp"/></div><div class="fg"><span class="lbl">Duração (min)</span><input id="sv-dur" type="number" class="inp" value="60"/></div></div><div class="dfooter"><button class="btn-sec" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="saveSvc()">Salvar</button></div>`);}
 function editSvc(s){editId=s.id;openDrawer(`<div class="dtitle">Editar Serviço</div><div class="fg"><span class="lbl">Nome *</span><input id="sv-nome" type="text" class="inp" value="${s.nome||''}"/></div><div class="form-row"><div class="fg"><span class="lbl">Descrição</span><input id="sv-desc" type="text" class="inp" value="${s.descricao||''}"/></div><div class="fg"><span class="lbl">Duração (min)</span><input id="sv-dur" type="number" class="inp" value="${s.duracaoMin||60}"/></div></div><div class="fg"><span class="lbl">Status</span><select id="sv-ativo" class="inp"><option value="true" ${isAtivo(s.ativo)?'selected':''}>Ativo</option><option value="false" ${!isAtivo(s.ativo)?'selected':''}>Inativo</option></select></div><div class="dfooter"><button class="btn-sec" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="saveSvc()">Salvar</button></div>`);}
 async function saveSvc(){const nome=document.getElementById('sv-nome')?.value.trim();if(!nome)return toast('Nome obrigatório.','err');const data={id:editId||null,nome,descricao:document.getElementById('sv-desc')?.value.trim()||'',duracaoMin:parseInt(document.getElementById('sv-dur')?.value)||60,ativo:document.getElementById('sv-ativo')?.value||'true'};const btn=document.querySelector('#drawer .btn-save');btnSv(btn,true);try{const r=await post({action:'saveServico',token:TOKEN,data});if(r.status!=='ok'){toast('Erro.','err');btnSv(btn,false);return;}closeDrawer();toast('Salvo!','ok');const fr=await api({action:'getServicos',token:TOKEN});if(fr.status==='ok'){DB.servicos=fr.data;renderSvc();}}catch(e){toast('Erro.','err');btnSv(btn,false);}}
 async function delSvc(id){if(!confirm('Excluir?'))return;try{await post({action:'deleteRow',token:TOKEN,sheet:'servicos',id});DB.servicos=DB.servicos.filter(s=>s.id!==id);renderSvc();toast('Excluído.','ok');}catch(e){toast('Erro.','err');}}
 
 // ── PRODUTOS ──────────────────────────────────────────────────
-function renderPrd(){const el=document.getElementById('list-prd');if(!el)return;if(!DB.produtos.length){el.innerHTML='<div class="empty"><div class="empty-icon">🛍️</div><p>Nenhum produto</p></div>';return;}el.innerHTML=DB.produtos.map(p=>`<div class="card"><div class="cavatar" style="font-size:18px">🛍</div><div class="cbody"><div class="cname">${p.nome}</div><div class="cmeta">${p.descricao||'—'}</div></div><div class="cactions"><span class="badge ${isAtivo(p.ativo)?'b-on':'b-off'}">${isAtivo(p.ativo)?'Ativo':'Inativo'}</span><button class="btn-e" onclick='editPrd(${JSON.stringify(p)})'>${svgEdit}</button><button class="btn-d" onclick="delPrd('${p.id}')">${svgDel}</button></div></div>`).join('');}
-function openDrawerPrd(){editId=null;openDrawer(`<div class="dtitle">Novo Produto</div><div class="fg"><span class="lbl">Nome *</span><input id="pr-nome" type="text" class="inp"/></div><div class="fg"><span class="lbl">Descrição</span><textarea id="pr-desc" class="inp"></textarea></div><div class="dfooter"><button class="btn-sec" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="savePrd()">Salvar</button></div>`);}
-function editPrd(p){editId=p.id;openDrawer(`<div class="dtitle">Editar Produto</div><div class="fg"><span class="lbl">Nome *</span><input id="pr-nome" type="text" class="inp" value="${p.nome||''}"/></div><div class="fg"><span class="lbl">Descrição</span><textarea id="pr-desc" class="inp">${p.descricao||''}</textarea></div><div class="fg"><span class="lbl">Status</span><select id="pr-ativo" class="inp"><option value="true" ${isAtivo(p.ativo)?'selected':''}>Ativo</option><option value="false" ${!isAtivo(p.ativo)?'selected':''}>Inativo</option></select></div><div class="dfooter"><button class="btn-sec" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="savePrd()">Salvar</button></div>`);}
-async function savePrd(){const nome=document.getElementById('pr-nome')?.value.trim();if(!nome)return toast('Nome obrigatório.','err');const data={id:editId||null,nome,descricao:document.getElementById('pr-desc')?.value.trim()||'',ativo:document.getElementById('pr-ativo')?.value||'true'};const btn=document.querySelector('#drawer .btn-save');btnSv(btn,true);try{const r=await post({action:'saveProduto',token:TOKEN,data});if(r.status!=='ok'){toast('Erro.','err');btnSv(btn,false);return;}closeDrawer();toast('Salvo!','ok');const fr=await api({action:'getProdutos',token:TOKEN});if(fr.status==='ok'){DB.produtos=fr.data;renderPrd();}}catch(e){toast('Erro.','err');btnSv(btn,false);}}
+function renderPrd(){const el=document.getElementById('list-prd');if(!el)return;if(!DB.produtos.length){el.innerHTML='<div class="empty"><div class="empty-icon">🛍️</div><p>Nenhum produto</p></div>';return;}el.innerHTML=DB.produtos.map(p=>`<div class="card"><div class="card-top"><div class="cavatar" style="font-size:18px">🛍</div><div class="cbody"><div class="cname">${p.nome}</div><div class="cmeta">${p.preco>0?fmt(p.preco)+' · ':''}${p.descricao||'—'}</div></div><span class="badge ${isAtivo(p.ativo)?'b-on':'b-off'}">${isAtivo(p.ativo)?'Ativo':'Inativo'}</span></div><div class="card-bottom"><button class="btn-e" onclick='editPrd(${JSON.stringify(p)})'>${svgEdit}</button><button class="btn-d" onclick="delPrd('${p.id}')">${svgDel}</button></div></div>`).join('');}
+function openDrawerPrd(){editId=null;openDrawer(`<div class="dtitle">Novo Produto</div><div class="fg"><span class="lbl">Nome *</span><input id="pr-nome" type="text" class="inp"/></div><div class="form-row"><div class="fg"><span class="lbl">Preço padrão (R$)</span><input id="pr-preco" type="text" class="inp" inputmode="numeric" placeholder="0,00" oninput="applyValorMask(this)"/></div><div class="fg"><span class="lbl">Descrição</span><input id="pr-desc" type="text" class="inp" placeholder="Opcional…"/></div></div><div class="dfooter"><button class="btn-sec" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="savePrd()">Salvar</button></div>`);}
+function editPrd(p){editId=p.id;openDrawer(`<div class="dtitle">Editar Produto</div><div class="fg"><span class="lbl">Nome *</span><input id="pr-nome" type="text" class="inp" value="${p.nome||''}"/></div><div class="form-row"><div class="fg"><span class="lbl">Preço padrão (R$)</span><input id="pr-preco" type="text" class="inp" inputmode="numeric" placeholder="0,00" oninput="applyValorMask(this)"/></div><div class="fg"><span class="lbl">Descrição</span><input id="pr-desc" type="text" class="inp" value="${p.descricao||''}"/></div></div><div class="fg"><span class="lbl">Status</span><select id="pr-ativo" class="inp"><option value="true" ${isAtivo(p.ativo)?'selected':''}>Ativo</option><option value="false" ${!isAtivo(p.ativo)?'selected':''}>Inativo</option></select></div><div class="dfooter"><button class="btn-sec" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="savePrd()">Salvar</button></div>`);setTimeout(()=>{const pp=document.getElementById('pr-preco');if(pp&&p.preco)setValorMask(pp,p.preco);},30);}
+async function savePrd(){const nome=document.getElementById('pr-nome')?.value.trim();if(!nome)return toast('Nome obrigatório.','err');const data={id:editId||null,nome,preco:getValorRaw(document.getElementById('pr-preco')),descricao:document.getElementById('pr-desc')?.value.trim()||'',ativo:document.getElementById('pr-ativo')?.value||'true'};const btn=document.querySelector('#drawer .btn-save');btnSv(btn,true);try{const r=await post({action:'saveProduto',token:TOKEN,data});if(r.status!=='ok'){toast('Erro.','err');btnSv(btn,false);return;}closeDrawer();toast('Salvo!','ok');const fr=await api({action:'getProdutos',token:TOKEN});if(fr.status==='ok'){DB.produtos=fr.data;renderPrd();}}catch(e){toast('Erro.','err');btnSv(btn,false);}}
 async function delPrd(id){if(!confirm('Excluir?'))return;try{await post({action:'deleteRow',token:TOKEN,sheet:'produtos',id});DB.produtos=DB.produtos.filter(p=>p.id!==id);renderPrd();toast('Excluído.','ok');}catch(e){toast('Erro.','err');}}
 
 // ── COLABORADORES ─────────────────────────────────────────────
-function renderColab(){const el=document.getElementById('list-colab');if(!el)return;if(!DB.colaboradores.length){el.innerHTML='<div class="empty"><div class="empty-icon">💇‍♀️</div><p>Nenhuma colaboradora</p></div>';return;}el.innerHTML=DB.colaboradores.map(c=>`<div class="card"><div class="cavatar">${(c.nome||'?')[0].toUpperCase()}</div><div class="cbody"><div class="cname">${c.nome}</div><div class="cmeta">${c.cargo||'—'} · ${c.horaInicio||'08:00'}–${c.horaFim||'18:00'}</div></div><div class="cactions"><span class="badge ${isAtivo(c.ativo)?'b-on':'b-off'}">${isAtivo(c.ativo)?'Ativa':'Inativa'}</span><button class="btn-e" onclick='editColab(${JSON.stringify(c)})'>${svgEdit}</button><button class="btn-d" onclick="delColab('${c.id}')">${svgDel}</button></div></div>`).join('');}
+function renderColab(){const el=document.getElementById('list-colab');if(!el)return;if(!DB.colaboradores.length){el.innerHTML='<div class="empty"><div class="empty-icon">💇‍♀️</div><p>Nenhuma colaboradora</p></div>';return;}el.innerHTML=DB.colaboradores.map(c=>`<div class="card"><div class="card-top"><div class="cavatar">${(c.nome||'?')[0].toUpperCase()}</div><div class="cbody"><div class="cname">${c.nome}</div><div class="cmeta">${c.cargo||'—'} · ${c.horaInicio||'08:00'}–${c.horaFim||'18:00'}</div></div><span class="badge ${isAtivo(c.ativo)?'b-on':'b-off'}">${isAtivo(c.ativo)?'Ativa':'Inativa'}</span></div><div class="card-bottom"><button class="btn-e" onclick='editColab(${JSON.stringify(c)})'>${svgEdit}</button><button class="btn-d" onclick="delColab('${c.id}')">${svgDel}</button></div></div>`).join('');}
 function openDrawerColab(){editId=null;openDrawer(`<div class="dtitle">Nova Colaboradora</div><div class="fg"><span class="lbl">Nome *</span><input id="co-nome" type="text" class="inp"/></div><div class="fg"><span class="lbl">Cargo</span><input id="co-cargo" type="text" class="inp" placeholder="Ex: Especialista Mega-hair"/></div><div class="fg"><span class="lbl">Telefone</span><input id="co-tel" type="tel" class="inp" placeholder="(00) 00000-0000" oninput="applyTelMask(this)" maxlength="15"/></div><div class="form-row"><div class="fg"><span class="lbl">Início</span><input id="co-hi" type="time" class="inp" value="08:00"/></div><div class="fg"><span class="lbl">Fim</span><input id="co-hf" type="time" class="inp" value="18:00"/></div></div><div class="dfooter"><button class="btn-sec" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="saveColab()">Salvar</button></div>`);}
 function editColab(c){editId=c.id;openDrawer(`<div class="dtitle">Editar Colaboradora</div><div class="fg"><span class="lbl">Nome *</span><input id="co-nome" type="text" class="inp" value="${c.nome||''}"/></div><div class="fg"><span class="lbl">Cargo</span><input id="co-cargo" type="text" class="inp" value="${c.cargo||''}"/></div><div class="fg"><span class="lbl">Telefone</span><input id="co-tel" type="tel" class="inp" value="${c.telefone||''}" oninput="applyTelMask(this)" maxlength="15"/></div><div class="form-row"><div class="fg"><span class="lbl">Início</span><input id="co-hi" type="time" class="inp" value="${c.horaInicio||'08:00'}"/></div><div class="fg"><span class="lbl">Fim</span><input id="co-hf" type="time" class="inp" value="${c.horaFim||'18:00'}"/></div></div><div class="fg"><span class="lbl">Status</span><select id="co-ativo" class="inp"><option value="true" ${isAtivo(c.ativo)?'selected':''}>Ativa</option><option value="false" ${!isAtivo(c.ativo)?'selected':''}>Inativa</option></select></div><div class="dfooter"><button class="btn-sec" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="saveColab()">Salvar</button></div>`);}
 async function saveColab(){const nome=document.getElementById('co-nome')?.value.trim();if(!nome)return toast('Nome obrigatório.','err');const data={id:editId||null,nome,cargo:document.getElementById('co-cargo')?.value.trim()||'',telefone:document.getElementById('co-tel')?.value.trim()||'',horaInicio:document.getElementById('co-hi')?.value||'08:00',horaFim:document.getElementById('co-hf')?.value||'18:00',ativo:document.getElementById('co-ativo')?.value||'true'};const btn=document.querySelector('#drawer .btn-save');btnSv(btn,true);try{const r=await post({action:'saveColaborador',token:TOKEN,data});if(r.status!=='ok'){toast('Erro.','err');btnSv(btn,false);return;}closeDrawer();toast('Salvo!','ok');const fr=await api({action:'getColaboradores',token:TOKEN});if(fr.status==='ok'){DB.colaboradores=fr.data;renderColab();}}catch(e){toast('Erro.','err');btnSv(btn,false);}}
@@ -1069,7 +1179,7 @@ function renderPlan(){
   const el=document.getElementById('list-plan');if(!el)return;
   let data=DB.planejamento;if(_planFiltro!=='todos')data=data.filter(p=>p.tipo===_planFiltro);
   if(!data.length){el.innerHTML='<div class="empty"><div class="empty-icon">📋</div><p>Nenhum item</p></div>';return;}
-  el.innerHTML=data.map(p=>`<div class="card"><div class="cavatar" style="font-size:18px">${p.tipo==='despesa'?'📤':'📥'}</div><div class="cbody"><div class="cname">${p.descricao}</div><div class="cmeta">${p.numParcelas}x de ${fmt(p.valorParcela)} · Dia ${p.diaVencimento} de cada mês</div></div><div class="cactions"><span class="badge ${p.status==='ativo'?'b-on':'b-off'}">${p.status}</span></div></div>`).join('');
+  el.innerHTML=data.map(p=>`<div class="card"><div class="card-top"><div class="cavatar" style="font-size:18px">${p.tipo==='despesa'?'📤':'📥'}</div><div class="cbody"><div class="cname">${p.descricao}</div><div class="cmeta">${p.numParcelas}x de ${fmt(p.valorParcela)} · Dia ${p.diaVencimento}</div></div><span class="badge ${p.status==='ativo'?'b-on':'b-off'}">${p.status}</span></div></div>`).join('');
 }
 function openDrawerPlan(){
   let _planTipo='despesa';
