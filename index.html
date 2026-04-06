@@ -169,6 +169,21 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 /* ── Info box ── */
 .info-box{background:var(--gold-bg);border:1px solid var(--gold-dk);border-radius:var(--r);padding:12px;margin-bottom:14px;font-size:11px;color:var(--dark);line-height:1.6}
 
+/* ── Itens múltiplos no lançamento ── */
+.itens-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.item-row{background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 12px;display:flex;align-items:center;gap:8px}
+.item-row-body{flex:1;min-width:0}
+.item-row-nome{font-size:13px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-row-val{font-size:12px;color:var(--dim);margin-top:2px}
+.item-val-input{width:90px;background:var(--bg2);border:1.5px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;text-align:right}
+.item-val-input:focus{border-color:var(--gold)}
+.btn-remove-item{background:var(--err-bg);color:var(--err);border:1.5px solid var(--err);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;flex-shrink:0}
+.btn-add-item{background:var(--bg2);border:1.5px solid var(--gold-dk);color:var(--gold-dk);border-radius:var(--r);padding:12px;width:100%;font-size:12px;font-weight:600;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-add-item:active{background:var(--gold-bg)}
+.total-bar{background:var(--dark);border-radius:var(--r);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.total-bar-label{font-size:11px;color:rgba(255,255,255,.6);letter-spacing:1px;text-transform:uppercase}
+.total-bar-val{font-family:'Playfair Display',serif;font-size:22px;color:var(--gold-lt);font-weight:600}
+
 /* ── Dashboard ── */
 .dg-greeting{font-family:'Playfair Display',serif;font-size:22px;font-style:italic;color:var(--dark);margin-bottom:2px}
 .dg-greeting em{color:var(--gold)}
@@ -474,7 +489,7 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 const API='https://script.google.com/macros/s/AKfycbwdgffUDDPyPXyE_4YRBf4wrfLXitwfFQ6Wn5zIwvb3z7YDhnHeZzFmnjt6U1m7bgSMBA/exec';
 let TOKEN='',LONG_TOKEN='';
 let DB={clientes:[],servicos:[],produtos:[],colaboradores:[],crediario:[],planejamento:[],config:{}};
-let editId=null,_tipoLanc='entrada',_credFiltro='aberto',_agView='dia',_extModo='mes',_extUnlocked=false,_planFiltro='todos';
+let editId=null,_tipoLanc='entrada',_credFiltro='aberto',_agView='dia',_extModo='mes',_extUnlocked=false,_planFiltro='todos',_itensLanc=[];
 const store={get:k=>{try{return JSON.parse(localStorage.getItem(k))}catch{return null}},set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)),del:k=>localStorage.removeItem(k)};
 const fmt=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
 const today=()=>new Date().toISOString().slice(0,10);
@@ -504,26 +519,52 @@ const subPages=['servicos','produtos','colaboradores','config','extrato','planej
 function navTo(page){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));document.getElementById('page-'+page)?.classList.add('active');const np=subPages.includes(page)?'mais':page;document.querySelector(`[data-page="${np}"]`)?.classList.add('active');if(page==='caixa')loadCaixa();if(page==='crediario')loadCred();if(page==='agenda')loadAgenda();if(page==='extrato')checkExtLock();}
 function lbForma(f){return{dinheiro:'Dinheiro',pix:'PIX',debito:'Débito',credito:'Crédito',fiado:'Fiado'}[f]||f||'—';}
 
+function renderItensMini(itemNome,obs){
+  // Se obs começa com [ITENS], extrai a lista JSON
+  if(obs&&obs.startsWith('[ITENS]')){
+    try{
+      const rest=obs.slice(7);
+      const pipeIdx=rest.indexOf('|');
+      const json=pipeIdx>=0?rest.slice(0,pipeIdx):rest;
+      const itens=JSON.parse(json);
+      return itens.map(i=>`${i.nome} ${fmt(i.valor)}`).join(' · ');
+    }catch(_){}
+  }
+  // Fallback: mostra itemNome e obs normais
+  const parts=[itemNome].filter(Boolean);
+  if(obs&&!obs.startsWith('[ITENS]'))parts.push(obs);
+  return parts.join(' · ');
+}
+
 // ── INIT ──────────────────────────────────────────────────────
-window.onload=async()=>{
+window.onload=()=>{
   TOKEN=store.get('sc_tok')||'';
   LONG_TOKEN=store.get('sc_ltok')||'';
   document.getElementById('dg-date').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   initExtSelectors();
   const cx=document.getElementById('cx-data');if(cx)cx.value=fmtBR(today());
   const ag=document.getElementById('ag-data');if(ag)ag.value=fmtBR(today());
+  // Timeout de segurança: se demorar mais de 12s, vai pro login
+  const safetyTimer=setTimeout(()=>{
+    if(document.getElementById('loading').style.display!=='none'){
+      console.warn('Timeout de carregamento — indo para login');
+      store.del('sc_tok');store.del('sc_ltok');TOKEN='';showLogin();
+    }
+  },12000);
   if(TOKEN||LONG_TOKEN){
     TOKEN=TOKEN||LONG_TOKEN;
-    // Valida token antes de mostrar app
-    try{
-      const test=await api({action:'getConfig',token:TOKEN});
-      if(test.status==='ok'){showApp();await loadAll();}
-      else{store.del('sc_tok');store.del('sc_ltok');TOKEN='';showLogin();}
-    }catch(e){showLogin();}
-  }else{showLogin();}
+    // Mostra app imediatamente sem validar token — mais rápido
+    showApp();
+    loadAll().then(()=>clearTimeout(safetyTimer)).catch(()=>{
+      store.del('sc_tok');store.del('sc_ltok');TOKEN='';showLogin();
+    });
+  }else{
+    clearTimeout(safetyTimer);
+    showLogin();
+  }
 };
-function showLogin(){showLoading(false);document.getElementById('screen-login').style.display='flex';document.getElementById('screen-app').style.display='none';}
-function showApp(){showLoading(false);document.getElementById('screen-login').style.display='none';document.getElementById('screen-app').style.display='flex';}
+function showLogin(){document.getElementById('loading').style.display='none';document.getElementById('screen-login').style.display='flex';document.getElementById('screen-app').style.display='none';}
+function showApp(){document.getElementById('loading').style.display='none';document.getElementById('screen-login').style.display='none';document.getElementById('screen-app').style.display='flex';}
 
 // ── AUTH ──────────────────────────────────────────────────────
 async function doLogin(){
@@ -536,23 +577,32 @@ async function doLogin(){
     TOKEN=r.data.token;
     store.set('sc_tok',TOKEN);
     if(document.getElementById('chk-lembrar').checked&&r.data.longToken){LONG_TOKEN=r.data.longToken;store.set('sc_ltok',LONG_TOKEN);}
-    showApp();await loadAll();
+    showApp();
+    loadAll().catch(e=>console.error('loadAll:',e));
   }catch(e){btn.textContent='Entrar';btn.disabled=false;toast('Erro de conexão.','err');}
 }
 function logout(){store.del('sc_tok');store.del('sc_ltok');TOKEN='';LONG_TOKEN='';showLogin();}
 
 // ── LOAD ALL (bug fix: await em todas as chamadas) ─────────────
+// Wrapper com timeout para evitar travamento
+function apiTimeout(params,ms=10000){
+  return Promise.race([
+    api(params),
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))
+  ]).catch(()=>({status:'err'}));
+}
+
 async function loadAll(){
   showLoading(true);
   try{
     const[cfg,cli,svc,prd,col,cred,plan]=await Promise.all([
-      api({action:'getConfig',token:TOKEN}).catch(()=>({status:'err'})),
-      api({action:'getClientes',token:TOKEN}).catch(()=>({status:'err'})),
-      api({action:'getServicos',token:TOKEN}).catch(()=>({status:'err'})),
-      api({action:'getProdutos',token:TOKEN}).catch(()=>({status:'err'})),
-      api({action:'getColaboradores',token:TOKEN}).catch(()=>({status:'err'})),
-      api({action:'getCrediario',token:TOKEN}).catch(()=>({status:'err'})),
-      api({action:'getPlanejamento',token:TOKEN}).catch(()=>({status:'err'})),
+      apiTimeout({action:'getConfig',token:TOKEN}),
+      apiTimeout({action:'getClientes',token:TOKEN}),
+      apiTimeout({action:'getServicos',token:TOKEN}),
+      apiTimeout({action:'getProdutos',token:TOKEN}),
+      apiTimeout({action:'getColaboradores',token:TOKEN}),
+      apiTimeout({action:'getCrediario',token:TOKEN}),
+      apiTimeout({action:'getPlanejamento',token:TOKEN}),
     ]);
     if(cfg.status==='ok'){DB.config=cfg.data;applyConfig();}
     if(cli.status==='ok'){DB.clientes=cli.data;renderCli();}
@@ -613,8 +663,8 @@ async function loadCaixa(){
         return`<div class="lcard">
           <div class="licon ${l.tipo}">${l.tipo==='entrada'?'↑':'↓'}</div>
           <div class="lbody">
-            <div class="lnome">${l.itemNome||l.categoria||'—'}${l.clienteNome?' · '+l.clienteNome:''}${isRet?' <span class="badge b-warn">PESSOAL</span>':''}</div>
-            <div class="lmeta">${lbForma(l.formaPagamento)}${l.observacoes?' · '+l.observacoes:''}</div>
+            <div class="lnome">${l.clienteNome||l.itemNome||l.categoria||'—'}${isRet?' <span class="badge b-warn">PESSOAL</span>':''}</div>
+            <div class="lmeta">${lbForma(l.formaPagamento)} ${renderItensMini(l.itemNome,l.observacoes)}</div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
             <div class="lval ${l.tipo}">${l.tipo==='saida'?'-':''}${fmt(l.valor)}</div>
@@ -628,7 +678,7 @@ async function loadCaixa(){
 
 // ── DRAWER LANÇAMENTO ─────────────────────────────────────────
 function openDrawerLanc(){
-  editId=null;_tipoLanc='entrada';
+  editId=null;_tipoLanc='entrada';_itensLanc=[];
   const cliOpts=DB.clientes.map(c=>`<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
   const svcOpts=DB.servicos.filter(s=>isAtivo(s.ativo)).map(s=>`<option value="${s.id}|${s.nome}|servico">${s.nome}</option>`).join('');
   const prdOpts=DB.produtos.filter(p=>isAtivo(p.ativo)).map(p=>`<option value="${p.id}|${p.nome}|produto|${p.preco||0}">${p.nome}${p.preco>0?' ('+fmt(p.preco)+')':''}</option>`).join('');
@@ -637,7 +687,17 @@ function openDrawerLanc(){
     <div class="seg"><button class="seg-btn active" id="seg-e" onclick="setTipoLanc('entrada')">Entrada</button><button class="seg-btn" id="seg-s" onclick="setTipoLanc('saida')">Saída</button><button class="seg-btn" id="seg-r" onclick="setTipoLanc('retirada')">Retirada</button></div>
     <div id="f-entrada">
       <div class="fg"><span class="lbl">Cliente (opcional)</span><select id="f-cli"><option value="">— Sem vínculo —</option>${cliOpts}</select></div>
-      <div class="fg"><span class="lbl">Serviço / Produto</span><select id="f-item"><option value="">— Selecione —</option><optgroup label="Serviços">${svcOpts}</optgroup><optgroup label="Produtos">${prdOpts}</optgroup></select></div>
+      <div class="fg"><span class="lbl">Selecionar item</span>
+        <select id="f-item-sel" onchange="addItemFromSelect(this)">
+          <option value="">— Toque para adicionar item —</option>
+          <optgroup label="Serviços">${svcOpts}</optgroup>
+          <optgroup label="Produtos">${prdOpts}</optgroup>
+        </select>
+      </div>
+      <div class="itens-list" id="itens-list"></div>
+      <button class="btn-add-item" onclick="abrirSeletorItem()">＋ Adicionar serviço ou produto</button>
+      <div class="total-bar"><span class="total-bar-label">Total</span><span class="total-bar-val" id="f-total-display">R$ 0,00</span></div>
+      <input type="hidden" id="f-valor"/>
       <div class="fg"><span class="lbl">Forma de Pagamento</span><select id="f-forma" onchange="onFormaChange(this.value)"><option value="dinheiro">Dinheiro</option><option value="pix">PIX</option><option value="debito">Débito</option><option value="credito">Crédito</option><option value="fiado">Fiado / Parcelado</option></select></div>
       <div id="f-fiado-expand" style="display:none;background:var(--bg3);border:1.5px solid var(--gold-dk);border-radius:var(--r);padding:14px;margin-bottom:2px">
         <div style="font-size:10px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:12px">📋 Detalhes do Fiado</div>
@@ -661,6 +721,74 @@ function openDrawerLanc(){
     <div class="fg"><span class="lbl">Observações</span><input id="f-obs" type="text" class="inp" placeholder="Opcional…"/></div>
     <div class="dfooter"><button class="btn-sec" onclick="closeDrawer()">Cancelar</button><button class="btn-save" onclick="saveLanc()">Salvar</button></div>`);
   setTimeout(()=>{const d=document.getElementById('f-data');if(d)d.value=fmtBR(today());},30);
+}
+
+// ── GESTÃO DE ITENS DO LANÇAMENTO ───────────────────────────
+function addItemFromSelect(sel){
+  const val=sel.value;if(!val){return;}
+  const parts=val.split('|');
+  const id=parts[0],nome=parts[1],tipo=parts[2]||'servico',preco=parseFloat(parts[3])||0;
+  _itensLanc.push({id,nome,tipo,valor:preco});
+  renderItens();
+  sel.value='';
+}
+
+function abrirSeletorItem(){
+  const sel=document.getElementById('f-item-sel');
+  if(sel)sel.focus();
+}
+
+function removeItem(idx){
+  _itensLanc.splice(idx,1);
+  renderItens();
+}
+
+function updateItemValor(idx,el){
+  applyValorMask(el);
+  _itensLanc[idx].valor=getValorRaw(el);
+  atualizarTotal();
+}
+
+function atualizarTotal(){
+  const total=(_itensLanc||[]).reduce((s,i)=>s+(parseFloat(i.valor)||0),0);
+  const el=document.getElementById('f-total-display');
+  if(el)el.textContent=fmt(total);
+  // Sincronizar com ff-total se fiado estiver aberto
+  const fft=document.getElementById('ff-total');
+  if(fft&&document.getElementById('f-fiado-expand')?.style.display!=='none'){
+    setValorMask(fft,total);
+    calcFiadoInline();
+  }
+}
+
+function renderItens(){
+  const el=document.getElementById('itens-list');if(!el)return;
+  if(!_itensLanc.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--dim);text-align:center;padding:8px">Nenhum item adicionado ainda</div>';
+    atualizarTotal();return;
+  }
+  el.innerHTML=_itensLanc.map((item,i)=>{
+    const cents=Math.round(item.valor*100);
+    return`<div class="item-row">
+      <div class="item-row-body">
+        <div class="item-row-nome">${item.nome}</div>
+        <div class="item-row-val">${item.tipo==='servico'?'Serviço':'Produto'}</div>
+      </div>
+      <input class="item-val-input" type="text" inputmode="numeric"
+        value="${item.valor>0?(String(cents)):''}"
+        placeholder="0,00" oninput="updateItemValor(${i},this)"
+        onfocus="if(!this.dataset.raw)this.value=''"/>
+      <button class="btn-remove-item" onclick="removeItem(${i})">✕</button>
+    </div>`;
+  }).join('');
+  // Aplicar máscaras após render
+  setTimeout(()=>{
+    _itensLanc.forEach((item,i)=>{
+      const inp=document.querySelector(`#itens-list .item-row:nth-child(${i+1}) .item-val-input`);
+      if(inp&&item.valor>0)setValorMask(inp,item.valor);
+    });
+    atualizarTotal();
+  },20);
 }
 
 function setTipoLanc(t){
@@ -758,13 +886,27 @@ function editLanc(l){
 }
 
 async function saveLanc(){
-  const valor=getValorRaw(document.getElementById('f-valor'));
-  if(!valor||valor<=0)return toast('Informe o valor.','err');
+  // Valor vem da soma dos itens (modo múltiplos) ou do campo direto (saída/retirada)
+  const tipo_check=_tipoLanc;
+  let valor=0;
+  if(tipo_check==='entrada'){
+    valor=(_itensLanc||[]).reduce((s,i)=>s+i.valor,0);
+    if(!valor||valor<=0)return toast('Adicione pelo menos um item com valor.','err');
+  }else{
+    valor=getValorRaw(document.getElementById('f-valor'));
+    if(!valor||valor<=0)return toast('Informe o valor.','err');
+  }
   const tipo=_tipoLanc,tipoBack=tipo==='retirada'?'saida':tipo;
   let clienteId='',clienteNome='',itemId='',itemNome='',itemTipo='',categoria='',formaPagamento='dinheiro',isRetirada=false;
   if(tipo==='entrada'){
     const cli=document.getElementById('f-cli')?.value||'';if(cli){[clienteId,clienteNome]=cli.split('|');}
-    const item=document.getElementById('f-item')?.value||'';if(item){const p=item.split('|');itemId=p[0];itemNome=p[1];itemTipo=p[2]||'';}
+    // Lê lista de itens
+    const itensData=_itensLanc||[];
+    if(itensData.length===0)return toast('Adicione pelo menos um item.','err');
+    itemNome=itensData.map(i=>i.nome).join(', ');
+    itemTipo=itensData.length===1?itensData[0].tipo:'misto';
+    itemId=itensData.length===1?itensData[0].id:'';
+    // valor já calculado pela soma dos itens
     formaPagamento=document.getElementById('f-forma')?.value||'dinheiro';
     // Se for fiado, salva via fluxo especial
     if(formaPagamento==='fiado'){
@@ -787,7 +929,11 @@ async function saveLanc(){
     }
   }else if(tipo==='retirada'){categoria='Retirada Pessoal';itemNome=document.getElementById('f-ret-desc')?.value.trim()||'';isRetirada=true;}
   else{categoria=document.getElementById('f-cat')?.value||'Outros';}
-  const data={id:editId||null,tipo:tipoBack,categoria,clienteId,clienteNome,itemId,itemNome,itemTipo,valor,formaPagamento,isRetirada,observacoes:document.getElementById('f-obs')?.value.trim()||'',data:parseISO(document.getElementById('f-data')?.value)};
+  const itensJson=tipo_check==='entrada'&&_itensLanc?.length>1?JSON.stringify(_itensLanc):'';
+  const obsBase=document.getElementById('f-obs')?.value.trim()||'';
+  const data={id:editId||null,tipo:tipoBack,categoria,clienteId,clienteNome,itemId,itemNome,itemTipo,valor,formaPagamento,isRetirada,
+    observacoes:itensJson?`[ITENS]${itensJson}${obsBase?'|'+obsBase:''}`:obsBase,
+    data:parseISO(document.getElementById('f-data')?.value)};
   const btn=document.querySelector('#drawer .btn-save');btnSv(btn,true);
   try{
     const r=await post({action:'saveLancamento',token:TOKEN,data});
