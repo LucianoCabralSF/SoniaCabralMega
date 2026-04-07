@@ -952,6 +952,53 @@ const store = {
   del(k){ localStorage.removeItem(k); }
 };
 
+// ── Cache de dados ────────────────────────────────────────────
+function saveDbCache(){
+  try{
+    store.set('sc_db', {
+      clientes:      state.db.clientes,
+      servicos:      state.db.servicos,
+      produtos:      state.db.produtos,
+      colaboradores: state.db.colaboradores,
+      crediario:     state.db.crediario,
+      planejamento:  state.db.planejamento,
+      config:        state.db.config,
+      statsDate:     today(),
+      statsCx:       qs('#st-cx')?.textContent || ''
+    });
+  }catch(_){}
+}
+
+function restoreFromCache(){
+  const c = store.get('sc_db');
+  if(!c) return false;
+
+  state.db.clientes      = c.clientes      || [];
+  state.db.servicos      = c.servicos      || [];
+  state.db.produtos      = c.produtos      || [];
+  state.db.colaboradores = c.colaboradores || [];
+  state.db.crediario     = c.crediario     || [];
+  state.db.planejamento  = c.planejamento  || [];
+  state.db.config        = c.config        || {};
+
+  applyConfig();
+  renderCli();
+  renderSvc();
+  renderPrd();
+  renderColab();
+  renderCred();
+  renderPlan();
+
+  // Estatísticas do cache (home)
+  qs('#st-cli').textContent  = state.db.clientes.length;
+  qs('#st-svc').textContent  = state.db.servicos.length;
+  const abertos = state.db.crediario.filter(x => x.status === 'aberto');
+  qs('#st-fiad').textContent = fmt(abertos.reduce((s,x)=>s+(parseFloat(x.saldoDevedor)||0),0));
+  if(c.statsDate === today() && c.statsCx) qs('#st-cx').textContent = c.statsCx;
+
+  return true;
+}
+
 const state = {
   token: '',
   longToken: '',
@@ -1277,9 +1324,11 @@ async function loadAll(){
 
     state.ui.loadFlags.bootstrapped = true;
     state.ui.loadFlags.homeLoaded = true;
+    saveDbCache();
   }catch(e){
     console.error('loadAll error:', e);
-    limparSessao();
+    // Só desloga se não havia cache — erro em background não encerra sessão
+    if(!store.get('sc_db')) limparSessao();
   }
 }
 
@@ -1488,8 +1537,15 @@ window.addEventListener('load', async () => {
     qs('#ag-data').value = fmtBR(today());
 
     if(state.token){
-      showApp();
-      await loadAll();
+      const hasCache = restoreFromCache();
+      if(hasCache){
+        showApp();
+        // Atualiza em segundo plano sem bloquear a tela
+        loadAll().catch(e => console.warn('Refresh background:', e));
+      }else{
+        showApp();
+        await loadAll();
+      }
     }else{
       showLogin();
     }
