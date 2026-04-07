@@ -1,0 +1,10 @@
+
+---
+
+# 4) `.gitignore`
+
+Crie este arquivo:
+
+```gitignore
+.DS_Store
+Thumbs.db
