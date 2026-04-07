@@ -743,6 +743,12 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
         </span>
         <input id="search-cli" type="search" placeholder="Buscar nome ou telefone…"/>
       </div>
+      <div id="btn-importar-agenda-wrap" style="padding:0 16px 12px;display:none">
+        <button id="btn-importar-agenda" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--gold-bg);border:1.5px dashed var(--gold);color:var(--gold);border-radius:var(--r);padding:11px 16px;font-family:inherit;font-size:13px;font-weight:500">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          Importar da Agenda do Celular
+        </button>
+      </div>
       <div class="card-list" id="list-cli"></div>
     </div>
 
@@ -1453,6 +1459,12 @@ function bindGlobalEvents(){
   qs('#btn-open-lanc').addEventListener('click', openDrawerLanc);
   qs('#btn-open-agend').addEventListener('click', openDrawerAgend);
   qs('#btn-open-cliente').addEventListener('click', openDrawerCliente);
+
+  // Mostra botão de importar agenda somente em browsers que suportam a API
+  if ('contacts' in navigator && 'ContactsManager' in window) {
+    qs('#btn-importar-agenda-wrap').style.display = 'block';
+    qs('#btn-importar-agenda').addEventListener('click', importarDaAgenda);
+  }
   qs('#btn-open-fiado').addEventListener('click', openDrawerFiadoLanc);
   qs('#btn-open-svc').addEventListener('click', openDrawerSvc);
   qs('#btn-open-prd').addEventListener('click', openDrawerPrd);
@@ -2256,6 +2268,72 @@ async function delCli(id){
     toast('Excluída.','ok');
   }catch(e){
     toast('Erro.','err');
+  }
+}
+
+async function importarDaAgenda() {
+  if (!('contacts' in navigator && 'ContactsManager' in window)) {
+    toast('Seu navegador não suporta a importação de agenda.', 'err');
+    return;
+  }
+
+  let contatos;
+  try {
+    contatos = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: true });
+  } catch (e) {
+    // Usuário cancelou ou permissão negada
+    return;
+  }
+
+  if (!contatos || !contatos.length) return;
+
+  // Monta set de telefones já cadastrados para evitar duplicatas
+  const telefonesExistentes = new Set(
+    state.db.clientes.map(c => (c.telefone || '').replace(/\D/g, '')).filter(Boolean)
+  );
+
+  let importados = 0;
+  let pulados = 0;
+  const erros = [];
+
+  for (const c of contatos) {
+    const nome = (c.name && c.name[0]) ? c.name[0].trim() : '';
+    if (!nome) continue;
+
+    const telRaw = (c.tel && c.tel[0]) ? c.tel[0].trim() : '';
+    const telDigitos = telRaw.replace(/\D/g, '');
+    const email = (c.email && c.email[0]) ? c.email[0].trim() : '';
+
+    // Pula se já existe cliente com o mesmo telefone
+    if (telDigitos && telefonesExistentes.has(telDigitos)) {
+      pulados++;
+      continue;
+    }
+
+    try {
+      const r = await post({ action: 'saveCliente', token: state.token, data: { nome, telefone: telRaw, email } });
+      if (r.status === 'ok' && r.data?.item) {
+        state.db.clientes.push(r.data.item);
+        if (telDigitos) telefonesExistentes.add(telDigitos);
+        importados++;
+      } else {
+        erros.push(nome);
+      }
+    } catch (e) {
+      erros.push(nome);
+    }
+  }
+
+  renderCli();
+  updateStats();
+
+  if (importados === 0 && pulados === 0 && erros.length === 0) {
+    toast('Nenhum contato selecionado.', 'warn');
+  } else {
+    let msg = `${importados} importado(s)`;
+    if (pulados) msg += `, ${pulados} já cadastrado(s)`;
+    if (erros.length) msg += `, ${erros.length} com erro`;
+    toast(msg, importados > 0 ? 'ok' : 'warn');
   }
 }
 
