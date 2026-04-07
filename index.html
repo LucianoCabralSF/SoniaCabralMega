@@ -1499,7 +1499,7 @@ window.addEventListener('load', async () => {
   }
 });
 
-  function onClientesListClick(e){
+function onClientesListClick(e){
   const btn = e.target.closest('button[data-action]');
   if(!btn) return;
   const action = btn.dataset.action;
