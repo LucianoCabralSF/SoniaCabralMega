@@ -1498,3 +1498,2010 @@ window.addEventListener('load', async () => {
     showLogin();
   }
 });
+
+  function onClientesListClick(e){
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const action = btn.dataset.action;
+  const index = Number(btn.dataset.index);
+  const id = btn.dataset.id;
+
+  if(action === 'hist') {
+    const c = state.db.clientes[index];
+    if(c) verHist(c.id, c.nome || '');
+  }
+  if(action === 'edit') {
+    const c = state.db.clientes[index];
+    if(c) editCli(c);
+  }
+  if(action === 'del') delCli(id);
+}
+
+function onServicosListClick(e){
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const action = btn.dataset.action;
+  const index = Number(btn.dataset.index);
+  const id = btn.dataset.id;
+
+  if(action === 'edit'){
+    const s = state.db.servicos[index];
+    if(s) editSvc(s);
+  }
+  if(action === 'del') delSvc(id);
+}
+
+function onProdutosListClick(e){
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const action = btn.dataset.action;
+  const index = Number(btn.dataset.index);
+  const id = btn.dataset.id;
+
+  if(action === 'edit'){
+    const p = state.db.produtos[index];
+    if(p) editPrd(p);
+  }
+  if(action === 'del') delPrd(id);
+}
+
+function onColabListClick(e){
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const action = btn.dataset.action;
+  const index = Number(btn.dataset.index);
+  const id = btn.dataset.id;
+
+  if(action === 'edit'){
+    const c = state.db.colaboradores[index];
+    if(c) editColab(c);
+  }
+  if(action === 'del') delColab(id);
+}
+
+function onCaixaListClick(e){
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const action = btn.dataset.action;
+  const id = btn.dataset.id;
+  const data = btn.dataset.date || '';
+
+  const list = qs('#cx-list')._currentItems || [];
+  const item = list.find(x => String(x.id) === String(id));
+  if(!item) return;
+
+  if(action === 'edit') editLanc(item);
+  if(action === 'del') delLanc(id, data);
+}
+
+function onAgendaListClick(e){
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const action = btn.dataset.action;
+  const id = btn.dataset.id;
+  const list = qs('#ag-content')._currentItems || [];
+  const item = list.find(x => String(x.id) === String(id));
+  if(!item) return;
+
+  if(action === 'edit') editAgend(item);
+  if(action === 'del') delAgend(id);
+}
+
+function renderCli(list){
+  const data = list || state.db.clientes;
+  const el = qs('#list-cli');
+  if(!el) return;
+
+  if(!data.length){
+    el.innerHTML = '<div class="empty"><div class="empty-icon">👤</div><p>Nenhuma cliente</p></div>';
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  data.forEach((c, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="cavatar">${((c.nome || '?')[0] || '?').toUpperCase()}</div>
+        <div class="cbody">
+          <div class="cname">${c.nome || '—'}</div>
+          <div class="cmeta">${c.telefone || '—'}${c.aniversario ? ' · 🎂 ' + c.aniversario : ''}</div>
+        </div>
+      </div>
+      <div class="card-bottom">
+        <button class="btn-s" data-action="hist" data-index="${i}">${svgHist}</button>
+        <button class="btn-e" data-action="edit" data-index="${i}">${svgEdit}</button>
+        <button class="btn-d" data-action="del" data-id="${c.id}">${svgDel}</button>
+      </div>
+    `;
+    frag.appendChild(card);
+  });
+
+  el.innerHTML = '';
+  el.appendChild(frag);
+}
+
+function filterCli(q){
+  clearTimeout(state.runtime.cliSearchTimer);
+  state.runtime.cliSearchTimer = setTimeout(() => {
+    state.ui.clienteSearch = String(q || '').toLowerCase();
+    const filtered = state.db.clientes.filter(c =>
+      String(c.nome || '').toLowerCase().includes(state.ui.clienteSearch) ||
+      String(c.telefone || '').includes(state.ui.clienteSearch)
+    );
+    renderCli(filtered);
+  }, 180);
+}
+
+function renderSvc(){
+  const el = qs('#list-svc');
+  if(!el) return;
+  if(!state.db.servicos.length){
+    el.innerHTML = '<div class="empty"><div class="empty-icon">✂️</div><p>Nenhum serviço</p></div>';
+    return;
+  }
+
+  el.innerHTML = state.db.servicos.map((s, i) => `
+    <div class="card">
+      <div class="card-top">
+        <div class="cavatar" style="font-size:18px">✂</div>
+        <div class="cbody">
+          <div class="cname">${s.nome}</div>
+          <div class="cmeta">${s.descricao || '—'} · ${s.duracaoMin || 60}min</div>
+        </div>
+        <span class="badge ${isAtivo(s.ativo) ? 'b-on' : 'b-off'}">${isAtivo(s.ativo) ? 'Ativo' : 'Inativo'}</span>
+      </div>
+      <div class="card-bottom">
+        <button class="btn-e" data-action="edit" data-index="${i}">${svgEdit}</button>
+        <button class="btn-d" data-action="del" data-id="${s.id}">${svgDel}</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderPrd(){
+  const el = qs('#list-prd');
+  if(!el) return;
+  if(!state.db.produtos.length){
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🛍️</div><p>Nenhum produto</p></div>';
+    return;
+  }
+
+  el.innerHTML = state.db.produtos.map((p, i) => `
+    <div class="card">
+      <div class="card-top">
+        <div class="cavatar" style="font-size:18px">🛍</div>
+        <div class="cbody">
+          <div class="cname">${p.nome}</div>
+          <div class="cmeta">${Number(p.preco) > 0 ? fmt(p.preco) + ' · ' : ''}${p.descricao || '—'}</div>
+        </div>
+        <span class="badge ${isAtivo(p.ativo) ? 'b-on' : 'b-off'}">${isAtivo(p.ativo) ? 'Ativo' : 'Inativo'}</span>
+      </div>
+      <div class="card-bottom">
+        <button class="btn-e" data-action="edit" data-index="${i}">${svgEdit}</button>
+        <button class="btn-d" data-action="del" data-id="${p.id}">${svgDel}</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderColab(){
+  const el = qs('#list-colab');
+  if(!el) return;
+  if(!state.db.colaboradores.length){
+    el.innerHTML = '<div class="empty"><div class="empty-icon">💇‍♀️</div><p>Nenhuma colaboradora</p></div>';
+    return;
+  }
+
+  el.innerHTML = state.db.colaboradores.map((c, i) => `
+    <div class="card">
+      <div class="card-top">
+        <div class="cavatar">${((c.nome || '?')[0] || '?').toUpperCase()}</div>
+        <div class="cbody">
+          <div class="cname">${c.nome}</div>
+          <div class="cmeta">${c.cargo || '—'} · ${c.horaInicio || '08:00'}–${c.horaFim || '18:00'}</div>
+        </div>
+        <span class="badge ${isAtivo(c.ativo) ? 'b-on' : 'b-off'}">${isAtivo(c.ativo) ? 'Ativa' : 'Inativa'}</span>
+      </div>
+      <div class="card-bottom">
+        <button class="btn-e" data-action="edit" data-index="${i}">${svgEdit}</button>
+        <button class="btn-d" data-action="del" data-id="${c.id}">${svgDel}</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderPlan(){
+  const el = qs('#list-plan');
+  if(!el) return;
+  let data = state.db.planejamento;
+  if(state.ui.planFiltro !== 'todos') data = data.filter(p => p.tipo === state.ui.planFiltro);
+
+  if(!data.length){
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><p>Nenhum item</p></div>';
+    return;
+  }
+
+  el.innerHTML = data.map(p => `
+    <div class="card">
+      <div class="card-top">
+        <div class="cavatar" style="font-size:18px">${p.tipo === 'despesa' ? '📤' : '📥'}</div>
+        <div class="cbody">
+          <div class="cname">${p.descricao}</div>
+          <div class="cmeta">${p.numParcelas}x de ${fmt(p.valorParcela)} · Dia ${p.diaVencimento}</div>
+        </div>
+        <span class="badge ${p.status === 'ativo' ? 'b-on' : 'b-off'}">${p.status}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderCred(){
+  const el = qs('#list-cred');
+  if(!el) return;
+
+  let data = state.db.crediario;
+  if(state.ui.credFiltro !== 'todos') data = data.filter(c => c.status === state.ui.credFiltro);
+
+  if(!data.length){
+    el.innerHTML = `<div class="empty"><div class="empty-icon">✅</div><p>${state.ui.credFiltro === 'aberto' ? 'Nenhum fiado em aberto' : 'Sem registros'}</p></div>`;
+    return;
+  }
+
+  el.innerHTML = data.map(c => `
+    <div class="cred-card">
+      <div class="cred-hdr">
+        <div style="font-size:14px;font-weight:500">${c.clienteNome}</div>
+        <span class="badge ${c.status === 'aberto' ? 'b-off' : 'b-on'}">${c.status}</span>
+      </div>
+      <div class="cred-vals">
+        <div class="cv-item"><div class="cv-label">Total</div><div class="cv-num">${fmt(c.valorTotal)}</div></div>
+        <div class="cv-item"><div class="cv-label">Entrada</div><div class="cv-num">${fmt(c.valorEntrada)}</div></div>
+        <div class="cv-item"><div class="cv-label">Saldo</div><div class="cv-num err">${fmt(c.saldoDevedor)}</div></div>
+      </div>
+      ${c.status === 'aberto'
+        ? `<button class="btn-pagar" onclick="abrirPgtoFiado('${c.id}','${(c.clienteNome || '').replace(/'/g,"\\'")}',${Number(c.saldoDevedor) || 0},${Number(c.numParcelas) || 1})">Registrar Pagamento</button>`
+        : ''
+      }
+    </div>
+  `).join('');
+}
+
+async function loadCaixa(){
+  const inp = qs('#cx-data');
+  if(inp && !inp.value) inp.value = fmtBR(today());
+  const data = parseISO(inp?.value || fmtBR(today()));
+
+  try{
+    const [res, lancs] = await Promise.all([
+      api({ action:'getCaixaResumo', token:state.token, data }),
+      api({ action:'getCaixa', token:state.token, data })
+    ]);
+
+    if(res.status === 'ok'){
+      const d = res.data || {};
+      qs('#cx-ent').textContent = fmt(d.entradas);
+      qs('#cx-sai').textContent = fmt(d.saidas);
+      qs('#cx-sal').textContent = fmt(d.saldo);
+
+      const pf = d.porForma || {};
+      const keys = Object.keys(pf);
+      const fel = qs('#cx-formas');
+      fel.innerHTML = keys.length
+        ? '<div class="slabel" style="margin-bottom:8px">Por forma de pagamento</div>' +
+          keys.map(k => `<div class="forma-row"><span style="font-size:12px;color:var(--dim)">${lbForma(k)}</span><span style="font-size:12px;font-weight:500">${fmt(pf[k])}</span></div>`).join('')
+        : '<div style="font-size:11px;color:var(--dim);text-align:center">Nenhuma entrada registrada</div>';
+    }
+
+    if(lancs.status === 'ok'){
+      const el = qs('#cx-list');
+      const dataList = (lancs.data || []).slice().reverse();
+      el._currentItems = dataList;
+
+      if(!dataList.length){
+        el.innerHTML = '<div class="empty"><div class="empty-icon">💰</div><p>Nenhum lançamento</p></div>';
+        return;
+      }
+
+      el.innerHTML = dataList.map(l => {
+        const isRet = l.isRetirada === 'true' || l.categoria === 'Retirada Pessoal';
+        return `
+          <div class="lcard">
+            <div class="licon ${l.tipo}">${l.tipo === 'entrada' ? '↑' : '↓'}</div>
+            <div class="lbody">
+              <div class="lnome">${l.clienteNome || l.itemNome || l.categoria || '—'}${isRet ? ' <span class="badge b-warn">PESSOAL</span>' : ''}</div>
+              <div class="lmeta">${lbForma(l.formaPagamento)} ${renderItensMini(l.itemNome, l.observacoes)}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+              <div class="lval ${l.tipo}">${l.tipo === 'saida' ? '-' : ''}${fmt(l.valor)}</div>
+              <div style="display:flex;gap:2px">
+                <button class="btn-e" data-action="edit" data-id="${l.id}" data-date="${l.data}">${svgEdit}</button>
+                <button class="btn-d" data-action="del" data-id="${l.id}" data-date="${l.data}">${svgDel}</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    state.ui.loadFlags.caixaLoadedFor = data;
+  }catch(e){
+    console.error('loadCaixa', e);
+  }
+}
+
+async function loadAgenda(){
+  const inp = qs('#ag-data');
+  if(inp && !inp.value) inp.value = fmtBR(today());
+  const dataBase = parseISO(inp?.value || fmtBR(today()));
+  const params = { action:'getAgendamentos', token:state.token };
+
+  if(state.ui.agView === 'dia'){
+    params.data = dataBase;
+  }else if(state.ui.agView === 'semana'){
+    const d = new Date(dataBase + 'T00:00:00');
+    d.setDate(d.getDate() - d.getDay());
+    const di = d.toISOString().slice(0,10);
+    d.setDate(d.getDate() + 6);
+    params.dataInicio = di;
+    params.dataFim = d.toISOString().slice(0,10);
+  }else{
+    const [a,m] = dataBase.split('-');
+    params.dataInicio = `${a}-${m}-01`;
+    const ld = new Date(parseInt(a,10), parseInt(m,10), 0).getDate();
+    params.dataFim = `${a}-${m}-${ld}`;
+  }
+
+  const el = qs('#ag-content');
+  el.innerHTML = '<div style="text-align:center;padding:30px"><div class="spinner" style="margin:0 auto"></div></div>';
+
+  try{
+    const r = await api(params);
+    if(r.status !== 'ok'){
+      el.innerHTML = `<div class="empty"><p>Erro: ${r.data?.message || 'falha na consulta'}</p></div>`;
+      return;
+    }
+
+    const list = r.data || [];
+    el._currentItems = list;
+
+    if(!list.length){
+      el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><p>Nenhum agendamento</p></div>';
+      return;
+    }
+
+    const grupos = {};
+    list.forEach(a => {
+      const d = String(a.data).slice(0,10);
+      if(!grupos[d]) grupos[d] = [];
+      grupos[d].push(a);
+    });
+
+    el.innerHTML = Object.keys(grupos).sort().map(data => {
+      const br = fmtBR(data);
+      const isHoje = data === today();
+      return `
+        <div style="margin-bottom:20px">
+          <div style="font-size:10px;color:${isHoje ? 'var(--gold)' : 'var(--dim)'};letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:${isHoje ? '600' : '400'}">${br}${isHoje ? ' · HOJE' : ''}</div>
+          ${grupos[data].map(ag => `
+            <div class="ag-card ${ag.status}">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                <div>
+                  <div class="ag-hora">${ag.hora}</div>
+                  <div class="ag-cli">${ag.clienteNome || '—'}</div>
+                  <div class="ag-meta">${ag.servicos || '—'} · ${ag.duracaoMin}min${ag.colaboradorNome ? ' · ' + ag.colaboradorNome : ''}</div>
+                </div>
+                <div style="display:flex;gap:4px;align-items:center">
+                  <span class="badge ${ag.status === 'concluido' ? 'b-on' : ag.status === 'cancelado' ? 'b-off' : 'b-info'}">${ag.status}</span>
+                  <button class="btn-e" data-action="edit" data-id="${ag.id}">${svgEdit}</button>
+                  <button class="btn-d" data-action="del" data-id="${ag.id}">${svgDel}</button>
+                </div>
+              </div>
+              ${Number(ag.valor) > 0 ? `<div style="font-family:'Playfair Display',serif;font-size:15px;color:var(--ok);margin-top:6px">${fmt(ag.valor)}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }).join('');
+
+    state.ui.loadFlags.agendaLoaded = true;
+  }catch(e){
+    console.error('loadAgenda', e);
+    el.innerHTML = '<div class="empty"><p>Erro de conexão.</p></div>';
+  }
+}
+
+async function loadCred(){
+  try{
+    const r = await api({ action:'getCrediario', token:state.token });
+    if(r.status === 'ok'){
+      state.db.crediario = r.data || [];
+      renderCred();
+    }
+  }catch(e){}
+}
+
+async function loadVencHome(){
+  try{
+    const [venc, atras] = await Promise.all([
+      api({ action:'getVencimentos', token:state.token }),
+      api({ action:'getAtrasados', token:state.token })
+    ]);
+
+    const vel = qs('#home-venc');
+    if(venc.status === 'ok' && venc.data.length){
+      vel.innerHTML = venc.data.slice(0,6).map(v => {
+        const dias = Math.round((new Date(v.vencimento + 'T00:00:00') - new Date()) / (1000*60*60*24));
+        const cls = dias <= 2 ? 'err' : dias <= 5 ? 'warn' : 'ok';
+        const cardCls = dias <= 2 ? 'atrasado' : dias <= 5 ? 'urgente' : '';
+        return `
+          <div class="venc-card ${cardCls}">
+            <div class="venc-dot ${cls}"></div>
+            <div class="venc-body">
+              <div class="venc-desc">${v.descricao || v.clienteNome || '—'}</div>
+              <div class="venc-data">Vence ${fmtBR(v.vencimento)} · ${v._tipo === 'despesa' ? 'Despesa' : 'A receber'}</div>
+            </div>
+            <div class="venc-val">${fmt(v.valor || v.valorParcela)}</div>
+          </div>
+        `;
+      }).join('');
+    }else{
+      vel.innerHTML = `<div style="font-size:12px;color:var(--ok);padding:8px 0;font-weight:500">✅ Nenhum vencimento nos próximos 15 dias</div>`;
+    }
+
+    const ael = qs('#home-atrasados');
+    if(atras.status === 'ok' && atras.data.length){
+      ael.innerHTML = `
+        <div style="background:var(--err-bg);border:1.5px solid var(--err);border-radius:var(--r);padding:12px 14px;margin-bottom:16px">
+          <div style="font-size:10px;color:var(--err);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:8px">⚠️ ${atras.data.length} obrigação(ões) em atraso</div>
+          ${atras.data.slice(0,3).map(v => `
+            <div class="alert-bar">
+              <div class="alert-bar-icon">🔴</div>
+              <div class="alert-bar-body">
+                <div class="alert-bar-desc">${v.descricao || v.clienteNome || '—'}</div>
+                <div class="alert-bar-meta">Venceu ${fmtBR(v.vencimento)}</div>
+              </div>
+              <div class="alert-bar-val">${fmt(v.valor || v.valorParcela)}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }else{
+      ael.innerHTML = '';
+    }
+  }catch(e){}
+}
+
+async function loadExtrato(){
+  const params = { action:'getExtrato', token:state.token };
+
+  if(state.ui.extModo === 'periodo'){
+    const di = parseISO(qs('#ext-di')?.value || '');
+    const df = parseISO(qs('#ext-df')?.value || '');
+    if(!di || !df || di === 'NaN-NaN-NaN') return toast('Informe as datas.','err');
+
+    const diff = (new Date(df) - new Date(di)) / (1000*60*60*24);
+    if(diff > 7 && !state.ui.extUnlocked){
+      qs('#ext-lock').style.display = 'block';
+      qs('#ext-ui').style.display = 'none';
+      return;
+    }
+    params.dataInicio = di;
+    params.dataFim = df;
+  }else{
+    if(!state.ui.extUnlocked){
+      qs('#ext-lock').style.display = 'block';
+      qs('#ext-ui').style.display = 'none';
+      return;
+    }
+    params.mes = qs('#ext-mes')?.value;
+    params.ano = qs('#ext-ano')?.value;
+  }
+
+  const el = qs('#ext-content');
+  el.innerHTML = '<div style="text-align:center;padding:40px"><div class="spinner" style="margin:0 auto"></div></div>';
+
+  try{
+    const r = await api(params);
+    if(r.status !== 'ok'){
+      el.innerHTML = '<div class="empty"><p>Erro ao carregar.</p></div>';
+      return;
+    }
+    renderExtrato(r.data, el);
+  }catch(e){
+    el.innerHTML = '<div class="empty"><p>Erro de conexão.</p></div>';
+  }
+}
+
+function renderExtrato(d, el){
+  let html = `<div class="ext-header"><div class="ext-label">${d.label || 'Extrato'}</div><div class="ext-sub">${d.total || 0} lançamentos</div></div>`;
+  const resOp = d.resultadoOp || 0;
+  const dizimo = Math.max(0, resOp) * 0.10;
+
+  html += `
+    <div class="ext-rg">
+      <div class="ext-rc"><div class="ext-rc-label">Entradas</div><div class="ext-rc-val pos">${fmt(d.faturamento)}</div></div>
+      <div class="ext-rc"><div class="ext-rc-label">Despesas Op.</div><div class="ext-rc-val neg">${fmt(d.saidasOp)}</div></div>
+    </div>
+    <div class="result-box ${resOp >= 0 ? 'destaque-ok' : 'destaque-err'}" style="margin-bottom:12px">
+      <div><div class="result-label">Resultado Operacional</div><div class="result-sub">Entradas − Despesas da empresa</div></div>
+      <div class="result-val ${resOp >= 0 ? 'pos' : 'neg'}" style="font-size:26px">${fmt(resOp)}</div>
+    </div>
+    ${dizimo > 0 ? `
+      <div style="background:var(--info-bg);border:1.5px solid var(--info);border-radius:var(--r);padding:14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:9px;color:var(--info);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:2px">🙏 Dízimo (10%)</div><div style="font-size:11px;color:var(--dim)">Sobre o resultado operacional</div></div>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--info);font-weight:600">${fmt(dizimo)}</div>
+      </div>
+    ` : ''}
+    <div class="ext-rg" style="margin-bottom:12px">
+      <div class="ext-rc"><div class="ext-rc-label">Retiradas Pessoais</div><div class="ext-rc-val warn">${fmt(d.retiradas || 0)}</div></div>
+      <div class="ext-rc"><div class="ext-rc-label">Dízimo estimado</div><div class="ext-rc-val" style="color:var(--info)">${fmt(dizimo)}</div></div>
+    </div>
+  `;
+
+  if((d.retiradas || 0) > 0){
+    html += `<div class="result-box destaque"><div><div class="result-label">Resultado Final</div><div class="result-sub">Após retiradas pessoais</div></div><div class="result-val ${(d.resultadoFinal || 0) >= 0 ? 'pos' : 'neg'}">${fmt(d.resultadoFinal)}</div></div>`;
+  }
+
+  if(Object.keys(d.porForma || {}).length){
+    html += `<div class="bk-box"><div class="bk-title">Entradas por forma de pagamento</div>`;
+    Object.entries(d.porForma).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{
+      const pct = d.faturamento > 0 ? ((v / d.faturamento) * 100).toFixed(1) : 0;
+      html += `<div class="bk-row"><span class="bk-label">${lbForma(k)}</span><span class="bk-val">${fmt(v)}<span class="bk-pct">${pct}%</span></span></div>`;
+    });
+    html += `</div>`;
+  }
+
+  if(Object.keys(d.porCategoria || {}).length){
+    html += `<div class="bk-box"><div class="bk-title">Saídas por categoria</div>`;
+    Object.entries(d.porCategoria).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{
+      const pct = d.saidasOp > 0 ? ((v / d.saidasOp) * 100).toFixed(1) : 0;
+      html += `<div class="bk-row"><span class="bk-label">${k}</span><span class="bk-val" style="color:var(--err)">${fmt(v)}<span class="bk-pct">${pct}%</span></span></div>`;
+    });
+    html += `</div>`;
+  }
+
+  if(d.dias?.length){
+    html += '<div class="slabel" style="margin-bottom:10px">Detalhamento por dia</div>';
+    d.dias.forEach((dia,i) => {
+      const br = fmtBR(dia.data);
+      html += `
+        <div>
+          <div class="dia-hdr" onclick="toggleDia('dd${i}')">
+            <span style="font-size:12px;color:var(--dim);font-weight:500">${br}</span>
+            <span style="display:flex;gap:12px;font-size:12px;font-weight:600">
+              <span style="color:var(--ok)">+${fmt(dia.entradas)}</span>
+              ${dia.saidas > 0 ? `<span style="color:var(--err)">-${fmt(dia.saidas)}</span>` : ''}
+            </span>
+          </div>
+          <div class="dia-items" id="dd${i}" style="display:${i === 0 ? 'block' : 'none'}">
+            ${(dia.lancamentos || []).map(l => `
+              <div class="dia-item">
+                <div class="licon ${l.tipo}" style="width:28px;height:28px;font-size:12px">${l.tipo === 'entrada' ? '↑' : '↓'}</div>
+                <div class="lbody">
+                  <div class="lnome" style="font-size:12px">${l.itemNome || l.categoria || '—'}${l.clienteNome ? ' · ' + l.clienteNome : ''}</div>
+                  <div class="lmeta">${lbForma(l.formaPagamento)}</div>
+                </div>
+                <div class="lval ${l.tipo}" style="font-size:14px">${l.tipo === 'saida' ? '-' : ''}${fmt(l.valor)}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    });
+  }else{
+    html += '<div class="empty"><div class="empty-icon">📭</div><p>Nenhum lançamento</p></div>';
+  }
+
+  el.innerHTML = html;
+}
+
+function toggleDia(id){
+  const el = qs('#' + id);
+  if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+window.toggleDia = toggleDia;
+
+function openDrawerCliente(){
+  state.ui.editId = null;
+  openDrawer(`
+    <div class="dtitle">Nova Cliente</div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="fc-nome" type="text" class="inp"/></div>
+    <div class="fg"><span class="lbl">Telefone</span><input id="fc-tel" type="tel" class="inp" placeholder="(00) 00000-0000" maxlength="15"/></div>
+    <div class="fg"><span class="lbl">E-mail</span><input id="fc-email" type="email" class="inp"/></div>
+    <div class="fg"><span class="lbl">Aniversário</span><input id="fc-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/></div>
+    <div class="fg"><span class="lbl">Observações</span><textarea id="fc-obs" class="inp"></textarea></div>
+    <div class="dfooter">
+      <button class="btn-sec" id="btn-cancel-cli">Cancelar</button>
+      <button class="btn-save" id="btn-save-cli">Salvar</button>
+    </div>
+  `);
+
+  qs('#fc-tel').addEventListener('input', e => applyTelMask(e.target));
+  qs('#fc-aniv').addEventListener('input', e => applyDataMask(e.target));
+  qs('#btn-cancel-cli').addEventListener('click', closeDrawer);
+  qs('#btn-save-cli').addEventListener('click', saveCli);
+}
+
+function editCli(c){
+  state.ui.editId = c.id;
+  openDrawer(`
+    <div class="dtitle">Editar Cliente</div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="fc-nome" type="text" class="inp" value="${c.nome || ''}"/></div>
+    <div class="fg"><span class="lbl">Telefone</span><input id="fc-tel" type="tel" class="inp" value="${c.telefone || ''}" maxlength="15"/></div>
+    <div class="fg"><span class="lbl">E-mail</span><input id="fc-email" type="email" class="inp" value="${c.email || ''}"/></div>
+    <div class="fg"><span class="lbl">Aniversário</span><input id="fc-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${c.aniversario || ''}"/></div>
+    <div class="fg"><span class="lbl">Observações</span><textarea id="fc-obs" class="inp">${c.observacoes || ''}</textarea></div>
+    <div class="dfooter">
+      <button class="btn-sec" id="btn-cancel-cli">Cancelar</button>
+      <button class="btn-save" id="btn-save-cli">Salvar</button>
+    </div>
+  `);
+
+  qs('#fc-tel').addEventListener('input', e => applyTelMask(e.target));
+  qs('#fc-aniv').addEventListener('input', e => applyDataMask(e.target));
+  qs('#btn-cancel-cli').addEventListener('click', closeDrawer);
+  qs('#btn-save-cli').addEventListener('click', saveCli);
+}
+
+async function saveCli(){
+  const nome = qs('#fc-nome')?.value.trim();
+  if(!nome) return toast('Nome obrigatório.','err');
+
+  const data = {
+    id: state.ui.editId || null,
+    nome,
+    telefone: qs('#fc-tel')?.value.trim() || '',
+    email: qs('#fc-email')?.value.trim() || '',
+    aniversario: qs('#fc-aniv')?.value || '',
+    observacoes: qs('#fc-obs')?.value.trim() || ''
+  };
+
+  const btn = qs('#drawer .btn-save');
+  btnSv(btn, true);
+
+  try{
+    const r = await post({ action:'saveCliente', token:state.token, data });
+    if(r.status !== 'ok'){
+      toast('Erro.','err');
+      btnSv(btn, false);
+      return;
+    }
+
+    if(r.data?.item){
+      const item = r.data.item;
+      const idx = state.db.clientes.findIndex(x => x.id === item.id);
+      if(idx >= 0) state.db.clientes[idx] = item;
+      else state.db.clientes.push(item);
+    }else{
+      const fr = await api({ action:'getClientes', token:state.token });
+      if(fr.status === 'ok') state.db.clientes = fr.data || [];
+    }
+
+    renderCli();
+    updateStats();
+    closeDrawer();
+    toast(state.ui.editId ? 'Atualizada!' : 'Cadastrada!','ok');
+  }catch(e){
+    toast('Erro.','err');
+    btnSv(btn, false);
+  }
+}
+
+async function delCli(id){
+  if(!confirm('Excluir?')) return;
+  try{
+    const r = await post({ action:'deleteRow', token:state.token, sheet:'clientes', id });
+    if(r.status !== 'ok') return toast('Erro.','err');
+    state.db.clientes = state.db.clientes.filter(c => c.id !== id);
+    renderCli();
+    updateStats();
+    toast('Excluída.','ok');
+  }catch(e){
+    toast('Erro.','err');
+  }
+}
+
+async function verHist(clienteId, nome){
+  openDrawer(`<div class="dtitle">Histórico</div><div style="color:var(--dim);margin-bottom:16px">${nome}</div><div style="color:var(--dim);font-size:12px">Carregando…</div>`);
+
+  try{
+    const [hist, cred] = await Promise.all([
+      api({ action:'getHistoricoCliente', token:state.token, clienteId }),
+      api({ action:'getCrediario', token:state.token, clienteId })
+    ]);
+
+    let html = `<div class="dtitle">Histórico</div><div style="font-size:12px;color:var(--dim);margin-bottom:16px">${nome}</div>`;
+
+    if(cred.status === 'ok' && cred.data.length){
+      const c = cred.data.find(x => x.status === 'aberto');
+      if(c){
+        html += `<div style="background:var(--err-bg);border:1.5px solid var(--err);border-radius:var(--r);padding:12px;margin-bottom:16px;display:flex;justify-content:space-between"><span style="color:var(--err);font-size:12px;font-weight:500">Fiado em aberto</span><span style="font-family:'Playfair Display',serif;font-size:18px;color:var(--err);font-weight:600">${fmt(c.saldoDevedor)}</span></div>`;
+      }
+    }
+
+    if(hist.status === 'ok' && hist.data.length){
+      html += '<div class="slabel" style="margin-bottom:8px">Serviços e produtos</div>';
+      html += hist.data.slice().reverse().map(h => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-size:13px;font-weight:500">${h.itemNome || h.categoria || '—'}</div>
+            <div style="font-size:10px;color:var(--dim)">${fmtBR(String(h.data).slice(0,10))} · ${lbForma(h.formaPagamento)}</div>
+          </div>
+          <div style="font-family:'Playfair Display',serif;font-size:15px;color:var(--ok);font-weight:600">${fmt(h.valor)}</div>
+        </div>
+      `).join('');
+    }else{
+      html += '<div class="empty"><div class="empty-icon">📋</div><p>Sem histórico</p></div>';
+    }
+
+    html += '<div class="dfooter"><button class="btn-save" style="width:100%" id="btn-fechar-hist">Fechar</button></div>';
+    qs('#drawer-content').innerHTML = html;
+    qs('#btn-fechar-hist').addEventListener('click', closeDrawer);
+  }catch(e){
+    toast('Erro.','err');
+  }
+}
+
+function openDrawerSvc(){
+  state.ui.editId = null;
+  openDrawer(`
+    <div class="dtitle">Novo Serviço</div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="sv-nome" type="text" class="inp"/></div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Descrição</span><input id="sv-desc" type="text" class="inp"/></div>
+      <div class="fg"><span class="lbl">Duração (min)</span><input id="sv-dur" type="number" class="inp" value="60"/></div>
+    </div>
+    <div class="dfooter">
+      <button class="btn-sec" id="btn-cancel-svc">Cancelar</button>
+      <button class="btn-save" id="btn-save-svc">Salvar</button>
+    </div>
+  `);
+  qs('#btn-cancel-svc').addEventListener('click', closeDrawer);
+  qs('#btn-save-svc').addEventListener('click', saveSvc);
+}
+
+function editSvc(s){
+  state.ui.editId = s.id;
+  openDrawer(`
+    <div class="dtitle">Editar Serviço</div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="sv-nome" type="text" class="inp" value="${s.nome || ''}"/></div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Descrição</span><input id="sv-desc" type="text" class="inp" value="${s.descricao || ''}"/></div>
+      <div class="fg"><span class="lbl">Duração (min)</span><input id="sv-dur" type="number" class="inp" value="${s.duracaoMin || 60}"/></div>
+    </div>
+    <div class="fg">
+      <span class="lbl">Status</span>
+      <select id="sv-ativo" class="inp">
+        <option value="true" ${isAtivo(s.ativo) ? 'selected' : ''}>Ativo</option>
+        <option value="false" ${!isAtivo(s.ativo) ? 'selected' : ''}>Inativo</option>
+      </select>
+    </div>
+    <div class="dfooter">
+      <button class="btn-sec" id="btn-cancel-svc">Cancelar</button>
+      <button class="btn-save" id="btn-save-svc">Salvar</button>
+    </div>
+  `);
+  qs('#btn-cancel-svc').addEventListener('click', closeDrawer);
+  qs('#btn-save-svc').addEventListener('click', saveSvc);
+}
+
+async function saveSvc(){
+  const nome = qs('#sv-nome')?.value.trim();
+  if(!nome) return toast('Nome obrigatório.','err');
+
+  const data = {
+    id: state.ui.editId || null,
+    nome,
+    descricao: qs('#sv-desc')?.value.trim() || '',
+    duracaoMin: parseInt(qs('#sv-dur')?.value || '60', 10),
+    ativo: qs('#sv-ativo')?.value || 'true'
+  };
+
+  const btn = qs('#drawer .btn-save');
+  btnSv(btn, true);
+
+  try{
+    const r = await post({ action:'saveServico', token:state.token, data });
+    if(r.status !== 'ok'){
+      toast('Erro.','err');
+      btnSv(btn, false);
+      return;
+    }
+
+    if(r.data?.item){
+      const item = r.data.item;
+      const idx = state.db.servicos.findIndex(x => x.id === item.id);
+      if(idx >= 0) state.db.servicos[idx] = item;
+      else state.db.servicos.push(item);
+    }else{
+      const fr = await api({ action:'getServicos', token:state.token });
+      if(fr.status === 'ok') state.db.servicos = fr.data || [];
+    }
+
+    renderSvc();
+    updateStats();
+    closeDrawer();
+    toast('Salvo!','ok');
+  }catch(e){
+    toast('Erro.','err');
+    btnSv(btn, false);
+  }
+}
+
+async function delSvc(id){
+  if(!confirm('Excluir?')) return;
+  try{
+    const r = await post({ action:'deleteRow', token:state.token, sheet:'servicos', id });
+    if(r.status !== 'ok') return toast('Erro.','err');
+    state.db.servicos = state.db.servicos.filter(s => s.id !== id);
+    renderSvc();
+    updateStats();
+    toast('Excluído.','ok');
+  }catch(e){
+    toast('Erro.','err');
+  }
+}
+
+function openDrawerPrd(){
+  state.ui.editId = null;
+  openDrawer(`
+    <div class="dtitle">Novo Produto</div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="pr-nome" type="text" class="inp"/></div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Preço padrão (R$)</span><input id="pr-preco" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
+      <div class="fg"><span class="lbl">Descrição</span><input id="pr-desc" type="text" class="inp" placeholder="Opcional…"/></div>
+    </div>
+    <div class="dfooter">
+      <button class="btn-sec" id="btn-cancel-prd">Cancelar</button>
+      <button class="btn-save" id="btn-save-prd">Salvar</button>
+    </div>
+  `);
+
+  qs('#pr-preco').addEventListener('input', e => applyValorMask(e.target));
+  qs('#btn-cancel-prd').addEventListener('click', closeDrawer);
+  qs('#btn-save-prd').addEventListener('click', savePrd);
+}
+
+function editPrd(p){
+  state.ui.editId = p.id;
+  openDrawer(`
+    <div class="dtitle">Editar Produto</div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="pr-nome" type="text" class="inp" value="${p.nome || ''}"/></div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Preço padrão (R$)</span><input id="pr-preco" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
+      <div class="fg"><span class="lbl">Descrição</span><input id="pr-desc" type="text" class="inp" value="${p.descricao || ''}"/></div>
+    </div>
+    <div class="fg">
+      <span class="lbl">Status</span>
+      <select id="pr-ativo" class="inp">
+        <option value="true" ${isAtivo(p.ativo) ? 'selected' : ''}>Ativo</option>
+        <option value="false" ${!isAtivo(p.ativo) ? 'selected' : ''}>Inativo</option>
+      </select>
+    </div>
+    <div class="dfooter">
+      <button class="btn-sec" id="btn-cancel-prd">Cancelar</button>
+      <button class="btn-save" id="btn-save-prd">Salvar</button>
+    </div>
+  `);
+
+  qs('#pr-preco').addEventListener('input', e => applyValorMask(e.target));
+  setTimeout(() => setValorMask(qs('#pr-preco'), p.preco), 20);
+  qs('#btn-cancel-prd').addEventListener('click', closeDrawer);
+  qs('#btn-save-prd').addEventListener('click', savePrd);
+}
+
+async function savePrd(){
+  const nome = qs('#pr-nome')?.value.trim();
+  if(!nome) return toast('Nome obrigatório.','err');
+
+  const data = {
+    id: state.ui.editId || null,
+    nome,
+    preco: getValorRaw(qs('#pr-preco')),
+    descricao: qs('#pr-desc')?.value.trim() || '',
+    ativo: qs('#pr-ativo')?.value || 'true'
+  };
+
+  const btn = qs('#drawer .btn-save');
+  btnSv(btn, true);
+
+  try{
+    const r = await post({ action:'saveProduto', token:state.token, data });
+    if(r.status !== 'ok'){
+      toast('Erro.','err');
+      btnSv(btn, false);
+      return;
+    }
+
+    if(r.data?.item){
+      const item = r.data.item;
+      const idx = state.db.produtos.findIndex(x => x.id === item.id);
+      if(idx >= 0) state.db.produtos[idx] = item;
+      else state.db.produtos.push(item);
+    }else{
+      const fr = await api({ action:'getProdutos', token:state.token });
+      if(fr.status === 'ok') state.db.produtos = fr.data || [];
+    }
+
+    renderPrd();
+    closeDrawer();
+    toast('Salvo!','ok');
+  }catch(e){
+    toast('Erro.','err');
+    btnSv(btn, false);
+  }
+}
+
+async function delPrd(id){
+  if(!confirm('Excluir?')) return;
+  try{
+    const r = await post({ action:'deleteRow', token:state.token, sheet:'produtos', id });
+    if(r.status !== 'ok') return toast('Erro.','err');
+    state.db.produtos = state.db.produtos.filter(p => p.id !== id);
+    renderPrd();
+    toast('Excluído.','ok');
+  }catch(e){
+    toast('Erro.','err');
+  }
+}
+
+function openDrawerColab(){
+  state.ui.editId = null;
+  openDrawer(`
+    <div class="dtitle">Nova Colaboradora</div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="co-nome" type="text" class="inp"/></div>
+    <div class="fg"><span class="lbl">Cargo</span><input id="co-cargo" type="text" class="inp" placeholder="Ex: Especialista Mega-hair"/></div>
+    <div class="fg"><span class="lbl">Telefone</span><input id="co-tel" type="tel" class="inp" placeholder="(00) 00000-0000" maxlength="15"/></div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Início</span><input id="co-hi" type="time" class="inp" value="08:00"/></div>
+      <div class="fg"><span class="lbl">Fim</span><input id="co-hf" type="time" class="inp" value="18:00"/></div>
+    </div>
+    <div class="dfooter">
+      <button class="btn-sec" id="btn-cancel-colab">Cancelar</button>
+      <button class="btn-save" id="btn-save-colab">Salvar</button>
+    </div>
+  `);
+
+  qs('#co-tel').addEventListener('input', e => applyTelMask(e.target));
+  qs('#btn-cancel-colab').addEventListener('click', closeDrawer);
+  qs('#btn-save-colab').addEventListener('click', saveColab);
+}
+
+function editColab(c){
+  state.ui.editId = c.id;
+  openDrawer(`
+    <div class="dtitle">Editar Colaboradora</div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="co-nome" type="text" class="inp" value="${c.nome || ''}"/></div>
+    <div class="fg"><span class="lbl">Cargo</span><input id="co-cargo" type="text" class="inp" value="${c.cargo || ''}"/></div>
+    <div class="fg"><span class="lbl">Telefone</span><input id="co-tel" type="tel" class="inp" value="${c.telefone || ''}" maxlength="15"/></div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Início</span><input id="co-hi" type="time" class="inp" value="${c.horaInicio || '08:00'}"/></div>
+      <div class="fg"><span class="lbl">Fim</span><input id="co-hf" type="time" class="inp" value="${c.horaFim || '18:00'}"/></div>
+    </div>
+    <div class="fg">
+      <span class="lbl">Status</span>
+      <select id="co-ativo" class="inp">
+        <option value="true" ${isAtivo(c.ativo) ? 'selected' : ''}>Ativa</option>
+        <option value="false" ${!isAtivo(c.ativo) ? 'selected' : ''}>Inativa</option>
+      </select>
+    </div>
+    <div class="dfooter">
+      <button class="btn-sec" id="btn-cancel-colab">Cancelar</button>
+      <button class="btn-save" id="btn-save-colab">Salvar</button>
+    </div>
+  `);
+
+  qs('#co-tel').addEventListener('input', e => applyTelMask(e.target));
+  qs('#btn-cancel-colab').addEventListener('click', closeDrawer);
+  qs('#btn-save-colab').addEventListener('click', saveColab);
+}
+
+async function saveColab(){
+  const nome = qs('#co-nome')?.value.trim();
+  if(!nome) return toast('Nome obrigatório.','err');
+
+  const data = {
+    id: state.ui.editId || null,
+    nome,
+    cargo: qs('#co-cargo')?.value.trim() || '',
+    telefone: qs('#co-tel')?.value.trim() || '',
+    horaInicio: qs('#co-hi')?.value || '08:00',
+    horaFim: qs('#co-hf')?.value || '18:00',
+    ativo: qs('#co-ativo')?.value || 'true'
+  };
+
+  const btn = qs('#drawer .btn-save');
+  btnSv(btn, true);
+
+  try{
+    const r = await post({ action:'saveColaborador', token:state.token, data });
+    if(r.status !== 'ok'){
+      toast('Erro.','err');
+      btnSv(btn, false);
+      return;
+    }
+
+    if(r.data?.item){
+      const item = r.data.item;
+      const idx = state.db.colaboradores.findIndex(x => x.id === item.id);
+      if(idx >= 0) state.db.colaboradores[idx] = item;
+      else state.db.colaboradores.push(item);
+    }else{
+      const fr = await api({ action:'getColaboradores', token:state.token });
+      if(fr.status === 'ok') state.db.colaboradores = fr.data || [];
+    }
+
+    renderColab();
+    closeDrawer();
+    toast('Salvo!','ok');
+  }catch(e){
+    toast('Erro.','err');
+    btnSv(btn, false);
+  }
+}
+
+async function delColab(id){
+  if(!confirm('Excluir?')) return;
+  try{
+    const r = await post({ action:'deleteRow', token:state.token, sheet:'colaboradores', id });
+    if(r.status !== 'ok') return toast('Erro.','err');
+    state.db.colaboradores = state.db.colaboradores.filter(c => c.id !== id);
+    renderColab();
+    toast('Excluída.','ok');
+  }catch(e){
+    toast('Erro.','err');
+  }
+}
+
+function openDrawerPlan(){
+  openDrawer(`
+    <div class="dtitle">Novo Planejamento</div>
+    <div class="seg">
+      <button class="seg-btn active" id="plan-d">Despesa</button>
+      <button class="seg-btn" id="plan-r">Receita</button>
+    </div>
+    <div class="fg"><span class="lbl">Descrição *</span><input id="pn-desc" type="text" class="inp" placeholder="Ex: Equipamento parcelado…"/></div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Valor total *</span><input id="pn-total" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
+      <div class="fg"><span class="lbl">Nº parcelas</span><input id="pn-parc" type="number" class="inp" min="1" max="60" value="1"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Dia vencimento</span><input id="pn-dia" type="number" class="inp" min="1" max="31" value="10"/></div>
+      <div class="fg"><span class="lbl">Data início</span><input id="pn-inicio" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/></div>
+    </div>
+    <div class="fg"><span class="lbl">Observações</span><input id="pn-obs" type="text" class="inp" placeholder="Opcional…"/></div>
+    <div class="dfooter">
+      <button class="btn-sec" id="btn-cancel-plan">Cancelar</button>
+      <button class="btn-save" id="btn-save-plan">Salvar</button>
+    </div>
+  `);
+
+  qs('#pn-total').addEventListener('input', e => applyValorMask(e.target));
+  qs('#pn-inicio').addEventListener('input', e => applyDataMask(e.target));
+  qs('#pn-inicio').value = fmtBR(today());
+
+  qs('#plan-d').addEventListener('click', () => {
+    qs('#plan-d').classList.add('active');
+    qs('#plan-r').classList.remove('active');
+  });
+  qs('#plan-r').addEventListener('click', () => {
+    qs('#plan-r').classList.add('active');
+    qs('#plan-d').classList.remove('active');
+  });
+
+  qs('#btn-cancel-plan').addEventListener('click', closeDrawer);
+  qs('#btn-save-plan').addEventListener('click', savePlan);
+}
+
+async function savePlan(){
+  const desc = qs('#pn-desc')?.value.trim();
+  if(!desc) return toast('Descrição obrigatória.','err');
+
+  const total = getValorRaw(qs('#pn-total'));
+  if(!total) return toast('Informe o valor.','err');
+
+  const tipo = qs('#plan-d')?.classList.contains('active') ? 'despesa' : 'receita';
+  const data = {
+    tipo,
+    descricao: desc,
+    valorTotal: total,
+    numParcelas: parseInt(qs('#pn-parc')?.value || '1', 10),
+    diaVencimento: parseInt(qs('#pn-dia')?.value || '10', 10),
+    dataInicio: parseISO(qs('#pn-inicio')?.value || fmtBR(today())),
+    observacoes: qs('#pn-obs')?.value || ''
+  };
+
+  const btn = qs('#drawer .btn-save');
+  btnSv(btn, true);
+
+  try{
+    const r = await post({ action:'savePlanejamento', token:state.token, data });
+    if(r.status !== 'ok'){
+      toast(r.data?.message || 'Erro.','err');
+      btnSv(btn, false);
+      return;
+    }
+
+    const fr = await api({ action:'getPlanejamento', token:state.token });
+    if(fr.status === 'ok') state.db.planejamento = fr.data || [];
+    renderPlan();
+    closeDrawer();
+    toast('Salvo!','ok');
+  }catch(e){
+    toast('Erro.','err');
+    btnSv(btn, false);
+  }
+}
+
+function openDrawerAgend(){
+  state.ui.editId = null;
+  const cliOpts = state.db.clientes.map(c => `<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
+  const svcOpts = state.db.servicos.filter(s => isAtivo(s.ativo)).map(s => `<option value="${s.nome}">${s.nome} (${s.duracaoMin || 60}min)</option>`).join('');
+  const colOpts = state.db.colaboradores.filter(c => isAtivo(c.ativo)).map(c => `<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
+
+  openDrawer(`
+    <div class="dtitle">Novo Agendamento</div>
+    <div class="fg"><span class="lbl">Cliente *</span><select id="ag-cli"><option value="">— Selecione —</option>${cliOpts}</select></div>
+    <div class="fg"><span class="lbl">Serviço</span><select id="ag-svc"><option value="">— Selecione —</option>${svcOpts}</select></div>
+    <div class="fg"><span class="lbl">Colaboradora</span><select id="ag-col"><option value="">— Selecione —</option>${colOpts}</select></div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Data *</span><input id="ag-d" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/></div>
+      <div class="fg"><span class="lbl">Hora *</span><input id="ag-h" type="time" class="inp" value="09:00"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Duração (min)</span><input id="ag-dur" type="number" class="inp" value="60" min="15"/></div>
+      <div class="fg"><span class="lbl">Valor (R$)</span><input id="ag-val" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
+    </div>
+    <div class="fg"><span class="lbl">Observações</span><input id="ag-obs" type="text" class="inp" placeholder="Opcional…"/></div>
+    <div class="dfooter">
+      <button class="btn-sec" id="btn-cancel-ag">Cancelar</button>
+      <button class="btn-save" id="btn-save-ag">Salvar</button>
+    </div>
+  `);
+
+  qs('#ag-d').addEventListener('input', e => applyDataMask(e.target));
+  qs('#ag-val').addEventListener('input', e => applyValorMask(e.target));
+  qs('#ag-d').value = qs('#ag-data')?.value || fmtBR(today());
+
+  qs('#btn-cancel-ag').addEventListener('click', closeDrawer);
+  qs('#btn-save-ag').addEventListener('click', saveAgend);
+}
+
+function editAgend(ag){
+  state.ui.editId = ag.id;
+  const cliOpts = state.db.clientes.map(c => `<option value="${c.id}|${c.nome}" ${c.id === ag.clienteId ? 'selected' : ''}>${c.nome}</option>`).join('');
+  const colOpts = state.db.colaboradores.filter(c => isAtivo(c.ativo)).map(c => `<option value="${c.id}|${c.nome}" ${c.id === ag.colaboradorId ? 'selected' : ''}>${c.nome}</option>`).join('');
+
+  openDrawer(`
+    <div class="dtitle">Editar Agendamento</div>
+    <div class="fg"><span class="lbl">Cliente</span><select id="ag-cli"><option value="">— Selecione —</option>${cliOpts}</select></div>
+    <div class="fg"><span class="lbl">Serviços</span><input id="ag-svc" type="text" class="inp" value="${ag.servicos || ''}"/></div>
+    <div class="fg"><span class="lbl">Colaboradora</span><select id="ag-col"><option value="">— Selecione —</option>${colOpts}</select></div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Data</span><input id="ag-d" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/></div>
+      <div class="fg"><span class="lbl">Hora</span><input id="ag-h" type="time" class="inp" value="${ag.hora || '09:00'}"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Duração (min)</span><input id="ag-dur" type="number" class="inp" value="${ag.duracaoMin || 60}"/></div>
+      <div class="fg"><span class="lbl">Valor</span><input id="ag-val" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
+    </div>
+    <div class="fg">
+      <span class="lbl">Status</span>
+      <select id="ag-status">
+        <option value="agendado" ${ag.status === 'agendado' ? 'selected' : ''}>Agendado</option>
+        <option value="concluido" ${ag.status === 'concluido' ? 'selected' : ''}>Concluído</option>
+        <option value="cancelado" ${ag.status === 'cancelado' ? 'selected' : ''}>Cancelado</option>
+      </select>
+    </div>
+    <div class="fg"><span class="lbl">Observações</span><input id="ag-obs" type="text" class="inp" value="${ag.observacoes || ''}"/></div>
+    <div class="dfooter">
+      <button class="btn-sec" id="btn-cancel-ag">Cancelar</button>
+      <button class="btn-save" id="btn-save-ag">Salvar</button>
+    </div>
+  `);
+
+  qs('#ag-d').addEventListener('input', e => applyDataMask(e.target));
+  qs('#ag-val').addEventListener('input', e => applyValorMask(e.target));
+  qs('#ag-d').value = fmtBR(String(ag.data).slice(0,10));
+  setTimeout(() => setValorMask(qs('#ag-val'), ag.valor), 20);
+
+  qs('#btn-cancel-ag').addEventListener('click', closeDrawer);
+  qs('#btn-save-ag').addEventListener('click', saveAgend);
+}
+
+async function saveAgend(){
+  const cli = qs('#ag-cli')?.value || '';
+  const [clienteId, clienteNome] = cli ? cli.split('|') : ['', ''];
+  if(!clienteId) return toast('Selecione a cliente.','err');
+
+  const col = qs('#ag-col')?.value || '';
+  const [colaboradorId, colaboradorNome] = col ? col.split('|') : ['', ''];
+
+  const data = {
+    id: state.ui.editId || null,
+    clienteId,
+    clienteNome,
+    colaboradorId,
+    colaboradorNome,
+    servicos: qs('#ag-svc')?.value || '',
+    data: parseISO(qs('#ag-d')?.value),
+    hora: qs('#ag-h')?.value || '09:00',
+    duracaoMin: parseInt(qs('#ag-dur')?.value || '60', 10),
+    valor: getValorRaw(qs('#ag-val')),
+    status: qs('#ag-status')?.value || 'agendado',
+    observacoes: qs('#ag-obs')?.value || ''
+  };
+
+  const btn = qs('#drawer .btn-save');
+  btnSv(btn, true);
+
+  try{
+    const r = await post({ action:'saveAgendamento', token:state.token, data });
+    if(r.status !== 'ok'){
+      toast('Erro.','err');
+      btnSv(btn, false);
+      return;
+    }
+    closeDrawer();
+    toast(state.ui.editId ? 'Atualizado!' : 'Agendado!','ok');
+    loadAgenda();
+  }catch(e){
+    toast('Erro.','err');
+    btnSv(btn, false);
+  }
+}
+
+async function delAgend(id){
+  if(!confirm('Excluir?')) return;
+  try{
+    const r = await post({ action:'deleteAgendamento', token:state.token, id });
+    if(r.status !== 'ok') return toast('Erro.','err');
+    toast('Excluído.','ok');
+    loadAgenda();
+  }catch(e){
+    toast('Erro.','err');
+  }
+}
+
+function abrirSeletorItem(){
+  const svcOpts = state.db.servicos.filter(s => isAtivo(s.ativo));
+  const prdOpts = state.db.produtos.filter(p => isAtivo(p.ativo));
+  let html = '<div style="font-family:Playfair Display,serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:16px">Adicionar item</div>';
+  html += '<div style="font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">SERVIÇOS</div>';
+
+  svcOpts.forEach(s => {
+    const preco = parseFloat(s.preco) || 0;
+    html += `<div onclick="addItemDireto(this)" data-id="${s.id}" data-nome="${String(s.nome).replace(/"/g,'&quot;')}" data-tipo="servico" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:15px;color:var(--text);font-weight:500">${s.nome}</span><span style="color:var(--ok);font-weight:600;font-size:14px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
+  });
+  if(!svcOpts.length) html += '<div style="color:var(--dim);font-size:12px;padding:12px">Nenhum serviço cadastrado</div>';
+
+  html += '<div style="font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin:14px 0 8px">PRODUTOS</div>';
+  prdOpts.forEach(p => {
+    const preco = parseFloat(p.preco) || 0;
+    html += `<div onclick="addItemDireto(this)" data-id="${p.id}" data-nome="${String(p.nome).replace(/"/g,'&quot;')}" data-tipo="produto" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:15px;color:var(--text);font-weight:500">${p.nome}</span><span style="color:var(--ok);font-weight:600;font-size:14px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
+  });
+  if(!prdOpts.length) html += '<div style="color:var(--dim);font-size:12px;padding:12px">Nenhum produto cadastrado</div>';
+
+  html += '<button onclick="closeModal()" class="btn-sec" style="width:100%;margin-top:16px">Fechar</button>';
+  openModal(html);
+}
+
+function addItemDireto(el){
+  state.ui.itensLanc.push({
+    id: el.dataset.id,
+    nome: el.dataset.nome,
+    tipo: el.dataset.tipo,
+    valor: parseFloat(el.dataset.preco) || 0
+  });
+  renderItens();
+  closeModal();
+}
+window.addItemDireto = addItemDireto;
+
+function removeItem(idx){
+  state.ui.itensLanc.splice(idx, 1);
+  renderItens();
+}
+window.removeItem = removeItem;
+
+function updateItemValor(idx, el){
+  applyValorMask(el);
+  state.ui.itensLanc[idx].valor = getValorRaw(el);
+  atualizarTotal();
+}
+window.updateItemValor = updateItemValor;
+
+function atualizarTotal(){
+  const total = (state.ui.itensLanc || []).reduce((s,i)=>s+(parseFloat(i.valor)||0),0);
+  const el = qs('#f-total-display');
+  if(el) el.textContent = fmt(total);
+
+  const fft = qs('#ff-total');
+  if(fft && qs('#f-fiado-expand')?.style.display !== 'none'){
+    setValorMask(fft, total);
+    calcFiadoInline();
+  }
+}
+
+function renderItens(){
+  const el = qs('#itens-list');
+  if(!el) return;
+
+  if(!state.ui.itensLanc.length){
+    el.innerHTML = '<div style="font-size:12px;color:var(--dim);text-align:center;padding:8px">Nenhum item adicionado ainda</div>';
+    atualizarTotal();
+    return;
+  }
+
+  let rows = '';
+  state.ui.itensLanc.forEach((item, i) => {
+    const semPreco = Number(item.valor) <= 0;
+    rows += `
+      <div class="item-row" style="border-color:${semPreco ? 'var(--warn)' : 'var(--border)'}">
+        <div class="item-row-body">
+          <div class="item-row-nome">${item.nome}</div>
+          <div class="item-row-val" style="color:${semPreco ? 'var(--warn)' : 'var(--dim)'}">${item.tipo === 'servico' ? 'Serviço' : 'Produto'}${semPreco ? ' · informe o valor' : ''}</div>
+        </div>
+        <input class="item-val-input" type="text" inputmode="numeric" placeholder="R$ ?" style="border-color:${semPreco ? 'var(--warn)' : 'var(--border)'}" oninput="updateItemValor(${i},this)">
+        <button class="btn-remove-item" onclick="removeItem(${i})">✕</button>
+      </div>
+    `;
+  });
+
+  el.innerHTML = rows;
+
+  setTimeout(() => {
+    state.ui.itensLanc.forEach((item, i) => {
+      const inp = document.querySelector(`#itens-list .item-row:nth-child(${i+1}) .item-val-input`);
+      if(inp && Number(item.valor) > 0) setValorMask(inp, item.valor);
+    });
+    atualizarTotal();
+  }, 20);
+}
+
+function setTipoLanc(t){
+  state.ui.tipoLanc = t;
+  ['e','s','r'].forEach(x => qs('#seg-' + x)?.classList.remove('active'));
+  qs('#seg-' + ({entrada:'e', saida:'s', retirada:'r'}[t]))?.classList.add('active');
+  qs('#f-entrada').style.display = t === 'entrada' ? 'block' : 'none';
+  qs('#f-saida').style.display = t === 'saida' ? 'block' : 'none';
+  qs('#f-retirada').style.display = t === 'retirada' ? 'block' : 'none';
+
+  const fe = qs('#f-fiado-expand');
+  if(fe) fe.style.display = 'none';
+  const forma = qs('#f-forma');
+  if(forma && t !== 'entrada') forma.value = 'dinheiro';
+}
+window.setTipoLanc = setTipoLanc;
+
+function onFormaChange(val){
+  const fe = qs('#f-fiado-expand');
+  if(!fe) return;
+  if(val === 'fiado'){
+    fe.style.display = 'block';
+    setTimeout(() => {
+      const vd = qs('#f-data');
+      const v1 = qs('#ff-venc1');
+      if(v1 && !v1.value) v1.value = vd?.value || fmtBR(today());
+
+      const totalItens = (state.ui.itensLanc || []).reduce((s,i)=>s+(parseFloat(i.valor)||0),0);
+      const fft = qs('#ff-total');
+      if(fft && totalItens > 0) setValorMask(fft, totalItens);
+
+      gerarVencimentosInline();
+    }, 30);
+  }else{
+    fe.style.display = 'none';
+  }
+}
+window.onFormaChange = onFormaChange;
+
+function calcFiadoInline(){
+  const total = getValorRaw(qs('#ff-total'));
+  const entrada = getValorRaw(qs('#ff-entrada'));
+  const n = parseInt(qs('#ff-parcelas')?.value || '1', 10);
+  const saldo = Math.max(0, total - entrada);
+  const parc = n > 0 ? saldo / n : 0;
+  const el = qs('#ff-resumo');
+
+  if(total > 0 && el){
+    el.style.display = 'block';
+    el.innerHTML = `<div style='display:flex;justify-content:space-between;margin-bottom:3px'><span style='color:var(--dim)'>Saldo a parcelar</span><span style='font-weight:500'>${fmt(saldo)}</span></div><div style='display:flex;justify-content:space-between'><span style='color:var(--dim)'>Valor por parcela</span><span style='color:var(--ok);font-weight:600'>${fmt(parc)}</span></div>`;
+  }
+}
+window.calcFiadoInline = calcFiadoInline;
+
+function verificarDataRetro(el){
+  const iso = parseISO(el.value);
+  if(iso && iso < today()){
+    el.style.borderColor = 'var(--err)';
+    el.title = '⚠️ Data no passado';
+  }else{
+    el.style.borderColor = 'var(--border)';
+    el.title = '';
+  }
+}
+window.verificarDataRetro = verificarDataRetro;
+
+function gerarVencimentosInline(){
+  calcFiadoInline();
+  const n = parseInt(qs('#ff-parcelas')?.value || '1', 10);
+  const v1 = qs('#ff-venc1')?.value || fmtBR(today());
+  const venc1 = parseISO(v1);
+  const total = getValorRaw(qs('#ff-total'));
+  const entrada = getValorRaw(qs('#ff-entrada'));
+  const saldo = Math.max(0, total - entrada);
+  const parc = n > 0 ? saldo / n : 0;
+  const ct = qs('#parcelas-container');
+  if(!ct || n <= 0){ if(ct) ct.innerHTML = ''; return; }
+
+  const tdISO = today();
+  let html = '<div class="slabel" style="margin-bottom:6px">Vencimentos</div>';
+  for(let i=0;i<Math.min(n,24);i++){
+    const d = new Date(venc1 + 'T00:00:00');
+    d.setMonth(d.getMonth() + i);
+    const iso = d.toISOString().slice(0,10);
+    const retro = iso < tdISO;
+    html += `<div class='parc-row'><span style='color:${retro ? 'var(--err)' : 'var(--dim)'}'>Parc.${i+1} · ${fmt(parc)}${retro ? ' ⚠️' : ''}</span><input type='text' class='inp' id='venc-${i}' inputmode='numeric' placeholder='DD/MM/AAAA' maxlength='10' value='${fmtBR(iso)}' style='border-color:${retro ? 'var(--err)' : 'var(--border)'}' oninput='applyDataMask(this);verificarDataRetro(this)'/></div>`;
+  }
+  ct.innerHTML = html;
+}
+window.gerarVencimentosInline = gerarVencimentosInline;
+
+function openDrawerLanc(){
+  state.ui.editId = null;
+  state.ui.tipoLanc = 'entrada';
+  state.ui.itensLanc = [];
+
+  const cliOpts = state.db.clientes.map(c => `<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
+
+  openDrawer(`
+    <div class="dtitle">Novo Lançamento</div>
+    <div class="seg">
+      <button class="seg-btn active" id="seg-e" onclick="setTipoLanc('entrada')">Entrada</button>
+      <button class="seg-btn" id="seg-s" onclick="setTipoLanc('saida')">Saída</button>
+      <button class="seg-btn" id="seg-r" onclick="setTipoLanc('retirada')">Retirada</button>
+    </div>
+
+    <div id="f-entrada">
+      <div class="fg"><span class="lbl">Cliente (opcional)</span><select id="f-cli"><option value="">— Sem vínculo —</option>${cliOpts}</select></div>
+      <div class="itens-list" id="itens-list"></div>
+      <button class="btn-add-item" id="btn-add-item-lanc">＋ Adicionar serviço ou produto</button>
+      <div class="total-bar"><span class="total-bar-label">Total</span><span class="total-bar-val" id="f-total-display">R$ 0,00</span></div>
+      <div class="fg">
+        <span class="lbl">Forma de Pagamento</span>
+        <select id="f-forma">
+          <option value="dinheiro">Dinheiro</option>
+          <option value="pix">PIX</option>
+          <option value="debito">Débito</option>
+          <option value="credito">Crédito</option>
+          <option value="fiado">Fiado / Parcelado</option>
+        </select>
+      </div>
+
+      <div id="f-fiado-expand" style="display:none;background:var(--bg3);border:1.5px solid var(--gold-dk);border-radius:var(--r);padding:14px;margin-bottom:2px">
+        <div style="font-size:10px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:12px">📋 Detalhes do Fiado</div>
+        <div class="form-row">
+          <div class="fg"><span class="lbl">Valor total *</span><input id="ff-total" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
+          <div class="fg"><span class="lbl">Entrada (R$)</span><input id="ff-entrada" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><span class="lbl">Nº parcelas</span><input id="ff-parcelas" type="number" class="inp" min="1" max="36" value="1"/></div>
+          <div class="fg"><span class="lbl">1ª venc.</span><input id="ff-venc1" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/></div>
+        </div>
+        <div id="ff-resumo" style="display:none;font-size:12px;margin-bottom:10px"></div>
+        <div id="parcelas-container"></div>
+      </div>
+    </div>
+
+    <div id="f-saida" style="display:none">
+      <div class="fg">
+        <span class="lbl">Categoria</span>
+        <select id="f-cat">
+          <option>Aluguel</option>
+          <option>Material</option>
+          <option>Compra de produto</option>
+          <option>Manutenção</option>
+          <option>Salário</option>
+          <option>Outros</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="f-retirada" style="display:none">
+      <div class="info-box">💼 <strong>Retirada pessoal</strong> — lançada no caixa mas separada das despesas operacionais no extrato mensal.</div>
+      <div class="fg"><span class="lbl">Descrição</span><input id="f-ret-desc" type="text" class="inp" placeholder="Ex: Farmácia, supermercado…"/></div>
+    </div>
+
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Valor *</span><input id="f-valor" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
+      <div class="fg"><span class="lbl">Data</span><input id="f-data" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/></div>
+    </div>
+    <div class="fg"><span class="lbl">Observações</span><input id="f-obs" type="text" class="inp" placeholder="Opcional…"/></div>
+    <div class="dfooter">
+      <button class="btn-sec" id="btn-cancel-lanc">Cancelar</button>
+      <button class="btn-save" id="btn-save-lanc">Salvar</button>
+    </div>
+  `);
+
+  qs('#f-data').value = fmtBR(today());
+  qs('#f-data').addEventListener('input', e => applyDataMask(e.target));
+  qs('#f-valor').addEventListener('input', e => applyValorMask(e.target));
+  qs('#f-forma').addEventListener('change', e => onFormaChange(e.target.value));
+
+  ['#ff-total','#ff-entrada'].forEach(sel => qs(sel)?.addEventListener('input', e => {
+    applyValorMask(e.target);
+    calcFiadoInline();
+  }));
+  qs('#ff-parcelas')?.addEventListener('input', gerarVencimentosInline);
+  qs('#ff-venc1')?.addEventListener('input', e => { applyDataMask(e.target); gerarVencimentosInline(); });
+
+  qs('#btn-add-item-lanc').addEventListener('click', abrirSeletorItem);
+  qs('#btn-cancel-lanc').addEventListener('click', closeDrawer);
+  qs('#btn-save-lanc').addEventListener('click', saveLanc);
+
+  renderItens();
+}
+
+function editLanc(l){
+  state.ui.editId = l.id;
+  state.ui.tipoLanc = l.isRetirada === 'true' ? 'retirada' : l.tipo;
+
+  const cliOpts = state.db.clientes.map(c => `<option value="${c.id}|${c.nome}" ${c.id === l.clienteId ? 'selected' : ''}>${c.nome}</option>`).join('');
+  const svcOpts = state.db.servicos.filter(s => isAtivo(s.ativo)).map(s => `<option value="${s.id}|${s.nome}|servico" ${s.id === l.itemId ? 'selected' : ''}>${s.nome}</option>`).join('');
+  const prdOpts = state.db.produtos.filter(p => isAtivo(p.ativo)).map(p => `<option value="${p.id}|${p.nome}|produto" ${p.id === l.itemId ? 'selected' : ''}>${p.nome}</option>`).join('');
+  const t = state.ui.tipoLanc;
+
+  openDrawer(`
+    <div class="dtitle">Editar Lançamento</div>
+    <div class="seg">
+      <button class="seg-btn ${t === 'entrada' ? 'active' : ''}" id="seg-e" onclick="setTipoLanc('entrada')">Entrada</button>
+      <button class="seg-btn ${t === 'saida' ? 'active' : ''}" id="seg-s" onclick="setTipoLanc('saida')">Saída</button>
+      <button class="seg-btn ${t === 'retirada' ? 'active' : ''}" id="seg-r" onclick="setTipoLanc('retirada')">Retirada</button>
+    </div>
+    <div id="f-entrada" style="display:${t === 'entrada' ? 'block' : 'none'}">
+      <div class="fg"><span class="lbl">Cliente</span><select id="f-cli"><option value="">— Sem vínculo —</option>${cliOpts}</select></div>
+      <div class="fg"><span class="lbl">Serviço / Produto</span><select id="f-item"><option value="">— Selecione —</option><optgroup label="Serviços">${svcOpts}</optgroup><optgroup label="Produtos">${prdOpts}</optgroup></select></div>
+      <div class="fg">
+        <span class="lbl">Forma</span>
+        <select id="f-forma">
+          <option value="dinheiro" ${l.formaPagamento === 'dinheiro' ? 'selected' : ''}>Dinheiro</option>
+          <option value="pix" ${l.formaPagamento === 'pix' ? 'selected' : ''}>PIX</option>
+          <option value="debito" ${l.formaPagamento === 'debito' ? 'selected' : ''}>Débito</option>
+          <option value="credito" ${l.formaPagamento === 'credito' ? 'selected' : ''}>Crédito</option>
+        </select>
+      </div>
+    </div>
+    <div id="f-saida" style="display:${t === 'saida' ? 'block' : 'none'}">
+      <div class="fg"><span class="lbl">Categoria</span><select id="f-cat">${['Aluguel','Material','Compra de produto','Manutenção','Salário','Outros'].map(c => `<option ${l.categoria === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+    </div>
+    <div id="f-retirada" style="display:${t === 'retirada' ? 'block' : 'none'}">
+      <div class="fg"><span class="lbl">Descrição</span><input id="f-ret-desc" type="text" class="inp" value="${l.itemNome || ''}"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Valor *</span><input id="f-valor" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
+      <div class="fg"><span class="lbl">Data</span><input id="f-data" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/></div>
+    </div>
+    <div class="fg"><span class="lbl">Observações</span><input id="f-obs" type="text" class="inp" value="${l.observacoes || ''}"/></div>
+    <div class="dfooter">
+      <button class="btn-sec" id="btn-cancel-lanc">Cancelar</button>
+      <button class="btn-save" id="btn-save-lanc">Salvar</button>
+    </div>
+  `);
+
+  qs('#f-data').addEventListener('input', e => applyDataMask(e.target));
+  qs('#f-valor').addEventListener('input', e => applyValorMask(e.target));
+  qs('#f-data').value = fmtBR(String(l.data).slice(0,10));
+  setTimeout(() => setValorMask(qs('#f-valor'), l.valor), 30);
+
+  qs('#btn-cancel-lanc').addEventListener('click', closeDrawer);
+  qs('#btn-save-lanc').addEventListener('click', saveLanc);
+}
+
+async function saveLanc(){
+  const tipoCheck = state.ui.tipoLanc;
+  let valor = 0;
+
+  if(tipoCheck === 'entrada' && !state.ui.editId){
+    valor = (state.ui.itensLanc || []).reduce((s,i)=>s+i.valor,0);
+    if(!valor || valor <= 0) return toast('Adicione pelo menos um item com valor.','err');
+  }else{
+    valor = getValorRaw(qs('#f-valor'));
+    if(!valor || valor <= 0) return toast('Informe o valor.','err');
+  }
+
+  const tipo = state.ui.tipoLanc;
+  const tipoBack = tipo === 'retirada' ? 'saida' : tipo;
+
+  let clienteId = '', clienteNome = '', itemId = '', itemNome = '', itemTipo = '', categoria = '', formaPagamento = 'dinheiro', isRetirada = false;
+
+  if(tipo === 'entrada'){
+    const cli = qs('#f-cli')?.value || '';
+    if(cli) [clienteId, clienteNome] = cli.split('|');
+
+    if(!state.ui.editId){
+      const itensData = state.ui.itensLanc || [];
+      if(itensData.length === 0) return toast('Adicione pelo menos um item.','err');
+
+      itemNome = itensData.map(i => i.nome).join(', ');
+      itemTipo = itensData.length === 1 ? itensData[0].tipo : 'misto';
+      itemId = itensData.length === 1 ? itensData[0].id : '';
+      formaPagamento = qs('#f-forma')?.value || 'dinheiro';
+
+      if(formaPagamento === 'fiado'){
+        const valorTotal = getValorRaw(qs('#ff-total')) || valor;
+        const valorEntrada = getValorRaw(qs('#ff-entrada')) || 0;
+        const numParcelas = parseInt(qs('#ff-parcelas')?.value || '1', 10);
+
+        const vencimentos = [];
+        let temRetro = false;
+        for(let i=0;i<numParcelas;i++){
+          const el = qs(`#venc-${i}`);
+          const iso = el ? parseISO(el.value) : '';
+          vencimentos.push(iso);
+          if(iso && iso < today()) temRetro = true;
+        }
+
+        if(temRetro && !confirm('⚠️ Uma ou mais parcelas têm datas no passado. Continuar mesmo assim?')) return;
+
+        const btn2 = qs('#drawer .btn-save');
+        btnSv(btn2, true);
+
+        try{
+          const r2 = await post({
+            action:'saveFiado',
+            token:state.token,
+            data:{
+              clienteId, clienteNome, itemId, itemNome, itemTipo,
+              valorTotal, valorEntrada, numParcelas, vencimentos,
+              observacoes: qs('#f-obs')?.value.trim() || ''
+            }
+          });
+
+          if(r2.status !== 'ok'){
+            toast(r2.data?.message || 'Erro.','err');
+            btnSv(btn2, false);
+            return;
+          }
+
+          closeDrawer();
+          toast('Fiado registrado!','ok');
+
+          const di = qs('#cx-data');
+          const dataLanc = qs('#f-data')?.value || fmtBR(today());
+          if(di) di.value = dataLanc;
+
+          await Promise.all([loadCaixa(), updateStats(), loadCred(), loadVencHome()]);
+        }catch(e){
+          toast('Erro.','err');
+          btnSv(btn2, false);
+        }
+        return;
+      }
+    }else{
+      const item = qs('#f-item')?.value || '';
+      if(item){
+        const p = item.split('|');
+        itemId = p[0];
+        itemNome = p[1];
+        itemTipo = p[2] || '';
+      }
+      formaPagamento = qs('#f-forma')?.value || 'dinheiro';
+    }
+  }else if(tipo === 'retirada'){
+    categoria = 'Retirada Pessoal';
+    itemNome = qs('#f-ret-desc')?.value.trim() || '';
+    isRetirada = true;
+  }else{
+    categoria = qs('#f-cat')?.value || 'Outros';
+  }
+
+  const itensJson = tipoCheck === 'entrada' && state.ui.itensLanc?.length > 1 ? JSON.stringify(state.ui.itensLanc) : '';
+  const obsBase = qs('#f-obs')?.value.trim() || '';
+
+  const data = {
+    id: state.ui.editId || null,
+    tipo: tipoBack,
+    categoria,
+    clienteId,
+    clienteNome,
+    itemId,
+    itemNome,
+    itemTipo,
+    valor,
+    formaPagamento,
+    isRetirada,
+    observacoes: itensJson ? `[ITENS]${itensJson}${obsBase ? '|' + obsBase : ''}` : obsBase,
+    data: parseISO(qs('#f-data')?.value)
+  };
+
+  const btn = qs('#drawer .btn-save');
+  btnSv(btn, true);
+
+  try{
+    const r = await post({ action:'saveLancamento', token:state.token, data });
+    if(r.status !== 'ok'){
+      toast(r.data?.message || 'Erro.','err');
+      btnSv(btn, false);
+      return;
+    }
+
+    closeDrawer();
+    toast(state.ui.editId ? 'Atualizado!' : 'Registrado!','ok');
+    const dataInp = qs('#cx-data');
+    if(dataInp) dataInp.value = fmtBR(data.data);
+    await Promise.all([loadCaixa(), updateStats()]);
+  }catch(e){
+    toast('Erro de conexão.','err');
+    btnSv(btn, false);
+  }
+}
+
+async function delLanc(id){
+  if(!confirm('Excluir este lançamento?')) return;
+  try{
+    const r = await post({ action:'deleteLancamento', token:state.token, id });
+    if(r.status !== 'ok') return toast('Erro.','err');
+    toast('Excluído.','ok');
+    await Promise.all([loadCaixa(), updateStats()]);
+  }catch(e){
+    toast('Erro.','err');
+  }
+}
+
+function openDrawerFiadoLanc(){
+  const cliOpts = state.db.clientes.map(c => `<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
+  const svcOpts = state.db.servicos.filter(s => isAtivo(s.ativo)).map(s => `<option value="${s.id}|${s.nome}|servico">${s.nome}</option>`).join('');
+  const prdOpts = state.db.produtos.filter(p => isAtivo(p.ativo)).map(p => `<option value="${p.id}|${p.nome}|produto|${p.preco || 0}">${p.nome}${p.preco > 0 ? ' (' + fmt(p.preco) + ')' : ''}</option>`).join('');
+
+  openDrawer(`
+    <div class="dtitle">Fiado / Parcelado</div>
+    <div class="fg"><span class="lbl">Cliente *</span><select id="ff-cli"><option value="">— Selecione —</option>${cliOpts}</select></div>
+    <div class="fg"><span class="lbl">Serviço / Produto</span><select id="ff-item"><option value="">— Selecione —</option><optgroup label="Serviços">${svcOpts}</optgroup><optgroup label="Produtos">${prdOpts}</optgroup></select></div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Valor total *</span><input id="ff-total" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
+      <div class="fg"><span class="lbl">Entrada (R$)</span><input id="ff-entrada" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Nº parcelas *</span><input id="ff-parcelas" type="number" class="inp" min="1" max="36" value="1"/></div>
+      <div class="fg"><span class="lbl">1ª venc.</span><input id="ff-venc1" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/></div>
+    </div>
+    <div id="ff-resumo" style="background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:14px;font-size:12px;display:none"></div>
+    <div id="parcelas-container"></div>
+    <div class="fg"><span class="lbl">Observações</span><input id="ff-obs" type="text" class="inp" placeholder="Opcional…"/></div>
+    <div class="dfooter">
+      <button class="btn-sec" id="btn-cancel-fiado">Cancelar</button>
+      <button class="btn-save" id="btn-save-fiado">Registrar</button>
+    </div>
+  `);
+
+  qs('#ff-total').addEventListener('input', e => { applyValorMask(e.target); calcFiado(); });
+  qs('#ff-entrada').addEventListener('input', e => { applyValorMask(e.target); calcFiado(); });
+  qs('#ff-parcelas').addEventListener('input', gerarVencimentos);
+  qs('#ff-venc1').addEventListener('input', e => { applyDataMask(e.target); gerarVencimentos(); });
+  qs('#ff-venc1').value = fmtBR(today());
+
+  qs('#btn-cancel-fiado').addEventListener('click', closeDrawer);
+  qs('#btn-save-fiado').addEventListener('click', saveFiado);
+
+  gerarVencimentos();
+}
+
+function calcFiado(){
+  const total = getValorRaw(qs('#ff-total'));
+  const entrada = getValorRaw(qs('#ff-entrada'));
+  const n = parseInt(qs('#ff-parcelas')?.value || '1', 10);
+  const saldo = Math.max(0, total - entrada);
+  const parc = n > 0 ? saldo / n : 0;
+  const el = qs('#ff-resumo');
+
+  if(total > 0 && el){
+    el.style.display = 'block';
+    el.innerHTML = `<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--dim)">Saldo a parcelar</span><span style="font-weight:500">${fmt(saldo)}</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--dim)">Valor por parcela</span><span style="color:var(--ok);font-weight:600">${fmt(parc)}</span></div>`;
+  }
+}
+window.calcFiado = calcFiado;
+
+function gerarVencimentos(){
+  calcFiado();
+  const n = parseInt(qs('#ff-parcelas')?.value || '1', 10);
+  const venc1 = parseISO(qs('#ff-venc1')?.value || fmtBR(today()));
+  const total = getValorRaw(qs('#ff-total'));
+  const entrada = getValorRaw(qs('#ff-entrada'));
+  const saldo = Math.max(0, total - entrada);
+  const parc = n > 0 ? saldo / n : 0;
+  const c = qs('#parcelas-container');
+  if(!c) return;
+  if(n <= 0){ c.innerHTML = ''; return; }
+
+  let html = '<div class="slabel" style="margin-bottom:8px">Vencimentos das parcelas</div>';
+  const tdISO = today();
+
+  for(let i=0;i<Math.min(n,24);i++){
+    const d = new Date(venc1 + 'T00:00:00');
+    d.setMonth(d.getMonth() + i);
+    const iso = d.toISOString().slice(0,10);
+    const retroativo = iso < tdISO;
+    html += `
+      <div class="parc-row">
+        <span style="color:${retroativo ? 'var(--err)' : 'var(--dim)'}">Parc. ${i+1} · ${fmt(parc)}${retroativo ? ' ⚠️' : ''}</span>
+        <input type="text" class="inp" id="venc-${i}" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${fmtBR(iso)}" style="border-color:${retroativo ? 'var(--err)' : 'var(--border)'}" oninput="applyDataMask(this);verificarDataRetro(this)"/>
+      </div>
+    `;
+  }
+  c.innerHTML = html;
+}
+window.gerarVencimentos = gerarVencimentos;
+
+async function saveFiado(){
+  const cli = qs('#ff-cli')?.value || '';
+  if(!cli) return toast('Selecione a cliente.','err');
+
+  const [clienteId, clienteNome] = cli.split('|');
+  const item = qs('#ff-item')?.value || '';
+  let itemId = '', itemNome = '', itemTipo = '';
+  if(item){
+    const p = item.split('|');
+    itemId = p[0];
+    itemNome = p[1];
+    itemTipo = p[2] || '';
+  }
+
+  const valorTotal = getValorRaw(qs('#ff-total'));
+  if(!valorTotal || valorTotal <= 0) return toast('Informe o valor total.','err');
+
+  const valorEntrada = getValorRaw(qs('#ff-entrada'));
+  const numParcelas = parseInt(qs('#ff-parcelas')?.value || '1', 10);
+
+  const vencimentos = [];
+  let temRetroativo = false;
+  for(let i=0;i<numParcelas;i++){
+    const el = qs(`#venc-${i}`);
+    const iso = el ? parseISO(el.value) : '';
+    vencimentos.push(iso);
+    if(iso && iso < today()) temRetroativo = true;
+  }
+
+  if(temRetroativo && !confirm('⚠️ Atenção! Uma ou mais parcelas têm datas de vencimento no passado. Deseja continuar mesmo assim?')) return;
+
+  const btn = qs('#drawer .btn-save');
+  btnSv(btn, true);
+
+  try{
+    const r = await post({
+      action:'saveFiado',
+      token:state.token,
+      data:{
+        clienteId,
+        clienteNome,
+        itemId,
+        itemNome,
+        itemTipo,
+        valorTotal,
+        valorEntrada,
+        numParcelas,
+        vencimentos,
+        observacoes: qs('#ff-obs')?.value.trim() || ''
+      }
+    });
+
+    if(r.status !== 'ok'){
+      toast(r.data?.message || 'Erro.','err');
+      btnSv(btn, false);
+      return;
+    }
+
+    closeDrawer();
+    toast('Fiado registrado!','ok');
+    await Promise.all([loadCaixa(), updateStats(), loadCred(), loadVencHome()]);
+  }catch(e){
+    toast('Erro ao registrar.','err');
+    btnSv(btn, false);
+  }
+}
+
+function abrirPgtoFiado(id, nome, saldo, numParc){
+  openModal(`
+    <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:4px">Receber Pagamento</div>
+    <div style="font-size:12px;color:var(--dim);margin-bottom:4px">${nome}</div>
+    <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--err);font-weight:600;margin-bottom:20px">Saldo: ${fmt(saldo)}</div>
+    <div class="fg"><span class="lbl">Valor recebido *</span><input id="pg-val" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
+    <div class="fg"><span class="lbl">Nº da parcela</span><input id="pg-parc" type="number" class="inp" min="1" max="${numParc}" placeholder="Ex: 1"/></div>
+    <div class="fg"><span class="lbl">Observações</span><input id="pg-obs" type="text" class="inp" placeholder="Opcional…"/></div>
+    <div class="dfooter"><button class="btn-sec" id="btn-cancel-pg">Cancelar</button><button class="btn-save" id="btn-confirm-pg">Confirmar</button></div>
+  `);
+
+  qs('#pg-val').addEventListener('input', e => applyValorMask(e.target));
+  qs('#btn-cancel-pg').addEventListener('click', closeModal);
+  qs('#btn-confirm-pg').addEventListener('click', () => registrarPgtoFiado(id));
+}
+window.abrirPgtoFiado = abrirPgtoFiado;
+
+async function registrarPgtoFiado(id){
+  const valor = getValorRaw(qs('#pg-val'));
+  if(!valor || valor <= 0) return toast('Informe o valor.','err');
+
+  const btn = qs('#modal-box .btn-save');
+  btnSv(btn, true);
+
+  try{
+    const r = await post({
+      action:'pagarCrediario',
+      token:state.token,
+      crediarioId:id,
+      valor,
+      parcela: qs('#pg-parc')?.value || '',
+      observacoes: qs('#pg-obs')?.value || ''
+    });
+
+    if(r.status !== 'ok'){
+      toast('Erro.','err');
+      btnSv(btn, false);
+      return;
+    }
+
+    closeModal();
+    toast('Pagamento registrado!','ok');
+    await Promise.all([loadCred(), updateStats(), loadCaixa(), loadVencHome()]);
+  }catch(e){
+    toast('Erro.','err');
+    btnSv(btn, false);
+  }
+}
+
+async function saveConfig(){
+  const nome = qs('#cfg-nome')?.value.trim();
+  if(!nome) return toast('Informe o nome.','err');
+
+  try{
+    const r = await post({ action:'updateConfig', token:state.token, config:{ salonName:nome } });
+    if(r.status !== 'ok') return toast('Erro.','err');
+
+    state.db.config.salonName = nome;
+    qs('#h-salonname').textContent = nome;
+    qs('#dg-name').textContent = nome.split(' ')[0];
+    toast('Salvo!','ok');
+  }catch(e){
+    toast('Erro.','err');
+  }
+}
+
+async function saveConfigHorario(){
+  try{
+    const r = await post({
+      action:'updateConfig',
+      token:state.token,
+      config:{
+        horaInicio: qs('#cfg-hi')?.value,
+        horaFim: qs('#cfg-hf')?.value,
+        intervaloMin: qs('#cfg-int')?.value
+      }
+    });
+    if(r.status !== 'ok') return toast('Erro.','err');
+    toast('Horário salvo!','ok');
+  }catch(e){
+    toast('Erro.','err');
+  }
+}
+
+async function saveSenha(){
+  const s1 = qs('#cfg-s1')?.value;
+  const s2 = qs('#cfg-s2')?.value;
+  if(!s1) return toast('Informe a nova senha.','err');
+  if(s1 !== s2) return toast('Senhas não coincidem.','err');
+
+  try{
+    const r = await post({ action:'updateConfig', token:state.token, config:{ senha:s1 } });
+    if(r.status !== 'ok') return toast('Erro.','err');
+    qs('#cfg-s1').value = '';
+    qs('#cfg-s2').value = '';
+    toast('Senha alterada!','ok');
+  }catch(e){
+    toast('Erro.','err');
+  }
+}
+</script>
+</body>
+</html>
