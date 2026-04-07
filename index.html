@@ -501,7 +501,11 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 </div>
 
 <script>
-const API='https://script.google.com/macros/s/AKfycbwdgffUDDPyPXyE_4YRBf4wrfLXitwfFQ6Wn5zIwvb3z7YDhnHeZzFmnjt6U1m7bgSMBA/exec';
+window.__API_URL__ = 'https://script.google.com/macros/s/AKfycbwdgffUDDPyPXyE_4YRBf4wrfLXitwfFQ6Wn5zIwvb3z7YDhnHeZzFmnjt6U1m7bgSMBA/exec';
+</script>
+
+<script>
+const API = window.__API_URL__ || 'https://script.google.com/macros/s/AKfycbwdgffUDDPyPXyE_4YRBf4wrfLXitwfFQ6Wn5zIwvb3z7YDhnHeZzFmnjt6U1m7bgSMBA/exec';
 let TOKEN='',LONG_TOKEN='';
 let DB={clientes:[],servicos:[],produtos:[],colaboradores:[],crediario:[],planejamento:[],config:{}};
 let editId=null,_tipoLanc='entrada',_credFiltro='aberto',_agView='dia',_extModo='mes',_extUnlocked=false,_planFiltro='todos',_itensLanc=[];
