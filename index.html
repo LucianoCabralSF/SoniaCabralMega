@@ -49,6 +49,7 @@ html,body{
 }
 button{cursor:pointer;font-family:inherit;border:none;outline:none}
 input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:none;color:var(--text)}
+input[type="date"]{-webkit-appearance:auto;appearance:auto;color-scheme:light;cursor:pointer}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -559,6 +560,52 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 .ag-card.concluido{border-left-color:var(--ok);opacity:.85}
 .ag-card.cancelado{border-left-color:var(--err);opacity:.7}
 
+/* === Agenda: grade semanal === */
+.gcal-week{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.gcal-header{display:grid;grid-template-columns:36px repeat(7,1fr);border-bottom:1.5px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:5}
+.gcal-hcell{text-align:center;padding:6px 2px;border-right:1px solid var(--border);min-width:42px}
+.gcal-hcell:last-child{border-right:none}
+.gcal-hcell-hoje{background:var(--gold-bg)}
+.gcal-hday-name{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);display:block}
+.gcal-hday{font-size:16px;font-weight:400;color:var(--text);width:28px;height:28px;line-height:28px;border-radius:50%;margin:2px auto 0;text-align:center}
+.gcal-hday.hoje{background:var(--gold);color:#fff;font-weight:700;font-size:14px}
+.gcal-body{display:grid;grid-template-columns:36px repeat(7,1fr)}
+.gcal-time-col{border-right:1px solid var(--border)}
+.gcal-time-label{height:52px;font-size:9px;color:var(--dim);text-align:right;padding:4px 5px 0 0;letter-spacing:.3px;line-height:1}
+.gcal-day-col{position:relative;border-right:1px solid var(--border);min-width:42px}
+.gcal-day-col:last-child{border-right:none}
+.gcal-day-hoje{background:rgba(154,111,30,.04)}
+.gcal-slot-line{position:absolute;left:0;right:0;border-top:1px solid rgba(224,217,204,.6);pointer-events:none}
+.gcal-now-line{position:absolute;left:0;right:0;height:2px;background:var(--err);z-index:3;pointer-events:none}
+.gcal-now-dot{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--err)}
+.gcal-event{
+  position:absolute;left:2px;right:2px;border-radius:4px;padding:2px 5px;
+  font-size:10px;overflow:hidden;cursor:pointer;border-left:3px solid;
+  transition:filter .12s;box-shadow:0 1px 4px rgba(26,18,8,.1);z-index:2
+}
+.gcal-event:active{filter:brightness(.88)}
+.gcal-event-hora{font-weight:600;font-size:10px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gcal-event-desc{font-size:9px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+
+/* === Agenda: grade mensal === */
+.gcal-month{width:100%}
+.gcal-month-title{text-align:center;font-family:'Playfair Display',serif;font-size:18px;font-style:italic;color:var(--dark);margin-bottom:10px}
+.gcal-month-header{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1.5px solid var(--border)}
+.gcal-month-hcell{text-align:center;padding:5px 2px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)}
+.gcal-month-grid{display:grid;grid-template-columns:repeat(7,1fr);border-left:1.5px solid var(--border);border-top:1.5px solid var(--border)}
+.gcal-month-cell{min-height:76px;padding:3px;border-right:1.5px solid var(--border);border-bottom:1.5px solid var(--border);overflow:hidden}
+.gcal-month-cell.outro-mes{background:var(--bg3)}
+.gcal-month-num{font-size:11px;color:var(--text);margin-bottom:2px;text-align:center;width:22px;height:22px;line-height:22px;border-radius:50%}
+.gcal-month-num.hoje{background:var(--gold);color:#fff;font-weight:700;margin:0 auto 2px}
+.gcal-month-cell.outro-mes .gcal-month-num{color:var(--dim);opacity:.5}
+.gcal-month-pill{
+  font-size:9px;padding:1px 4px;border-radius:3px;margin-bottom:2px;
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;
+  line-height:1.5;font-weight:500;display:block
+}
+.gcal-month-pill:active{filter:brightness(.88)}
+.gcal-month-mais{font-size:9px;color:var(--dim);padding:1px 4px;font-weight:500}
+
 .cfg-sec{
   background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);
   padding:18px;margin-bottom:14px;box-shadow:var(--shadow)
@@ -677,13 +724,13 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
           <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           Lançamento
         </button>
-        <button class="qb" data-go="agenda" data-quick="agend">
+        <button class="qb" data-go="agenda">
           <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Agendar
+          Agenda
         </button>
-        <button class="qb" data-go="crediario">
-          <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-          Fiado
+        <button class="qb" data-go="planejamento">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Planejamento
         </button>
       </div>
     </div>
@@ -694,7 +741,7 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
         <button class="btn-add" id="btn-open-lanc">+</button>
       </div>
       <div class="cdate-bar">
-        <input type="text" id="cx-data" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/>
+        <input type="date" id="cx-data"/>
         <button class="icon-btn" id="btn-reload-caixa" style="background:var(--bg2);border:1.5px solid var(--border);padding:10px;border-radius:var(--r)">
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="23 4 23 10 17 10"/>
@@ -723,7 +770,7 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
         <button class="seg-btn" data-ag-view="mes">Mês</button>
       </div>
       <div class="cdate-bar">
-        <input type="text" id="ag-data" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/>
+        <input type="date" id="ag-data"/>
         <button class="icon-btn" id="btn-reload-agenda" style="background:var(--bg2);border:1.5px solid var(--border);padding:10px;border-radius:var(--r)">
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="23 4 23 10 17 10"/>
@@ -1520,10 +1567,7 @@ function bindGlobalEvents(){
     btn.addEventListener('click', () => setExtModo(btn.dataset.extMode, btn));
   });
 
-  qs('#cx-data').addEventListener('input', e => applyDataMask(e.target));
   qs('#cx-data').addEventListener('change', loadCaixa);
-
-  qs('#ag-data').addEventListener('input', e => applyDataMask(e.target));
   qs('#ag-data').addEventListener('change', loadAgenda);
 
   qs('#ext-di').addEventListener('input', e => applyDataMask(e.target));
@@ -1553,8 +1597,8 @@ window.addEventListener('load', async () => {
     });
 
     initExtSelectors();
-    qs('#cx-data').value = fmtBR(today());
-    qs('#ag-data').value = fmtBR(today());
+    qs('#cx-data').value = today();
+    qs('#ag-data').value = today();
 
     if(state.token){
       const hasCache = restoreFromCache();
@@ -1848,8 +1892,8 @@ function renderCred(){
 
 async function loadCaixa(){
   const inp = qs('#cx-data');
-  if(inp && !inp.value) inp.value = fmtBR(today());
-  const data = parseISO(inp?.value || fmtBR(today()));
+  if(inp && !inp.value) inp.value = today();
+  const data = inp?.value || today();
 
   try{
     const [res, lancs] = await Promise.all([
@@ -1911,8 +1955,8 @@ async function loadCaixa(){
 
 async function loadAgenda(){
   const inp = qs('#ag-data');
-  if(inp && !inp.value) inp.value = fmtBR(today());
-  const dataBase = parseISO(inp?.value || fmtBR(today()));
+  if(inp && !inp.value) inp.value = today();
+  const dataBase = inp?.value || today();
   const params = { action:'getAgendamentos', token:state.token };
 
   if(state.ui.agView === 'dia'){
@@ -1944,55 +1988,229 @@ async function loadAgenda(){
     const list = r.data || [];
     el._currentItems = list;
 
-    if(!list.length){
-      el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><p>Nenhum agendamento</p></div>';
-      return;
+    if(state.ui.agView === 'semana'){
+      renderAgendaSemana(el, list, dataBase);
+    }else if(state.ui.agView === 'mes'){
+      renderAgendaMes(el, list, dataBase);
+    }else{
+      renderAgendaDia(el, list, dataBase);
     }
-
-    const grupos = {};
-    list.forEach(a => {
-      const d = String(a.data).slice(0,10);
-      if(!grupos[d]) grupos[d] = [];
-      grupos[d].push(a);
-    });
-    // Ordena cada grupo por horário
-    Object.keys(grupos).forEach(d => {
-      grupos[d].sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
-    });
-
-    el.innerHTML = Object.keys(grupos).sort().map(data => {
-      const br = fmtBR(data);
-      const isHoje = data === today();
-      return `
-        <div style="margin-bottom:20px">
-          <div style="font-size:10px;color:${isHoje ? 'var(--gold)' : 'var(--dim)'};letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:${isHoje ? '600' : '400'}">${br}${isHoje ? ' · HOJE' : ''}</div>
-          ${grupos[data].map(ag => `
-            <div class="ag-card ${ag.status}">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start">
-                <div>
-                  <div class="ag-hora">${fmtBR(String(ag.data).slice(0,10))} · ${ag.hora || '—'}</div>
-                  <div class="ag-cli">${ag.clienteNome || '—'}</div>
-                  <div class="ag-meta">${ag.servicos || '—'} · ${ag.duracaoMin}min${ag.colaboradorNome ? ' · ' + ag.colaboradorNome : ''}</div>
-                </div>
-                <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-                  <span class="badge ${ag.status === 'concluido' ? 'b-on' : ag.status === 'cancelado' ? 'b-off' : 'b-info'}">${ag.status === 'concluido' ? 'Concluído' : ag.status === 'cancelado' ? 'Cancelado' : 'Agendado'}</span>
-                  ${ag.status === 'agendado' ? `<button class="btn-ok" data-action="concluir" data-id="${ag.id}">${svgCheck}</button>` : ''}
-                  <button class="btn-e" data-action="edit" data-id="${ag.id}">${svgEdit}</button>
-                  <button class="btn-d" data-action="del" data-id="${ag.id}">${svgDel}</button>
-                </div>
-              </div>
-              ${Number(ag.valor) > 0 ? `<div style="font-family:'Playfair Display',serif;font-size:15px;color:var(--ok);margin-top:6px">${fmt(ag.valor)}</div>` : ''}
-            </div>
-          `).join('')}
-        </div>
-      `;
-    }).join('');
 
     state.ui.loadFlags.agendaLoaded = true;
   }catch(e){
     console.error('loadAgenda', e);
     el.innerHTML = '<div class="empty"><p>Erro de conexão.</p></div>';
   }
+}
+
+function agCardHtml(ag){
+  return `
+    <div class="ag-card ${ag.status}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="ag-hora">${ag.hora || '—'}</div>
+          <div class="ag-cli">${ag.clienteNome || '—'}</div>
+          <div class="ag-meta">${ag.servicos || '—'} · ${ag.duracaoMin}min${ag.colaboradorNome ? ' · ' + ag.colaboradorNome : ''}</div>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+          <span class="badge ${ag.status === 'concluido' ? 'b-on' : ag.status === 'cancelado' ? 'b-off' : 'b-info'}">${ag.status === 'concluido' ? 'Concluído' : ag.status === 'cancelado' ? 'Cancelado' : 'Agendado'}</span>
+          ${ag.status === 'agendado' ? `<button class="btn-ok" data-action="concluir" data-id="${ag.id}">${svgCheck}</button>` : ''}
+          <button class="btn-e" data-action="edit" data-id="${ag.id}">${svgEdit}</button>
+          <button class="btn-d" data-action="del" data-id="${ag.id}">${svgDel}</button>
+        </div>
+      </div>
+      ${Number(ag.valor) > 0 ? `<div style="font-family:'Playfair Display',serif;font-size:15px;color:var(--ok);margin-top:6px">${fmt(ag.valor)}</div>` : ''}
+    </div>
+  `;
+}
+
+function renderAgendaDia(el, list, dataBase){
+  if(!list.length){
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><p>Nenhum agendamento</p></div>';
+    return;
+  }
+  const grupos = {};
+  list.forEach(a => {
+    const d = String(a.data).slice(0,10);
+    if(!grupos[d]) grupos[d] = [];
+    grupos[d].push(a);
+  });
+  Object.keys(grupos).forEach(d => {
+    grupos[d].sort((a,b) => (a.hora||'').localeCompare(b.hora||''));
+  });
+  el.innerHTML = Object.keys(grupos).sort().map(data => {
+    const br = fmtBR(data);
+    const isHoje = data === today();
+    return `
+      <div style="margin-bottom:20px">
+        <div style="font-size:10px;color:${isHoje ? 'var(--gold)' : 'var(--dim)'};letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:${isHoje ? '600' : '400'}">${br}${isHoje ? ' · HOJE' : ''}</div>
+        ${grupos[data].map(ag => agCardHtml(ag)).join('')}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderAgendaSemana(el, list, dataBase){
+  const H_START = 7, H_END = 20, SLOT_H = 52;
+  const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+  const d0 = new Date(dataBase + 'T00:00:00');
+  d0.setDate(d0.getDate() - d0.getDay());
+  const weekDays = Array.from({length:7}, (_,i) => {
+    const d = new Date(d0); d.setDate(d.getDate()+i);
+    return d.toISOString().slice(0,10);
+  });
+
+  const byDate = {};
+  list.forEach(ag => {
+    const d = String(ag.data).slice(0,10);
+    if(!byDate[d]) byDate[d] = [];
+    byDate[d].push(ag);
+  });
+
+  // Header
+  let html = `<div class="gcal-week"><div class="gcal-header"><div class="gcal-hcell" style="border-right:1px solid var(--border)"></div>`;
+  weekDays.forEach((iso,i) => {
+    const isHoje = iso === today();
+    html += `<div class="gcal-hcell${isHoje ? ' gcal-hcell-hoje' : ''}">
+      <span class="gcal-hday-name" style="${isHoje ? 'color:var(--gold)' : ''}">${DIAS[i]}</span>
+      <div class="gcal-hday${isHoje ? ' hoje' : ''}">${parseInt(iso.split('-')[2],10)}</div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Body
+  const totalH = (H_END - H_START + 1) * SLOT_H;
+  html += `<div class="gcal-body"><div class="gcal-time-col">`;
+  for(let h=H_START; h<=H_END; h++){
+    html += `<div class="gcal-time-label">${h}h</div>`;
+  }
+  html += `</div>`;
+
+  weekDays.forEach(iso => {
+    const isHoje = iso === today();
+    const ags = byDate[iso] || [];
+    html += `<div class="gcal-day-col${isHoje ? ' gcal-day-hoje' : ''}" style="height:${totalH}px">`;
+
+    // Hour lines
+    for(let h=H_START; h<=H_END; h++){
+      html += `<div class="gcal-slot-line" style="top:${(h-H_START)*SLOT_H}px"></div>`;
+    }
+    // Half-hour lines (lighter)
+    for(let h=H_START; h<H_END; h++){
+      html += `<div class="gcal-slot-line" style="top:${(h-H_START)*SLOT_H+SLOT_H/2}px;border-color:rgba(224,217,204,.3)"></div>`;
+    }
+
+    // Current time line
+    if(isHoje){
+      const now = new Date();
+      const dec = now.getHours() + now.getMinutes()/60;
+      if(dec >= H_START && dec <= H_END){
+        const topNow = Math.round((dec - H_START) * SLOT_H);
+        html += `<div class="gcal-now-line" style="top:${topNow}px"><div class="gcal-now-dot"></div></div>`;
+      }
+    }
+
+    // Events
+    ags.forEach(ag => {
+      if(!ag.hora) return;
+      const [hh,mm] = ag.hora.split(':').map(Number);
+      const dec = hh + mm/60;
+      if(dec < H_START || dec > H_END) return;
+      const top = Math.round((dec - H_START) * SLOT_H);
+      const dur = Math.max(15, parseInt(ag.duracaoMin,10) || 60);
+      const height = Math.max(20, Math.round((dur/60) * SLOT_H) - 2);
+      const clr = ag.status==='concluido' ? 'var(--ok)' : ag.status==='cancelado' ? 'var(--err)' : 'var(--info)';
+      const bg  = ag.status==='concluido' ? 'var(--ok-bg)' : ag.status==='cancelado' ? 'var(--err-bg)' : 'var(--info-bg)';
+      html += `<div class="gcal-event" data-id="${ag.id}" style="top:${top}px;height:${height}px;background:${bg};border-left-color:${clr};color:${clr}">
+        <div class="gcal-event-hora">${ag.hora} ${ag.clienteNome || ''}</div>
+        ${height > 32 ? `<div class="gcal-event-desc">${ag.servicos || ''}</div>` : ''}
+      </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  html += `</div></div>`;
+  el.innerHTML = html;
+
+  // Bind event clicks → open edit drawer
+  el.querySelectorAll('.gcal-event[data-id]').forEach(ev => {
+    ev.addEventListener('click', () => {
+      const item = list.find(x => String(x.id) === ev.dataset.id);
+      if(item) editAgend(item);
+    });
+  });
+
+  // Scroll to business hours start
+  setTimeout(() => {
+    const body = el.querySelector('.gcal-body');
+    if(body) el.scrollTop = (8 - H_START) * SLOT_H;
+  }, 30);
+}
+
+function renderAgendaMes(el, list, dataBase){
+  const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const [ano, mes] = dataBase.split('-').map(Number);
+
+  const d1 = new Date(ano, mes-1, 1);
+  const gridStart = new Date(d1);
+  gridStart.setDate(gridStart.getDate() - gridStart.getDay());
+
+  const byDate = {};
+  list.forEach(ag => {
+    const d = String(ag.data).slice(0,10);
+    if(!byDate[d]) byDate[d] = [];
+    byDate[d].push(ag);
+  });
+  Object.keys(byDate).forEach(d => {
+    byDate[d].sort((a,b) => (a.hora||'').localeCompare(b.hora||''));
+  });
+
+  let html = `<div class="gcal-month">`;
+  html += `<div class="gcal-month-title">${MESES[mes-1]} ${ano}</div>`;
+  html += `<div class="gcal-month-header">${DIAS.map(d=>`<div class="gcal-month-hcell">${d}</div>`).join('')}</div>`;
+  html += `<div class="gcal-month-grid">`;
+
+  const cur = new Date(gridStart);
+  const tdISO = today();
+  let weeksRendered = 0;
+  while(weeksRendered < 6){
+    for(let col=0; col<7; col++){
+      const iso = cur.toISOString().slice(0,10);
+      const isCurrentMonth = cur.getMonth() === mes-1;
+      const isHoje = iso === tdISO;
+      const dayNum = cur.getDate();
+      const ags = byDate[iso] || [];
+      const visible = ags.slice(0,2);
+      const extra = ags.length - visible.length;
+
+      html += `<div class="gcal-month-cell${isCurrentMonth ? '' : ' outro-mes'}">`;
+      html += `<div class="gcal-month-num${isHoje ? ' hoje' : ''}">${dayNum}</div>`;
+      visible.forEach(ag => {
+        const clr = ag.status==='concluido' ? 'var(--ok)' : ag.status==='cancelado' ? 'var(--err)' : 'var(--info)';
+        const bg  = ag.status==='concluido' ? 'var(--ok-bg)' : ag.status==='cancelado' ? 'var(--err-bg)' : 'var(--info-bg)';
+        html += `<div class="gcal-month-pill" data-id="${ag.id}" style="background:${bg};color:${clr}">${ag.hora ? ag.hora+' ' : ''}${ag.clienteNome || ag.servicos || '—'}</div>`;
+      });
+      if(extra > 0) html += `<div class="gcal-month-mais">+${extra} mais</div>`;
+      html += `</div>`;
+      cur.setDate(cur.getDate()+1);
+    }
+    weeksRendered++;
+    // Stop after the week that contains the last day of the month
+    if(cur.getMonth() !== mes-1 && cur.getFullYear() >= ano && weeksRendered >= 4) break;
+  }
+
+  html += `</div></div>`;
+  el.innerHTML = html;
+
+  // Bind pill clicks → open edit drawer
+  el.querySelectorAll('.gcal-month-pill[data-id]').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const item = list.find(x => String(x.id) === pill.dataset.id);
+      if(item) editAgend(item);
+    });
+  });
 }
 
 async function loadCred(){
@@ -2796,7 +3014,7 @@ function openDrawerAgend(){
     <div class="fg"><span class="lbl">Serviço</span><select id="ag-svc"><option value="">— Selecione —</option>${svcOpts}</select></div>
     <div class="fg"><span class="lbl">Colaboradora</span><select id="ag-col"><option value="">— Selecione —</option>${colOpts}</select></div>
     <div class="form-row">
-      <div class="fg"><span class="lbl">Data *</span><input id="ag-d" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/></div>
+      <div class="fg"><span class="lbl">Data *</span><input id="ag-d" type="date" class="inp"/></div>
       <div class="fg"><span class="lbl">Hora *</span><input id="ag-h" type="time" class="inp" value="09:00"/></div>
     </div>
     <div class="form-row">
@@ -2810,9 +3028,8 @@ function openDrawerAgend(){
     </div>
   `);
 
-  qs('#ag-d').addEventListener('input', e => applyDataMask(e.target));
   qs('#ag-val').addEventListener('input', e => applyValorMask(e.target));
-  qs('#ag-d').value = qs('#ag-data')?.value || fmtBR(today());
+  qs('#ag-d').value = qs('#ag-data')?.value || today();
 
   // Auto-preenche duração ao selecionar serviço
   qs('#ag-svc').addEventListener('change', () => {
@@ -2836,7 +3053,7 @@ function editAgend(ag){
     <div class="fg"><span class="lbl">Serviços</span><input id="ag-svc" type="text" class="inp" value="${ag.servicos || ''}"/></div>
     <div class="fg"><span class="lbl">Colaboradora</span><select id="ag-col"><option value="">— Selecione —</option>${colOpts}</select></div>
     <div class="form-row">
-      <div class="fg"><span class="lbl">Data</span><input id="ag-d" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/></div>
+      <div class="fg"><span class="lbl">Data</span><input id="ag-d" type="date" class="inp"/></div>
       <div class="fg"><span class="lbl">Hora</span><input id="ag-h" type="time" class="inp" value="${ag.hora || '09:00'}"/></div>
     </div>
     <div class="form-row">
@@ -2858,9 +3075,8 @@ function editAgend(ag){
     </div>
   `);
 
-  qs('#ag-d').addEventListener('input', e => applyDataMask(e.target));
   qs('#ag-val').addEventListener('input', e => applyValorMask(e.target));
-  qs('#ag-d').value = fmtBR(String(ag.data).slice(0,10));
+  qs('#ag-d').value = String(ag.data).slice(0,10);
   setTimeout(() => setValorMask(qs('#ag-val'), ag.valor), 20);
 
   qs('#btn-cancel-ag').addEventListener('click', closeDrawer);
@@ -2882,7 +3098,7 @@ async function saveAgend(){
     colaboradorId,
     colaboradorNome,
     servicos: qs('#ag-svc')?.value || '',
-    data: parseISO(qs('#ag-d')?.value),
+    data: qs('#ag-d')?.value || today(),
     hora: qs('#ag-h')?.value || '09:00',
     duracaoMin: parseInt(qs('#ag-dur')?.value || '60', 10),
     valor: getValorRaw(qs('#ag-val')),
@@ -3186,6 +3402,11 @@ function setTipoLanc(t){
   qs('#f-saida').style.display = t === 'saida' ? 'block' : 'none';
   qs('#f-retirada').style.display = t === 'retirada' ? 'block' : 'none';
 
+  // Para entrada nova: o valor vem dos itens (total-bar), #f-valor é desnecessário
+  // Para saída/retirada: não há itens, #f-valor é necessário
+  const fvFg = qs('#f-valor-fg');
+  if(fvFg) fvFg.style.display = (t === 'entrada' && !state.ui.editId) ? 'none' : 'block';
+
   const fe = qs('#f-fiado-expand');
   if(fe) fe.style.display = 'none';
   const forma = qs('#f-forma');
@@ -3201,7 +3422,7 @@ function onFormaChange(val){
     setTimeout(() => {
       const vd = qs('#f-data');
       const v1 = qs('#ff-venc1');
-      if(v1 && !v1.value) v1.value = vd?.value || fmtBR(today());
+      if(v1 && !v1.value) v1.value = fmtBR(vd?.value || today());
 
       const totalItens = (state.ui.itensLanc || []).reduce((s,i)=>s+(parseFloat(i.valor)||0),0);
       const fft = qs('#ff-total');
@@ -3332,10 +3553,8 @@ function openDrawerLanc(){
       <div class="fg"><span class="lbl">Descrição</span><input id="f-ret-desc" type="text" class="inp" placeholder="Ex: Farmácia, supermercado…"/></div>
     </div>
 
-    <div class="form-row">
-      <div class="fg"><span class="lbl">Valor *</span><input id="f-valor" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
-      <div class="fg"><span class="lbl">Data</span><input id="f-data" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/></div>
-    </div>
+    <div class="fg" id="f-valor-fg" style="display:none"><span class="lbl">Valor *</span><input id="f-valor" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
+    <div class="fg"><span class="lbl">Data</span><input id="f-data" type="date" class="inp"/></div>
     <div class="fg"><span class="lbl">Observações</span><input id="f-obs" type="text" class="inp" placeholder="Opcional…"/></div>
     <div class="dfooter">
       <button class="btn-sec" id="btn-cancel-lanc">Cancelar</button>
@@ -3343,8 +3562,7 @@ function openDrawerLanc(){
     </div>
   `);
 
-  qs('#f-data').value = fmtBR(today());
-  qs('#f-data').addEventListener('input', e => applyDataMask(e.target));
+  qs('#f-data').value = today();
   qs('#f-valor').addEventListener('input', e => applyValorMask(e.target));
   qs('#f-forma').addEventListener('change', e => onFormaChange(e.target.value));
 
@@ -3399,7 +3617,7 @@ function editLanc(l){
     </div>
     <div class="form-row">
       <div class="fg"><span class="lbl">Valor *</span><input id="f-valor" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
-      <div class="fg"><span class="lbl">Data</span><input id="f-data" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/></div>
+      <div class="fg"><span class="lbl">Data</span><input id="f-data" type="date" class="inp"/></div>
     </div>
     <div class="fg"><span class="lbl">Observações</span><input id="f-obs" type="text" class="inp" value="${l.observacoes || ''}"/></div>
     <div class="dfooter">
@@ -3408,9 +3626,8 @@ function editLanc(l){
     </div>
   `);
 
-  qs('#f-data').addEventListener('input', e => applyDataMask(e.target));
   qs('#f-valor').addEventListener('input', e => applyValorMask(e.target));
-  qs('#f-data').value = fmtBR(String(l.data).slice(0,10));
+  qs('#f-data').value = String(l.data).slice(0,10);
   setTimeout(() => setValorMask(qs('#f-valor'), l.valor), 30);
 
   qs('#btn-cancel-lanc').addEventListener('click', closeDrawer);
@@ -3487,8 +3704,7 @@ async function saveLanc(){
           toast('Fiado registrado!','ok');
 
           const di = qs('#cx-data');
-          const dataLanc = qs('#f-data')?.value || fmtBR(today());
-          if(di) di.value = dataLanc;
+          if(di) di.value = qs('#f-data')?.value || today();
 
           await Promise.all([loadCaixa(), updateStats(), loadCred(), loadVencHome()]);
         }catch(e){
@@ -3531,7 +3747,7 @@ async function saveLanc(){
     formaPagamento,
     isRetirada,
     observacoes: itensJson ? `[ITENS]${itensJson}${obsBase ? '|' + obsBase : ''}` : obsBase,
-    data: parseISO(qs('#f-data')?.value)
+    data: qs('#f-data')?.value || today()
   };
 
   const btn = qs('#drawer .btn-save');
@@ -3548,7 +3764,7 @@ async function saveLanc(){
     closeDrawer();
     toast(state.ui.editId ? 'Atualizado!' : 'Registrado!','ok');
     const dataInp = qs('#cx-data');
-    if(dataInp) dataInp.value = fmtBR(data.data);
+    if(dataInp) dataInp.value = data.data;
     await Promise.all([loadCaixa(), updateStats()]);
   }catch(e){
     toast('Erro de conexão.','err');
