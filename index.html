@@ -49,7 +49,7 @@ html,body{
 }
 button{cursor:pointer;font-family:inherit;border:none;outline:none}
 input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:none;color:var(--text)}
-input[type="date"]{-webkit-appearance:auto;appearance:auto;color-scheme:light;cursor:pointer}
+input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;color-scheme:light;cursor:pointer}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -597,6 +597,21 @@ input[type="date"]{-webkit-appearance:auto;appearance:auto;color-scheme:light;cu
 .gcal-month-pill:active{filter:brightness(.88)}
 .gcal-month-mais{font-size:9px;color:var(--dim);padding:1px 4px;font-weight:500}
 
+/* === Mobile: agenda views === */
+@media (max-width:520px){
+  .gcal-week{min-width:0}
+  .gcal-week > div{min-width:336px}/* 7 cols × 48px each scrolls horizontally */
+  .gcal-hcell{min-width:48px;padding:4px 1px}
+  .gcal-hday{font-size:13px;width:24px;height:24px;line-height:24px}
+  .gcal-hday-name{font-size:8px}
+  .gcal-event{padding:2px 4px}
+  .gcal-event-hora{font-size:9px}
+  .gcal-month-cell{min-height:52px;padding:2px}
+  .gcal-month-hcell{font-size:8px;padding:4px 1px;letter-spacing:.5px}
+  .gcal-month-pill{font-size:8px;padding:1px 3px}
+  .gcal-month-num{font-size:10px;width:18px;height:18px;line-height:18px}
+}
+
 .cfg-sec{
   background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);
   padding:18px;margin-bottom:14px;box-shadow:var(--shadow)
@@ -732,7 +747,7 @@ input[type="date"]{-webkit-appearance:auto;appearance:auto;color-scheme:light;cu
         <button class="btn-add" id="btn-open-lanc">+</button>
       </div>
       <div class="cdate-bar">
-        <input type="date" id="cx-data"/>
+        <input type="month" id="cx-data"/>
         <button class="icon-btn" id="btn-reload-caixa" style="background:var(--bg2);border:1.5px solid var(--border);padding:10px;border-radius:var(--r)">
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="23 4 23 10 17 10"/>
@@ -746,7 +761,6 @@ input[type="date"]{-webkit-appearance:auto;appearance:auto;color-scheme:light;cu
         <div class="rc"><div class="rc-label">Saldo</div><div class="rc-val gold" id="cx-sal">R$0</div></div>
       </div>
       <div class="forma-box" id="cx-formas"></div>
-      <div class="slabel">Lançamentos</div>
       <div id="cx-list"></div>
     </div>
 
@@ -1067,6 +1081,7 @@ const state = {
     extUnlocked: false,
     planFiltro: 'todos',
     itensLanc: [],
+    caixaItems: [],
     clienteSearch: '',
     loadFlags: {
       bootstrapped: false,
@@ -1588,7 +1603,7 @@ window.addEventListener('load', async () => {
     });
 
     initExtSelectors();
-    qs('#cx-data').value = today();
+    qs('#cx-data').value = today().slice(0,7);
     qs('#ag-data').value = today();
 
     if(state.token){
@@ -1678,7 +1693,7 @@ function onCaixaListClick(e){
   const id = btn.dataset.id;
   const data = btn.dataset.date || '';
 
-  const list = qs('#cx-list')._currentItems || [];
+  const list = state.ui.caixaItems || [];
   const item = list.find(x => String(x.id) === String(id));
   if(!item) return;
 
@@ -1883,62 +1898,90 @@ function renderCred(){
 
 async function loadCaixa(){
   const inp = qs('#cx-data');
-  if(inp && !inp.value) inp.value = today();
-  const data = inp?.value || today();
+  if(inp && !inp.value) inp.value = today().slice(0,7);
+  const mes = inp?.value || today().slice(0,7); // YYYY-MM
+
+  const [ano, m] = mes.split('-').map(Number);
+  const dataInicio = `${ano}-${String(m).padStart(2,'0')}-01`;
+  const lastDay = new Date(ano, m, 0).getDate();
+  const dataFim = `${ano}-${String(m).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
 
   try{
-    const [res, lancs] = await Promise.all([
-      api({ action:'getCaixaResumo', token:state.token, data }),
-      api({ action:'getCaixa', token:state.token, data })
-    ]);
+    const r = await api({ action:'getExtrato', token:state.token, dataInicio, dataFim });
+    if(r.status !== 'ok') return;
 
-    if(res.status === 'ok'){
-      const d = res.data || {};
-      qs('#cx-ent').textContent = fmt(d.entradas);
-      qs('#cx-sai').textContent = fmt(d.saidas);
-      qs('#cx-sal').textContent = fmt(d.saldo);
+    const d = r.data || {};
 
-      const pf = d.porForma || {};
-      const keys = Object.keys(pf);
-      const fel = qs('#cx-formas');
-      fel.innerHTML = keys.length
-        ? '<div class="slabel" style="margin-bottom:8px">Por forma de pagamento</div>' +
-          keys.map(k => `<div class="forma-row"><span style="font-size:12px;color:var(--dim)">${lbForma(k)}</span><span style="font-size:12px;font-weight:500">${fmt(pf[k])}</span></div>`).join('')
-        : '<div style="font-size:11px;color:var(--dim);text-align:center">Nenhuma entrada registrada</div>';
+    // Summary cards
+    qs('#cx-ent').textContent = fmt(d.faturamento);
+    qs('#cx-sai').textContent = fmt(d.totalSaidas || 0);
+    qs('#cx-sal').textContent = fmt((d.faturamento||0) - (d.totalSaidas||0));
+
+    // Formas de pagamento
+    const pf = d.porForma || {};
+    const keys = Object.keys(pf);
+    const fel = qs('#cx-formas');
+    fel.innerHTML = keys.length
+      ? '<div class="slabel" style="margin-bottom:8px">Por forma de pagamento</div>' +
+        keys.map(k => `<div class="forma-row"><span style="font-size:12px;color:var(--dim)">${lbForma(k)}</span><span style="font-size:12px;font-weight:500">${fmt(pf[k])}</span></div>`).join('')
+      : '';
+
+    // Store all items for edit/delete
+    const allItems = (d.dias || []).flatMap(dia => dia.lancamentos || []);
+    state.ui.caixaItems = allItems;
+
+    // Accordion per day (most recent first)
+    const el = qs('#cx-list');
+    const dias = (d.dias || []).slice().reverse();
+
+    if(!dias.length){
+      el.innerHTML = '<div class="empty"><div class="empty-icon">💰</div><p>Nenhum lançamento</p></div>';
+      return;
     }
 
-    if(lancs.status === 'ok'){
-      const el = qs('#cx-list');
-      const dataList = (lancs.data || []).slice().reverse();
-      el._currentItems = dataList;
-
-      if(!dataList.length){
-        el.innerHTML = '<div class="empty"><div class="empty-icon">💰</div><p>Nenhum lançamento</p></div>';
-        return;
-      }
-
-      el.innerHTML = dataList.map(l => {
-        const isRet = l.isRetirada === 'true' || l.categoria === 'Retirada Pessoal';
-        return `
-          <div class="lcard">
-            <div class="licon ${l.tipo}">${l.tipo === 'entrada' ? '↑' : '↓'}</div>
-            <div class="lbody">
-              <div class="lnome">${l.clienteNome || l.itemNome || l.categoria || '—'}${isRet ? ' <span class="badge b-warn">PESSOAL</span>' : ''}</div>
-              <div class="lmeta">${lbForma(l.formaPagamento)} ${renderItensMini(l.itemNome, l.observacoes)}</div>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-              <div class="lval ${l.tipo}">${l.tipo === 'saida' ? '-' : ''}${fmt(l.valor)}</div>
-              <div style="display:flex;gap:2px">
-                <button class="btn-e" data-action="edit" data-id="${l.id}" data-date="${l.data}">${svgEdit}</button>
-                <button class="btn-d" data-action="del" data-id="${l.id}" data-date="${l.data}">${svgDel}</button>
-              </div>
-            </div>
+    const tdISO = today();
+    let html = '';
+    dias.forEach((dia, i) => {
+      const id = `cxd${i}`;
+      const isHoje = dia.data === tdISO;
+      const open = isHoje || (i === 0 && !dias.some(x => x.data === tdISO));
+      const br = fmtBR(dia.data);
+      html += `
+        <div>
+          <div class="dia-hdr" onclick="toggleCaixaDia('${id}')">
+            <span style="font-size:12px;font-weight:500${isHoje ? ';color:var(--gold)' : ''}">${br}${isHoje ? ' · hoje' : ''}</span>
+            <span style="display:flex;gap:12px;font-size:12px;font-weight:600">
+              ${dia.entradas > 0 ? `<span style="color:var(--ok)">+${fmt(dia.entradas)}</span>` : ''}
+              ${dia.saidas > 0 ? `<span style="color:var(--err)">-${fmt(dia.saidas)}</span>` : ''}
+            </span>
           </div>
-        `;
-      }).join('');
-    }
+          <div class="dia-items" id="${id}" style="display:${open ? 'block' : 'none'}">
+            ${(dia.lancamentos || []).map(l => {
+              const isRet = l.isRetirada === 'true' || l.categoria === 'Retirada Pessoal';
+              return `
+                <div class="dia-item">
+                  <div class="licon ${l.tipo}" style="width:28px;height:28px;font-size:12px;flex-shrink:0">${l.tipo === 'entrada' ? '↑' : '↓'}</div>
+                  <div class="lbody" style="flex:1;min-width:0">
+                    <div class="lnome" style="font-size:12px">${l.clienteNome || l.itemNome || l.categoria || '—'}${isRet ? ' <span class="badge b-warn">PESSOAL</span>' : ''}</div>
+                    <div class="lmeta">${lbForma(l.formaPagamento)} ${renderItensMini(l.itemNome, l.observacoes)}</div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
+                    <div class="lval ${l.tipo}" style="font-size:13px">${l.tipo === 'saida' ? '-' : ''}${fmt(l.valor)}</div>
+                    <div style="display:flex;gap:2px">
+                      <button class="btn-e" data-action="edit" data-id="${l.id}" data-date="${l.data}">${svgEdit}</button>
+                      <button class="btn-d" data-action="del" data-id="${l.id}" data-date="${l.data}">${svgDel}</button>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    });
+    el.innerHTML = html;
 
-    state.ui.loadFlags.caixaLoadedFor = data;
+    state.ui.loadFlags.caixaLoadedFor = mes;
   }catch(e){
     console.error('loadCaixa', e);
   }
@@ -2061,8 +2104,8 @@ function renderAgendaSemana(el, list, dataBase){
     byDate[d].sort((a,b) => (a.hora||'').localeCompare(b.hora||''));
   });
 
-  // Header
-  let html = `<div class="gcal-week">`;
+  // Header — inner div has min-width so 7 cols stay readable on mobile (scrolls horiz)
+  let html = `<div class="gcal-week"><div style="min-width:350px">`;
   html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1.5px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:5">`;
   weekDays.forEach((iso,i) => {
     const isHoje = iso === today();
@@ -2098,7 +2141,7 @@ function renderAgendaSemana(el, list, dataBase){
 
     html += `</div>`;
   });
-  html += `</div></div>`;
+  html += `</div></div></div>`;
 
   el.innerHTML = html;
 
@@ -2364,6 +2407,17 @@ function toggleDia(id){
   if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 window.toggleDia = toggleDia;
+
+function toggleCaixaDia(id){
+  const el = qs('#' + id);
+  if(!el) return;
+  const isOpen = el.style.display !== 'none';
+  // collapse all
+  qs('#cx-list').querySelectorAll('.dia-items').forEach(x => x.style.display = 'none');
+  // if was closed, open it
+  if(!isOpen) el.style.display = 'block';
+}
+window.toggleCaixaDia = toggleCaixaDia;
 
 function openDrawerCliente(){
   state.ui.editId = null;
@@ -3665,7 +3719,7 @@ async function saveLanc(){
           toast('Fiado registrado!','ok');
 
           const di = qs('#cx-data');
-          if(di) di.value = qs('#f-data')?.value || today();
+          if(di) di.value = (qs('#f-data')?.value || today()).slice(0,7);
 
           await Promise.all([loadCaixa(), updateStats(), loadCred(), loadVencHome()]);
         }catch(e){
@@ -3725,7 +3779,7 @@ async function saveLanc(){
     closeDrawer();
     toast(state.ui.editId ? 'Atualizado!' : 'Registrado!','ok');
     const dataInp = qs('#cx-data');
-    if(dataInp) dataInp.value = data.data;
+    if(dataInp) dataInp.value = (data.data || today()).slice(0,7);
     await Promise.all([loadCaixa(), updateStats()]);
   }catch(e){
     toast('Erro de conexão.','err');
