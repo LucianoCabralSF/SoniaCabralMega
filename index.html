@@ -2921,28 +2921,106 @@ async function delAgend(id){
   }
 }
 
-async function concluirAgend(ag){
+function concluirAgend(ag){
+  openDrawer(`
+    <div class="dtitle">Concluir Atendimento</div>
+    <div style="background:var(--gold-bg);border:1px solid var(--gold-dk);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--dark);line-height:1.6">
+      Confirme os dados abaixo. A entrada será registrada no caixa automaticamente.
+    </div>
+    <div class="fg">
+      <span class="lbl">Cliente</span>
+      <div style="background:var(--bg4);border:1.5px solid var(--border);border-radius:var(--r);padding:11px 13px;color:var(--dim);font-size:14px">${ag.clienteNome || '—'}</div>
+    </div>
+    <div class="fg"><span class="lbl">Serviços realizados</span><input id="cmd-svc" type="text" class="inp" value="${ag.servicos || ''}"/></div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Valor (R$) *</span><input id="cmd-val" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
+      <div class="fg">
+        <span class="lbl">Forma de pagamento</span>
+        <select id="cmd-forma">
+          <option value="dinheiro">Dinheiro</option>
+          <option value="pix">PIX</option>
+          <option value="debito">Débito</option>
+          <option value="credito">Crédito</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><span class="lbl">Observações</span><input id="cmd-obs" type="text" class="inp" value="${ag.observacoes || ''}" placeholder="Opcional…"/></div>
+    <div class="dfooter">
+      <button class="btn-sec" id="btn-cancel-cmd">Cancelar</button>
+      <button class="btn-save" id="btn-save-cmd">Confirmar e registrar</button>
+    </div>
+  `);
+
+  qs('#cmd-val').addEventListener('input', e => applyValorMask(e.target));
+  setTimeout(() => { if(ag.valor > 0) setValorMask(qs('#cmd-val'), ag.valor); }, 20);
+
+  qs('#btn-cancel-cmd').addEventListener('click', closeDrawer);
+  qs('#btn-save-cmd').addEventListener('click', () => salvarComanda(ag));
+}
+
+async function salvarComanda(ag){
+  const servicos = qs('#cmd-svc')?.value.trim() || ag.servicos || '';
+  const valor = getValorRaw(qs('#cmd-val'));
+  const formaPagamento = qs('#cmd-forma')?.value || 'dinheiro';
+  const observacoes = qs('#cmd-obs')?.value.trim() || '';
+
+  if(!valor || valor <= 0) return toast('Informe o valor.','err');
+
+  const btn = qs('#drawer .btn-save');
+  btnSv(btn, true, 'Confirmar e registrar');
+
   try{
-    const data = {
+    const agData = {
       id: ag.id,
       clienteId: ag.clienteId,
       clienteNome: ag.clienteNome,
       colaboradorId: ag.colaboradorId,
       colaboradorNome: ag.colaboradorNome,
-      servicos: ag.servicos,
+      servicos,
       data: String(ag.data).slice(0,10),
       hora: ag.hora,
       duracaoMin: ag.duracaoMin,
-      valor: ag.valor,
+      valor,
       status: 'concluido',
-      observacoes: ag.observacoes || ''
+      observacoes
     };
-    const r = await post({ action:'saveAgendamento', token:state.token, data });
-    if(r.status !== 'ok') return toast('Erro.','err');
-    toast('Atendimento concluído!','ok');
+
+    const lancData = {
+      id: null,
+      tipo: 'entrada',
+      categoria: '',
+      clienteId: ag.clienteId,
+      clienteNome: ag.clienteNome,
+      itemId: '',
+      itemNome: servicos || ag.servicos || 'Atendimento',
+      itemTipo: 'servico',
+      valor,
+      formaPagamento,
+      isRetirada: false,
+      observacoes: observacoes ? `Agendamento · ${observacoes}` : 'Agendamento',
+      data: String(ag.data).slice(0,10)
+    };
+
+    const [r1, r2] = await Promise.all([
+      post({ action:'saveAgendamento', token:state.token, data: agData }),
+      post({ action:'saveLancamento', token:state.token, data: lancData })
+    ]);
+
+    if(r1.status !== 'ok' || r2.status !== 'ok'){
+      toast('Erro ao registrar.','err');
+      btnSv(btn, false, 'Confirmar e registrar');
+      return;
+    }
+
+    closeDrawer();
+    toast('Atendimento concluído e registrado no caixa!','ok');
     loadAgenda();
+    updateStats();
+    // Recarrega caixa se o agendamento é do dia atual
+    if(String(ag.data).slice(0,10) === today()) loadCaixa();
   }catch(e){
     toast('Erro.','err');
+    btnSv(btn, false, 'Confirmar e registrar');
   }
 }
 
