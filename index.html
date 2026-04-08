@@ -569,15 +569,6 @@ input[type="date"]{-webkit-appearance:auto;appearance:auto;color-scheme:light;cu
 .gcal-hday-name{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);display:block}
 .gcal-hday{font-size:16px;font-weight:400;color:var(--text);width:28px;height:28px;line-height:28px;border-radius:50%;margin:2px auto 0;text-align:center}
 .gcal-hday.hoje{background:var(--gold);color:#fff;font-weight:700;font-size:14px}
-.gcal-body{display:grid;grid-template-columns:36px repeat(7,1fr)}
-.gcal-time-col{border-right:1px solid var(--border)}
-.gcal-time-label{height:52px;font-size:9px;color:var(--dim);text-align:right;padding:4px 5px 0 0;letter-spacing:.3px;line-height:1}
-.gcal-day-col{position:relative;border-right:1px solid var(--border);min-width:42px}
-.gcal-day-col:last-child{border-right:none}
-.gcal-day-hoje{background:rgba(154,111,30,.04)}
-.gcal-slot-line{position:absolute;left:0;right:0;border-top:1px solid rgba(224,217,204,.6);pointer-events:none}
-.gcal-now-line{position:absolute;left:0;right:0;height:2px;background:var(--err);z-index:3;pointer-events:none}
-.gcal-now-dot{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--err)}
 .gcal-event{
   position:absolute;left:2px;right:2px;border-radius:4px;padding:2px 5px;
   font-size:10px;overflow:hidden;cursor:pointer;border-left:3px solid;
@@ -2051,7 +2042,6 @@ function renderAgendaDia(el, list, dataBase){
 }
 
 function renderAgendaSemana(el, list, dataBase){
-  const H_START = 7, H_END = 20, SLOT_H = 52;
   const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 
   const d0 = new Date(dataBase + 'T00:00:00');
@@ -2067,9 +2057,13 @@ function renderAgendaSemana(el, list, dataBase){
     if(!byDate[d]) byDate[d] = [];
     byDate[d].push(ag);
   });
+  Object.keys(byDate).forEach(d => {
+    byDate[d].sort((a,b) => (a.hora||'').localeCompare(b.hora||''));
+  });
 
   // Header
-  let html = `<div class="gcal-week"><div class="gcal-header"><div class="gcal-hcell" style="border-right:1px solid var(--border)"></div>`;
+  let html = `<div class="gcal-week">`;
+  html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1.5px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:5">`;
   weekDays.forEach((iso,i) => {
     const isHoje = iso === today();
     html += `<div class="gcal-hcell${isHoje ? ' gcal-hcell-hoje' : ''}">
@@ -2079,74 +2073,41 @@ function renderAgendaSemana(el, list, dataBase){
   });
   html += `</div>`;
 
-  // Body
-  const totalH = (H_END - H_START + 1) * SLOT_H;
-  html += `<div class="gcal-body"><div class="gcal-time-col">`;
-  for(let h=H_START; h<=H_END; h++){
-    html += `<div class="gcal-time-label">${h}h</div>`;
-  }
-  html += `</div>`;
-
+  // Compact columns — sem linhas de hora vazias
+  html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);border-left:1.5px solid var(--border);align-items:start">`;
   weekDays.forEach(iso => {
     const isHoje = iso === today();
     const ags = byDate[iso] || [];
-    html += `<div class="gcal-day-col${isHoje ? ' gcal-day-hoje' : ''}" style="height:${totalH}px">`;
+    html += `<div style="border-right:1.5px solid var(--border);padding:4px 3px;min-height:48px;${isHoje ? 'background:rgba(154,111,30,.04)' : ''}">`;
 
-    // Hour lines
-    for(let h=H_START; h<=H_END; h++){
-      html += `<div class="gcal-slot-line" style="top:${(h-H_START)*SLOT_H}px"></div>`;
+    if(!ags.length){
+      html += `<div style="text-align:center;padding:14px 0;color:var(--dim);font-size:10px;opacity:.3">—</div>`;
+    }else{
+      ags.forEach(ag => {
+        const clr = ag.status==='concluido' ? 'var(--ok)' : ag.status==='cancelado' ? 'var(--err)' : 'var(--info)';
+        const bg  = ag.status==='concluido' ? 'var(--ok-bg)' : ag.status==='cancelado' ? 'var(--err-bg)' : 'var(--info-bg)';
+        html += `<div class="gcal-event" data-id="${ag.id}"
+          style="position:relative;height:auto;top:auto;left:auto;right:auto;
+                 background:${bg};border-left-color:${clr};color:${clr};margin-bottom:4px">
+          <div class="gcal-event-hora">${ag.hora || '—'}</div>
+          <div style="font-size:10px;font-weight:500;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${ag.clienteNome || ''}</div>
+          <div class="gcal-event-desc">${ag.servicos || ''}</div>
+        </div>`;
+      });
     }
-    // Half-hour lines (lighter)
-    for(let h=H_START; h<H_END; h++){
-      html += `<div class="gcal-slot-line" style="top:${(h-H_START)*SLOT_H+SLOT_H/2}px;border-color:rgba(224,217,204,.3)"></div>`;
-    }
-
-    // Current time line
-    if(isHoje){
-      const now = new Date();
-      const dec = now.getHours() + now.getMinutes()/60;
-      if(dec >= H_START && dec <= H_END){
-        const topNow = Math.round((dec - H_START) * SLOT_H);
-        html += `<div class="gcal-now-line" style="top:${topNow}px"><div class="gcal-now-dot"></div></div>`;
-      }
-    }
-
-    // Events
-    ags.forEach(ag => {
-      if(!ag.hora) return;
-      const [hh,mm] = ag.hora.split(':').map(Number);
-      const dec = hh + mm/60;
-      if(dec < H_START || dec > H_END) return;
-      const top = Math.round((dec - H_START) * SLOT_H);
-      const dur = Math.max(15, parseInt(ag.duracaoMin,10) || 60);
-      const height = Math.max(20, Math.round((dur/60) * SLOT_H) - 2);
-      const clr = ag.status==='concluido' ? 'var(--ok)' : ag.status==='cancelado' ? 'var(--err)' : 'var(--info)';
-      const bg  = ag.status==='concluido' ? 'var(--ok-bg)' : ag.status==='cancelado' ? 'var(--err-bg)' : 'var(--info-bg)';
-      html += `<div class="gcal-event" data-id="${ag.id}" style="top:${top}px;height:${height}px;background:${bg};border-left-color:${clr};color:${clr}">
-        <div class="gcal-event-hora">${ag.hora} ${ag.clienteNome || ''}</div>
-        ${height > 32 ? `<div class="gcal-event-desc">${ag.servicos || ''}</div>` : ''}
-      </div>`;
-    });
 
     html += `</div>`;
   });
-
   html += `</div></div>`;
+
   el.innerHTML = html;
 
-  // Bind event clicks → open edit drawer
   el.querySelectorAll('.gcal-event[data-id]').forEach(ev => {
     ev.addEventListener('click', () => {
       const item = list.find(x => String(x.id) === ev.dataset.id);
       if(item) editAgend(item);
     });
   });
-
-  // Scroll to business hours start
-  setTimeout(() => {
-    const body = el.querySelector('.gcal-body');
-    if(body) el.scrollTop = (8 - H_START) * SLOT_H;
-  }, 30);
 }
 
 function renderAgendaMes(el, list, dataBase){
