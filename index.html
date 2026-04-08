@@ -279,11 +279,11 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 .btn-e{background:var(--bg3);color:var(--gold-dk);border-color:var(--border)}
 .btn-d{background:var(--bg3);color:var(--err);border-color:var(--border)}
 .btn-s{background:var(--bg3);color:var(--info);border-color:var(--border)}
-.btn-ok{background:var(--bg3);color:var(--ok);border-color:var(--border)}
+.btn-ok{background:var(--ok);color:#fff;border-color:var(--ok)}
 .btn-e:hover{background:var(--gold-bg);border-color:var(--gold-dk)}
 .btn-d:hover{background:var(--err-bg);border-color:var(--err)}
 .btn-s:hover{background:var(--info-bg);border-color:var(--info)}
-.btn-ok:hover{background:var(--ok-bg);border-color:var(--ok)}
+.btn-ok:hover{filter:brightness(.88)}
 .btn-e svg,.btn-d svg,.btn-s svg,.btn-ok svg{
   width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;
   stroke-linecap:round;stroke-linejoin:round
@@ -2931,7 +2931,14 @@ function concluirAgend(ag){
       <span class="lbl">Cliente</span>
       <div style="background:var(--bg4);border:1.5px solid var(--border);border-radius:var(--r);padding:11px 13px;color:var(--dim);font-size:14px">${ag.clienteNome || '—'}</div>
     </div>
-    <div class="fg"><span class="lbl">Serviços realizados</span><input id="cmd-svc" type="text" class="inp" value="${ag.servicos || ''}"/></div>
+    <div class="fg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span class="lbl" style="margin:0">Serviços realizados</span>
+        <button type="button" id="btn-add-item-cmd" style="background:var(--gold-bg);border:1.5px solid var(--gold-dk);color:var(--gold-dk);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;letter-spacing:.5px;cursor:pointer">＋ Adicionar</button>
+      </div>
+      <input id="cmd-svc" type="text" class="inp" value="${ag.servicos || ''}" placeholder="Nome dos serviços…"/>
+      <div id="cmd-itens-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
+    </div>
     <div class="form-row">
       <div class="fg"><span class="lbl">Valor (R$) *</span><input id="cmd-val" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
       <div class="fg">
@@ -2954,6 +2961,7 @@ function concluirAgend(ag){
   qs('#cmd-val').addEventListener('input', e => applyValorMask(e.target));
   setTimeout(() => { if(ag.valor > 0) setValorMask(qs('#cmd-val'), ag.valor); }, 20);
 
+  qs('#btn-add-item-cmd').addEventListener('click', abrirSeletorItemComanda);
   qs('#btn-cancel-cmd').addEventListener('click', closeDrawer);
   qs('#btn-save-cmd').addEventListener('click', () => salvarComanda(ag));
 }
@@ -3046,6 +3054,56 @@ function abrirSeletorItem(){
   html += '<button onclick="closeModal()" class="btn-sec" style="width:100%;margin-top:16px">Fechar</button>';
   openModal(html);
 }
+
+function abrirSeletorItemComanda(){
+  const svcOpts = state.db.servicos.filter(s => isAtivo(s.ativo));
+  const prdOpts = state.db.produtos.filter(p => isAtivo(p.ativo));
+  let html = '<div style="font-family:Playfair Display,serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:16px">Adicionar item</div>';
+  html += '<div style="font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">SERVIÇOS</div>';
+  svcOpts.forEach(s => {
+    const preco = parseFloat(s.preco) || 0;
+    html += `<div onclick="addItemComanda(this)" data-nome="${String(s.nome).replace(/"/g,'&quot;')}" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:15px;color:var(--text);font-weight:500">${s.nome}</span><span style="color:var(--ok);font-weight:600;font-size:14px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
+  });
+  if(!svcOpts.length) html += '<div style="color:var(--dim);font-size:12px;padding:12px">Nenhum serviço cadastrado</div>';
+  html += '<div style="font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin:14px 0 8px">PRODUTOS</div>';
+  prdOpts.forEach(p => {
+    const preco = parseFloat(p.preco) || 0;
+    html += `<div onclick="addItemComanda(this)" data-nome="${String(p.nome).replace(/"/g,'&quot;')}" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:15px;color:var(--text);font-weight:500">${p.nome}</span><span style="color:var(--ok);font-weight:600;font-size:14px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
+  });
+  if(!prdOpts.length) html += '<div style="color:var(--dim);font-size:12px;padding:12px">Nenhum produto cadastrado</div>';
+  html += '<button onclick="closeModal()" class="btn-sec" style="width:100%;margin-top:16px">Fechar</button>';
+  openModal(html);
+}
+
+function addItemComanda(el){
+  const nome = el.dataset.nome;
+  const preco = parseFloat(el.dataset.preco) || 0;
+
+  const svcInput = qs('#cmd-svc');
+  if(svcInput){
+    const cur = svcInput.value.trim();
+    svcInput.value = cur ? cur + ', ' + nome : nome;
+  }
+
+  if(preco > 0){
+    const valInput = qs('#cmd-val');
+    if(valInput){
+      const cur = getValorRaw(valInput) || 0;
+      setValorMask(valInput, cur + preco);
+    }
+  }
+
+  const tagsEl = qs('#cmd-itens-tags');
+  if(tagsEl){
+    const tag = document.createElement('span');
+    tag.style.cssText = 'background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:500';
+    tag.textContent = preco > 0 ? `${nome} · ${fmt(preco)}` : nome;
+    tagsEl.appendChild(tag);
+  }
+
+  closeModal();
+}
+window.addItemComanda = addItemComanda;
 
 function addItemDireto(el){
   state.ui.itensLanc.push({
