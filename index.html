@@ -279,10 +279,12 @@ input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:non
 .btn-e{background:var(--bg3);color:var(--gold-dk);border-color:var(--border)}
 .btn-d{background:var(--bg3);color:var(--err);border-color:var(--border)}
 .btn-s{background:var(--bg3);color:var(--info);border-color:var(--border)}
+.btn-ok{background:var(--bg3);color:var(--ok);border-color:var(--border)}
 .btn-e:hover{background:var(--gold-bg);border-color:var(--gold-dk)}
 .btn-d:hover{background:var(--err-bg);border-color:var(--err)}
 .btn-s:hover{background:var(--info-bg);border-color:var(--info)}
-.btn-e svg,.btn-d svg,.btn-s svg{
+.btn-ok:hover{background:var(--ok-bg);border-color:var(--ok)}
+.btn-e svg,.btn-d svg,.btn-s svg,.btn-ok svg{
   width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;
   stroke-linecap:round;stroke-linejoin:round
 }
@@ -1046,6 +1048,7 @@ const subPages = ['servicos','produtos','colaboradores','config','extrato','plan
 const svgEdit = `<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Editar`;
 const svgDel = `<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Excluir`;
 const svgHist = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Histórico`;
+const svgCheck = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Concluir`;
 
 function qs(sel, root=document){ return root.querySelector(sel); }
 function qsa(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
@@ -1269,7 +1272,7 @@ async function doLogin(){
     state.longToken = r.data.longToken || '';
 
     store.set('sc_tok', state.token);
-    if(qs('#chk-lembrar').checked && state.longToken){
+    if(state.longToken){
       store.set('sc_ltok', state.longToken);
     }
 
@@ -1290,7 +1293,11 @@ async function loadAll(){
   try{
     const testCfg = await apiTimeout({ action:'getConfig', token:state.token }, 8000);
     if(testCfg.status === 'error'){
-      limparSessao();
+      // Só encerra sessão em erro de autenticação — outros erros não deslogam
+      const msg = testCfg.data?.message || '';
+      if(msg === 'Sessão expirada.' || msg === 'Sessão inválida.'){
+        limparSessao();
+      }
       return;
     }
 
@@ -1538,7 +1545,8 @@ window.addEventListener('load', async () => {
 
     state.token = store.get('sc_tok') || '';
     state.longToken = store.get('sc_ltok') || '';
-    state.token = state.token || state.longToken || '';
+    // Prefere longToken (persiste 30 dias) para evitar expiry do token de sessão curta
+    state.token = state.longToken || state.token || '';
 
     qs('#dg-date').textContent = new Date().toLocaleDateString('pt-BR',{
       weekday:'long',year:'numeric',month:'long',day:'numeric'
@@ -1563,7 +1571,8 @@ window.addEventListener('load', async () => {
     }
   }catch(err){
     console.error('Init error:', err);
-    showLogin();
+    // Só mostra login se não há token salvo; erro de rede não encerra sessão
+    if(!state.token) showLogin();
   }
 });
 
@@ -1653,10 +1662,11 @@ function onAgendaListClick(e){
 
   if(action === 'edit') editAgend(item);
   if(action === 'del') delAgend(id);
+  if(action === 'concluir') concluirAgend(item);
 }
 
 function renderCli(list){
-  const data = list || state.db.clientes;
+  const data = (list || state.db.clientes).slice().sort((a,b) => (a.nome||'').localeCompare(b.nome||'','pt-BR',{sensitivity:'base'}));
   const el = qs('#list-cli');
   if(!el) return;
 
@@ -1945,6 +1955,10 @@ async function loadAgenda(){
       if(!grupos[d]) grupos[d] = [];
       grupos[d].push(a);
     });
+    // Ordena cada grupo por horário
+    Object.keys(grupos).forEach(d => {
+      grupos[d].sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
+    });
 
     el.innerHTML = Object.keys(grupos).sort().map(data => {
       const br = fmtBR(data);
@@ -1956,12 +1970,13 @@ async function loadAgenda(){
             <div class="ag-card ${ag.status}">
               <div style="display:flex;justify-content:space-between;align-items:flex-start">
                 <div>
-                  <div class="ag-hora">${ag.hora}</div>
+                  <div class="ag-hora">${fmtBR(String(ag.data).slice(0,10))} · ${ag.hora || '—'}</div>
                   <div class="ag-cli">${ag.clienteNome || '—'}</div>
                   <div class="ag-meta">${ag.servicos || '—'} · ${ag.duracaoMin}min${ag.colaboradorNome ? ' · ' + ag.colaboradorNome : ''}</div>
                 </div>
-                <div style="display:flex;gap:4px;align-items:center">
-                  <span class="badge ${ag.status === 'concluido' ? 'b-on' : ag.status === 'cancelado' ? 'b-off' : 'b-info'}">${ag.status}</span>
+                <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+                  <span class="badge ${ag.status === 'concluido' ? 'b-on' : ag.status === 'cancelado' ? 'b-off' : 'b-info'}">${ag.status === 'concluido' ? 'Concluído' : ag.status === 'cancelado' ? 'Cancelado' : 'Agendado'}</span>
+                  ${ag.status === 'agendado' ? `<button class="btn-ok" data-action="concluir" data-id="${ag.id}">${svgCheck}</button>` : ''}
                   <button class="btn-e" data-action="edit" data-id="${ag.id}">${svgEdit}</button>
                   <button class="btn-d" data-action="del" data-id="${ag.id}">${svgDel}</button>
                 </div>
@@ -2799,6 +2814,13 @@ function openDrawerAgend(){
   qs('#ag-val').addEventListener('input', e => applyValorMask(e.target));
   qs('#ag-d').value = qs('#ag-data')?.value || fmtBR(today());
 
+  // Auto-preenche duração ao selecionar serviço
+  qs('#ag-svc').addEventListener('change', () => {
+    const nomeSvc = qs('#ag-svc')?.value;
+    const svc = state.db.servicos.find(s => s.nome === nomeSvc);
+    if(svc && svc.duracaoMin) qs('#ag-dur').value = svc.duracaoMin;
+  });
+
   qs('#btn-cancel-ag').addEventListener('click', closeDrawer);
   qs('#btn-save-ag').addEventListener('click', saveAgend);
 }
@@ -2888,11 +2910,36 @@ async function saveAgend(){
 }
 
 async function delAgend(id){
-  if(!confirm('Excluir?')) return;
+  if(!confirm('Excluir agendamento?')) return;
   try{
     const r = await post({ action:'deleteAgendamento', token:state.token, id });
     if(r.status !== 'ok') return toast('Erro.','err');
     toast('Excluído.','ok');
+    loadAgenda();
+  }catch(e){
+    toast('Erro.','err');
+  }
+}
+
+async function concluirAgend(ag){
+  try{
+    const data = {
+      id: ag.id,
+      clienteId: ag.clienteId,
+      clienteNome: ag.clienteNome,
+      colaboradorId: ag.colaboradorId,
+      colaboradorNome: ag.colaboradorNome,
+      servicos: ag.servicos,
+      data: String(ag.data).slice(0,10),
+      hora: ag.hora,
+      duracaoMin: ag.duracaoMin,
+      valor: ag.valor,
+      status: 'concluido',
+      observacoes: ag.observacoes || ''
+    };
+    const r = await post({ action:'saveAgendamento', token:state.token, data });
+    if(r.status !== 'ok') return toast('Erro.','err');
+    toast('Atendimento concluído!','ok');
     loadAgenda();
   }catch(e){
     toast('Erro.','err');
