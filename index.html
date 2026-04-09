@@ -2668,15 +2668,57 @@ function toggleCaixaDia(id){
 }
 window.toggleCaixaDia = toggleCaixaDia;
 
-function openDrawerCliente(){
+function upsertClienteLocal(item){
+  if(!item) return;
+  const idx = state.db.clientes.findIndex(x => x.id === item.id);
+  if(idx >= 0) state.db.clientes[idx] = item;
+  else state.db.clientes.push(item);
+}
+
+function selectClienteFromContext(inputSel = '#f-cli-search', selectSel = '#f-cli', item = null){
+  if(!item) return;
+  renderCli();
+  updateStats();
+  bindClienteSearch(inputSel, selectSel, item.id);
+}
+
+function getClienteFormData(prefix = 'fc', idValue = state.ui.editId || null){
+  return {
+    id: idValue,
+    nome: qs(`#${prefix}-nome`)?.value.trim() || '',
+    telefone: qs(`#${prefix}-tel`)?.value.trim() || '',
+    email: qs(`#${prefix}-email`)?.value.trim() || '',
+    aniversario: qs(`#${prefix}-aniv`)?.value || '',
+    observacoes: qs(`#${prefix}-obs`)?.value.trim() || ''
+  };
+}
+
+async function persistCliente(data){
+  const r = await post({ action:'saveCliente', token:state.token, data });
+  if(r.status !== 'ok') return r;
+
+  if(r.data?.item){
+    upsertClienteLocal(r.data.item);
+  }else{
+    const fr = await api({ action:'getClientes', token:state.token });
+    if(fr.status === 'ok') state.db.clientes = fr.data || [];
+  }
+
+  renderCli();
+  updateStats();
+  return r;
+}
+
+function openDrawerCliente(prefill = null){
+  const d = prefill || {};
   state.ui.editId = null;
   openDrawer(`
     <div class="dtitle">Nova Cliente</div>
-    <div class="fg"><span class="lbl">Nome *</span><input id="fc-nome" type="text" class="inp"/></div>
-    <div class="fg"><span class="lbl">Telefone</span><input id="fc-tel" type="tel" class="inp" placeholder="(00) 00000-0000" maxlength="15"/></div>
-    <div class="fg"><span class="lbl">E-mail</span><input id="fc-email" type="email" class="inp"/></div>
-    <div class="fg"><span class="lbl">Aniversário</span><input id="fc-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/></div>
-    <div class="fg"><span class="lbl">Observações</span><textarea id="fc-obs" class="inp"></textarea></div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="fc-nome" type="text" class="inp" value="${d.nome || ''}"/></div>
+    <div class="fg"><span class="lbl">Telefone</span><input id="fc-tel" type="tel" class="inp" placeholder="(00) 00000-0000" maxlength="15" value="${d.telefone || ''}"/></div>
+    <div class="fg"><span class="lbl">E-mail</span><input id="fc-email" type="email" class="inp" value="${d.email || ''}"/></div>
+    <div class="fg"><span class="lbl">Aniversário</span><input id="fc-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${d.aniversario || ''}"/></div>
+    <div class="fg"><span class="lbl">Observações</span><textarea id="fc-obs" class="inp">${d.observacoes || ''}</textarea></div>
     <div class="dfooter">
       <button class="btn-sec" id="btn-cancel-cli">Cancelar</button>
       <button class="btn-save" id="btn-save-cli">Salvar</button>
@@ -2711,41 +2753,19 @@ function editCli(c){
 }
 
 async function saveCli(){
-  const nome = qs('#fc-nome')?.value.trim();
-  if(!nome) return toast('Nome obrigatório.','err');
-
-  const data = {
-    id: state.ui.editId || null,
-    nome,
-    telefone: qs('#fc-tel')?.value.trim() || '',
-    email: qs('#fc-email')?.value.trim() || '',
-    aniversario: qs('#fc-aniv')?.value || '',
-    observacoes: qs('#fc-obs')?.value.trim() || ''
-  };
+  const data = getClienteFormData('fc', state.ui.editId || null);
+  if(!data.nome) return toast('Nome obrigatório.','err');
 
   const btn = qs('#drawer .btn-save');
   btnSv(btn, true);
 
   try{
-    const r = await post({ action:'saveCliente', token:state.token, data });
+    const r = await persistCliente(data);
     if(r.status !== 'ok'){
       toast('Erro.','err');
       btnSv(btn, false);
       return;
     }
-
-    if(r.data?.item){
-      const item = r.data.item;
-      const idx = state.db.clientes.findIndex(x => x.id === item.id);
-      if(idx >= 0) state.db.clientes[idx] = item;
-      else state.db.clientes.push(item);
-    }else{
-      const fr = await api({ action:'getClientes', token:state.token });
-      if(fr.status === 'ok') state.db.clientes = fr.data || [];
-    }
-
-    renderCli();
-    updateStats();
     closeDrawer();
     toast(state.ui.editId ? 'Atualizada!' : 'Cadastrada!','ok');
   }catch(e){
@@ -3859,46 +3879,138 @@ function normText(v){
 }
 
 async function quickCreateClienteFromLanc(inputSel = '#f-cli-search', selectSel = '#f-cli'){
-  const input = qs(inputSel);
-  const nome = String(input?.value || '').trim();
-  if(!nome) return toast('Digite o nome da cliente.','err');
+  openQuickClienteModal(inputSel, selectSel);
+}
+window.quickCreateClienteFromLanc = quickCreateClienteFromLanc;
 
-  const btn = qs('#f-cli-create');
-  if(btn){
-    btn.disabled = true;
-    btn.textContent = 'Cadastrando...';
+function getQuickClienteDraft(inputSel = '#f-cli-search'){
+  return {
+    nome: String(qs(inputSel)?.value || '').trim(),
+    telefone: '',
+    email: '',
+    aniversario: '',
+    observacoes: ''
+  };
+}
+
+function fillClienteFieldsFromContact(contact, prefix = 'qcli'){
+  const nome = (contact?.name && contact.name[0]) ? contact.name[0].trim() : '';
+  const tel = (contact?.tel && contact.tel[0]) ? contact.tel[0].trim() : '';
+  const email = (contact?.email && contact.email[0]) ? contact.email[0].trim() : '';
+
+  if(nome && qs(`#${prefix}-nome`)) qs(`#${prefix}-nome`).value = nome;
+  if(tel && qs(`#${prefix}-tel`)){
+    qs(`#${prefix}-tel`).value = tel;
+    applyTelMask(qs(`#${prefix}-tel`));
+  }
+  if(email && qs(`#${prefix}-email`)) qs(`#${prefix}-email`).value = email;
+}
+
+function getModalClienteDraft(prefix = 'qcli'){
+  return {
+    nome: qs(`#${prefix}-nome`)?.value.trim() || '',
+    telefone: qs(`#${prefix}-tel`)?.value.trim() || '',
+    email: qs(`#${prefix}-email`)?.value.trim() || '',
+    aniversario: qs(`#${prefix}-aniv`)?.value || '',
+    observacoes: qs(`#${prefix}-obs`)?.value.trim() || ''
+  };
+}
+
+function openQuickClienteModal(inputSel = '#f-cli-search', selectSel = '#f-cli', draft = null){
+  const d = draft || getQuickClienteDraft(inputSel);
+  openModal(`
+    <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:8px">Nova Cliente</div>
+    <div style="font-size:11px;color:var(--dim);margin-bottom:16px">Cadastre sem sair do lançamento ou agendamento.</div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="qcli-nome" type="text" class="inp" value="${d.nome || ''}"/></div>
+    <div class="fg"><span class="lbl">Telefone</span><input id="qcli-tel" type="tel" class="inp" placeholder="(00) 00000-0000" maxlength="15" value="${d.telefone || ''}"/></div>
+    <div class="fg"><span class="lbl">E-mail</span><input id="qcli-email" type="email" class="inp" value="${d.email || ''}"/></div>
+    <div class="fg"><span class="lbl">Aniversário</span><input id="qcli-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${d.aniversario || ''}"/></div>
+    <div class="fg"><span class="lbl">Observações</span><textarea id="qcli-obs" class="inp">${d.observacoes || ''}</textarea></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      ${('contacts' in navigator && 'ContactsManager' in window) ? `<button type="button" class="btn-sec" id="btn-qcli-import" style="flex:1">Importar do telefone</button>` : ''}
+      <button type="button" class="btn-sec" id="btn-qcli-full" style="flex:1">Cadastro completo</button>
+    </div>
+    <div class="dfooter" style="margin-top:0">
+      <button class="btn-sec" id="btn-qcli-cancel">Cancelar</button>
+      <button class="btn-save" id="btn-qcli-save">Salvar cliente</button>
+    </div>
+  `);
+
+  qs('#qcli-tel')?.addEventListener('input', e => applyTelMask(e.target));
+  qs('#qcli-aniv')?.addEventListener('input', e => applyDataMask(e.target));
+  qs('#btn-qcli-cancel')?.addEventListener('click', closeModal);
+  qs('#btn-qcli-save')?.addEventListener('click', () => saveQuickClienteFromContext(inputSel, selectSel));
+  qs('#btn-qcli-full')?.addEventListener('click', () => {
+    openFullClienteModal(inputSel, selectSel, getModalClienteDraft('qcli'));
+  });
+  qs('#btn-qcli-import')?.addEventListener('click', () => importSingleClienteFromAgenda('qcli'));
+}
+
+function openFullClienteModal(inputSel = '#f-cli-search', selectSel = '#f-cli', draft = null){
+  const d = draft || getQuickClienteDraft(inputSel);
+  openModal(`
+    <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:8px">Cadastro Completo</div>
+    <div style="font-size:11px;color:var(--dim);margin-bottom:16px">Mesmo cadastro principal de cliente, sem sair do lançamento ou agendamento.</div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="fcm-nome" type="text" class="inp" value="${d.nome || ''}"/></div>
+    <div class="fg"><span class="lbl">Telefone</span><input id="fcm-tel" type="tel" class="inp" placeholder="(00) 00000-0000" maxlength="15" value="${d.telefone || ''}"/></div>
+    <div class="fg"><span class="lbl">E-mail</span><input id="fcm-email" type="email" class="inp" value="${d.email || ''}"/></div>
+    <div class="fg"><span class="lbl">Aniversário</span><input id="fcm-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${d.aniversario || ''}"/></div>
+    <div class="fg"><span class="lbl">Observações</span><textarea id="fcm-obs" class="inp">${d.observacoes || ''}</textarea></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      ${('contacts' in navigator && 'ContactsManager' in window) ? `<button type="button" class="btn-sec" id="btn-fcm-import" style="flex:1">Importar do telefone</button>` : ''}
+      <button type="button" class="btn-sec" id="btn-fcm-quick" style="flex:1">Voltar ao rápido</button>
+    </div>
+    <div class="dfooter" style="margin-top:0">
+      <button class="btn-sec" id="btn-fcm-cancel">Cancelar</button>
+      <button class="btn-save" id="btn-fcm-save">Salvar cliente</button>
+    </div>
+  `);
+
+  qs('#fcm-tel')?.addEventListener('input', e => applyTelMask(e.target));
+  qs('#fcm-aniv')?.addEventListener('input', e => applyDataMask(e.target));
+  qs('#btn-fcm-import')?.addEventListener('click', () => importSingleClienteFromAgenda('fcm'));
+  qs('#btn-fcm-quick')?.addEventListener('click', () => openQuickClienteModal(inputSel, selectSel, getModalClienteDraft('fcm')));
+  qs('#btn-fcm-cancel')?.addEventListener('click', closeModal);
+  qs('#btn-fcm-save')?.addEventListener('click', () => saveQuickClienteFromContext(inputSel, selectSel, 'fcm', '#btn-fcm-save'));
+}
+
+async function importSingleClienteFromAgenda(prefix = 'qcli'){
+  if(!('contacts' in navigator && 'ContactsManager' in window)){
+    toast('Seu navegador não suporta importar da agenda.','err');
+    return;
   }
 
   try{
-    const r = await post({
-      action:'saveCliente',
-      token:state.token,
-      data:{ nome, telefone:'', email:'', aniversario:'', observacoes:'' }
-    });
+    const contatos = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: false });
+    const c = contatos?.[0];
+    if(!c) return;
+    fillClienteFieldsFromContact(c, prefix);
+  }catch(e){}
+}
+
+async function saveQuickClienteFromContext(inputSel = '#f-cli-search', selectSel = '#f-cli', prefix = 'qcli', btnSel = '#btn-qcli-save'){
+  const data = getClienteFormData(prefix, null);
+  if(!data.nome) return toast('Nome obrigatório.','err');
+
+  const btn = qs(btnSel);
+  btnSv(btn, true, 'Salvar cliente');
+
+  try{
+    const r = await persistCliente(data);
     if(r.status !== 'ok' || !r.data?.item){
       toast(r.data?.message || 'Erro ao cadastrar cliente.','err');
+      btnSv(btn, false, 'Salvar cliente');
       return;
     }
 
-    const item = r.data.item;
-    const idx = state.db.clientes.findIndex(x => x.id === item.id);
-    if(idx >= 0) state.db.clientes[idx] = item;
-    else state.db.clientes.push(item);
-
-    renderCli();
-    updateStats();
-    bindClienteSearch(inputSel, selectSel, item.id);
-    toast('Cliente cadastrado e selecionado!','ok');
+    closeModal();
+    selectClienteFromContext(inputSel, selectSel, r.data.item);
+    toast('Cliente cadastrada e selecionada!','ok');
   }catch(e){
     toast('Erro ao cadastrar cliente.','err');
-  }finally{
-    if(btn){
-      btn.disabled = false;
-      btn.textContent = 'Cadastrar cliente';
-    }
+    btnSv(btn, false, 'Salvar cliente');
   }
 }
-window.quickCreateClienteFromLanc = quickCreateClienteFromLanc;
 
 function bindClienteSearch(inputSel = '#f-cli-search', selectSel = '#f-cli', selectedId = ''){
   const input = qs(inputSel);
@@ -3932,7 +4044,7 @@ function bindClienteSearch(inputSel = '#f-cli-search', selectSel = '#f-cli', sel
           <button type="button" id="f-cli-create">Cadastrar cliente</button>
         </div>
       `;
-      qs('#f-cli-create', dropdown)?.addEventListener('click', () => quickCreateClienteFromLanc(inputSel, selectSel));
+      qs('#f-cli-create', dropdown)?.addEventListener('click', () => openQuickClienteModal(inputSel, selectSel));
     }else{
       dropdown.innerHTML = filtered.map((c, idx) => `
         <button type="button" class="cli-option ${idx === activeIndex ? 'active' : ''}" data-cli-id="${c.id}">
