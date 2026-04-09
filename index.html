@@ -216,6 +216,29 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.5;
   stroke-linecap:round;stroke-linejoin:round
 }
+.cli-autocomplete{position:relative}
+.cli-hidden-select{display:none}
+.cli-dropdown{
+  position:absolute;top:100%;left:0;right:0;z-index:30;margin-top:6px;
+  background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);
+  box-shadow:var(--shadow-md);max-height:240px;overflow-y:auto;display:none
+}
+.cli-dropdown.open{display:block}
+.cli-option{
+  width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);
+  padding:12px 14px;text-align:left;color:var(--text);display:flex;flex-direction:column;gap:2px
+}
+.cli-option:last-child{border-bottom:none}
+.cli-option.active,.cli-option:active{background:var(--gold-bg)}
+.cli-option-name{font-size:13px;font-weight:500}
+.cli-option-meta{font-size:10px;color:var(--dim)}
+.cli-empty{
+  padding:14px;color:var(--dim);font-size:12px;display:flex;flex-direction:column;gap:10px
+}
+.cli-empty button{
+  background:var(--dark);color:var(--gold-lt);padding:11px 12px;border-radius:10px;
+  border:1.5px solid var(--gold-dk);font-size:11px;letter-spacing:.5px;text-transform:uppercase
+}
 
 #doverlay{
   position:fixed;inset:0;background:rgba(26,18,8,.5);z-index:100;
@@ -3788,41 +3811,141 @@ function buildClienteOptions(selectedId = ''){
   ).join('');
 }
 
-function bindClienteSearch(inputSel = '#f-cli-search', selectSel = '#f-cli'){
+function normText(v){
+  return String(v || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+async function quickCreateClienteFromLanc(inputSel = '#f-cli-search', selectSel = '#f-cli'){
+  const input = qs(inputSel);
+  const nome = String(input?.value || '').trim();
+  if(!nome) return toast('Digite o nome da cliente.','err');
+
+  const btn = qs('#f-cli-create');
+  if(btn){
+    btn.disabled = true;
+    btn.textContent = 'Cadastrando...';
+  }
+
+  try{
+    const r = await post({
+      action:'saveCliente',
+      token:state.token,
+      data:{ nome, telefone:'', email:'', aniversario:'', observacoes:'' }
+    });
+    if(r.status !== 'ok' || !r.data?.item){
+      toast(r.data?.message || 'Erro ao cadastrar cliente.','err');
+      return;
+    }
+
+    const item = r.data.item;
+    const idx = state.db.clientes.findIndex(x => x.id === item.id);
+    if(idx >= 0) state.db.clientes[idx] = item;
+    else state.db.clientes.push(item);
+
+    renderCli();
+    updateStats();
+    bindClienteSearch(inputSel, selectSel, item.id);
+    toast('Cliente cadastrado e selecionado!','ok');
+  }catch(e){
+    toast('Erro ao cadastrar cliente.','err');
+  }finally{
+    if(btn){
+      btn.disabled = false;
+      btn.textContent = 'Cadastrar cliente';
+    }
+  }
+}
+window.quickCreateClienteFromLanc = quickCreateClienteFromLanc;
+
+function bindClienteSearch(inputSel = '#f-cli-search', selectSel = '#f-cli', selectedId = ''){
   const input = qs(inputSel);
   const select = qs(selectSel);
-  if(!input || !select) return;
+  const dropdown = qs('#f-cli-dropdown');
+  if(!input || !select || !dropdown) return;
 
   const allClientes = getClientesSorted();
+  let activeIndex = -1;
 
-  const renderOptions = (query = '') => {
-    const term = String(query || '').trim().toLowerCase();
-    const currentValue = select.value;
-    const filtered = !term ? allClientes : allClientes.filter(c =>
-      String(c.nome || '').toLowerCase().includes(term) ||
-      String(c.telefone || '').replace(/\D/g, '').includes(term.replace(/\D/g, ''))
-    );
-
-    select.innerHTML =
-      `<option value="">- Sem vinculo -</option>` +
-      filtered.map(c => `<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
-
-    if(filtered.some(c => `${c.id}|${c.nome}` === currentValue)){
-      select.value = currentValue;
-    }else if(currentValue){
-      select.value = '';
-    }
+  const setSelected = (cliente) => {
+    select.innerHTML = `<option value="">— Sem vínculo —</option>` + buildClienteOptions(cliente?.id || '');
+    select.value = cliente ? `${cliente.id}|${cliente.nome}` : '';
+    input.value = cliente?.nome || '';
+    dropdown.classList.remove('open');
   };
 
-  input.addEventListener('input', e => renderOptions(e.target.value));
-  select.addEventListener('change', () => {
-    const option = select.options[select.selectedIndex];
-    input.value = select.value ? (option?.textContent || '') : '';
-  });
+  const renderOptions = (query = '', forceOpen = false) => {
+    const term = normText(query);
+    const phoneTerm = String(query || '').replace(/\D/g, '');
+    const filtered = !term ? allClientes : allClientes.filter(c =>
+      normText(c.nome).includes(term) ||
+      (!!phoneTerm && String(c.telefone || '').replace(/\D/g, '').includes(phoneTerm))
+    );
+    activeIndex = filtered.length ? 0 : -1;
 
-  if(select.value){
-    const option = select.options[select.selectedIndex];
-    input.value = option?.textContent || '';
+    if(!filtered.length && term){
+      dropdown.innerHTML = `
+        <div class="cli-empty">
+          <div>Nenhuma cliente encontrada para "<strong>${query}</strong>".</div>
+          <button type="button" id="f-cli-create">Cadastrar cliente</button>
+        </div>
+      `;
+      qs('#f-cli-create', dropdown)?.addEventListener('click', () => quickCreateClienteFromLanc(inputSel, selectSel));
+    }else{
+      dropdown.innerHTML = filtered.map((c, idx) => `
+        <button type="button" class="cli-option ${idx === activeIndex ? 'active' : ''}" data-cli-id="${c.id}">
+          <span class="cli-option-name">${c.nome}</span>
+          <span class="cli-option-meta">${c.telefone || 'Cliente cadastrada'}</span>
+        </button>
+      `).join('');
+      qsa('.cli-option', dropdown).forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cliente = allClientes.find(c => c.id === btn.dataset.cliId);
+          if(cliente) setSelected(cliente);
+        });
+      });
+    }
+
+    dropdown.classList.toggle('open', forceOpen || document.activeElement === input);
+  };
+
+  input.addEventListener('focus', () => renderOptions(input.value, true));
+  input.addEventListener('input', e => {
+    select.value = '';
+    renderOptions(e.target.value, true);
+  });
+  input.addEventListener('keydown', e => {
+    const options = qsa('.cli-option', dropdown);
+    if(!dropdown.classList.contains('open') || !options.length) return;
+
+    if(e.key === 'ArrowDown'){
+      e.preventDefault();
+      activeIndex = (activeIndex + 1) % options.length;
+    }else if(e.key === 'ArrowUp'){
+      e.preventDefault();
+      activeIndex = (activeIndex - 1 + options.length) % options.length;
+    }else if(e.key === 'Enter'){
+      e.preventDefault();
+      options[Math.max(activeIndex, 0)]?.click();
+      return;
+    }else if(e.key === 'Escape'){
+      dropdown.classList.remove('open');
+      return;
+    }else{
+      return;
+    }
+
+    options.forEach((opt, idx) => opt.classList.toggle('active', idx === activeIndex));
+    options[activeIndex]?.scrollIntoView({ block:'nearest' });
+  });
+  input.addEventListener('blur', () => setTimeout(() => dropdown.classList.remove('open'), 180));
+
+  if(selectedId){
+    const cliente = allClientes.find(c => c.id === selectedId);
+    if(cliente) setSelected(cliente);
   }
 }
 
@@ -3844,8 +3967,11 @@ function openDrawerLanc(){
     <div id="f-entrada">
       <div class="fg">
         <span class="lbl">Cliente (opcional)</span>
-        <input id="f-cli-search" type="text" class="inp" placeholder="Digite para buscar cliente"/>
-        <select id="f-cli"><option value="">— Sem vínculo —</option>${cliOpts}</select>
+        <div class="cli-autocomplete">
+          <input id="f-cli-search" type="text" class="inp" placeholder="Digite o nome da cliente"/>
+          <select id="f-cli" class="cli-hidden-select"><option value="">— Sem vínculo —</option>${cliOpts}</select>
+          <div id="f-cli-dropdown" class="cli-dropdown"></div>
+        </div>
       </div>
       <div class="itens-list" id="itens-list"></div>
       <button class="btn-add-item" id="btn-add-item-lanc">＋ Adicionar serviço ou produto</button>
@@ -3942,8 +4068,11 @@ function editLanc(l){
     <div id="f-entrada" style="display:${t === 'entrada' ? 'block' : 'none'}">
       <div class="fg">
         <span class="lbl">Cliente</span>
-        <input id="f-cli-search" type="text" class="inp" placeholder="Digite para buscar cliente"/>
-        <select id="f-cli"><option value="">— Sem vínculo —</option>${cliOpts}</select>
+        <div class="cli-autocomplete">
+          <input id="f-cli-search" type="text" class="inp" placeholder="Digite o nome da cliente"/>
+          <select id="f-cli" class="cli-hidden-select"><option value="">— Sem vínculo —</option>${cliOpts}</select>
+          <div id="f-cli-dropdown" class="cli-dropdown"></div>
+        </div>
       </div>
       <div class="fg"><span class="lbl">Serviço / Produto</span><select id="f-item"><option value="">— Selecione —</option><optgroup label="Serviços">${svcOpts}</optgroup><optgroup label="Produtos">${prdOpts}</optgroup></select></div>
       <div class="fg">
@@ -3979,7 +4108,7 @@ function editLanc(l){
 
   qs('#btn-cancel-lanc').addEventListener('click', closeDrawer);
   qs('#btn-save-lanc').addEventListener('click', saveLanc);
-  bindClienteSearch();
+  bindClienteSearch('#f-cli-search', '#f-cli', l.clienteId);
 }
 
 async function saveLanc(){
