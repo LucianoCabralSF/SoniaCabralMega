@@ -1024,7 +1024,8 @@ function saveDbCache(){
       planejamento:  state.db.planejamento,
       config:        state.db.config,
       statsDate:     today(),
-      statsCx:       qs('#st-cx')?.textContent || ''
+      statsCx:       qs('#st-cx')?.textContent || '',
+      ts:            Date.now()
     });
   }catch(_){}
 }
@@ -1056,7 +1057,8 @@ function restoreFromCache(){
   qs('#st-fiad').textContent = fmt(abertos.reduce((s,x)=>s+(parseFloat(x.saldoDevedor)||0),0));
   if(c.statsDate === today() && c.statsCx) qs('#st-cx').textContent = c.statsCx;
 
-  return true;
+  const age = Date.now() - (c.ts || 0);
+  return age < 24 * 60 * 60 * 1000 ? 'fresh' : 'stale';
 }
 
 const state = {
@@ -1531,8 +1533,8 @@ function bindGlobalEvents(){
   qs('#btn-open-colab').addEventListener('click', openDrawerColab);
   qs('#btn-open-plan').addEventListener('click', openDrawerPlan);
 
-  qs('#btn-reload-caixa').addEventListener('click', loadCaixa);
-  qs('#btn-reload-agenda').addEventListener('click', loadAgenda);
+  qs('#btn-reload-caixa').addEventListener('click', () => loadCaixa(true));
+  qs('#btn-reload-agenda').addEventListener('click', () => loadAgenda(true));
   qs('#btn-ext-unlock').addEventListener('click', desbloquearExtrato);
   qs('#btn-ext-ver-mes').addEventListener('click', loadExtrato);
   qs('#btn-ext-ver-per').addEventListener('click', loadExtrato);
@@ -1607,10 +1609,16 @@ window.addEventListener('load', async () => {
     qs('#ag-data').value = today();
 
     if(state.token){
-      const hasCache = restoreFromCache();
-      if(hasCache){
+      const cacheState = restoreFromCache();
+      if(cacheState === 'fresh'){
         showApp();
-        // Atualiza em segundo plano sem bloquear a tela
+        // Cache fresco (< 24h): atualiza stats em segundo plano, não recarrega dados pesados
+        updateStats().catch(()=>{});
+        loadVencHome().catch(()=>{});
+        state.ui.loadFlags.bootstrapped = true;
+      }else if(cacheState === 'stale'){
+        showApp();
+        // Cache existe mas expirou: atualiza tudo em segundo plano
         loadAll().catch(e => console.warn('Refresh background:', e));
       }else{
         showApp();
@@ -1702,17 +1710,13 @@ function onCaixaListClick(e){
 }
 
 function onAgendaListClick(e){
-  const btn = e.target.closest('button[data-action]');
-  if(!btn) return;
-  const action = btn.dataset.action;
-  const id = btn.dataset.id;
+  const card = e.target.closest('.ag-card[data-id]');
+  if(!card) return;
+  const id = card.dataset.id;
   const list = qs('#ag-content')._currentItems || [];
   const item = list.find(x => String(x.id) === String(id));
   if(!item) return;
-
-  if(action === 'edit') editAgend(item);
-  if(action === 'del') delAgend(id);
-  if(action === 'concluir') concluirAgend(item);
+  abrirAcaoAgendamento(item);
 }
 
 function renderCli(list){
@@ -1896,7 +1900,84 @@ function renderCred(){
   `).join('');
 }
 
-async function loadCaixa(){
+function _renderCaixaData(d, mes){
+  qs('#cx-ent').textContent = fmt(d.faturamento);
+  qs('#cx-sai').textContent = fmt(d.totalSaidas || 0);
+  qs('#cx-sal').textContent = fmt((d.faturamento||0) - (d.totalSaidas||0));
+
+  const pf = d.porForma || {};
+  const keys = Object.keys(pf);
+  const fel = qs('#cx-formas');
+  fel.innerHTML = keys.length
+    ? '<div class="slabel" style="margin-bottom:8px">Por forma de pagamento</div>' +
+      keys.map(k => `<div class="forma-row"><span style="font-size:12px;color:var(--dim)">${lbForma(k)}</span><span style="font-size:12px;font-weight:500">${fmt(pf[k])}</span></div>`).join('')
+    : '';
+
+  const allItems = (d.dias || []).flatMap(dia => dia.lancamentos || []);
+  state.ui.caixaItems = allItems;
+
+  const el = qs('#cx-list');
+  const dias = (d.dias || []).slice().reverse();
+
+  if(!dias.length){
+    el.innerHTML = '<div class="empty"><div class="empty-icon">💰</div><p>Nenhum lançamento</p></div>';
+    state.ui.loadFlags.caixaLoadedFor = mes;
+    return;
+  }
+
+  const tdISO = today();
+  let html = '';
+  dias.forEach((dia, i) => {
+    const id = `cxd${i}`;
+    const isHoje = dia.data === tdISO;
+    const open = isHoje || (i === 0 && !dias.some(x => x.data === tdISO));
+    const br = fmtBR(dia.data);
+    html += `
+      <div>
+        <div class="dia-hdr" onclick="toggleCaixaDia('${id}')">
+          <span style="font-size:12px;font-weight:500${isHoje ? ';color:var(--gold)' : ''}">${br}${isHoje ? ' · hoje' : ''}</span>
+          <span style="display:flex;gap:12px;font-size:12px;font-weight:600">
+            ${dia.entradas > 0 ? `<span style="color:var(--ok)">+${fmt(dia.entradas)}</span>` : ''}
+            ${dia.saidas > 0 ? `<span style="color:var(--err)">-${fmt(dia.saidas)}</span>` : ''}
+          </span>
+        </div>
+        <div class="dia-items" id="${id}" style="display:${open ? 'block' : 'none'}">
+          ${(dia.lancamentos || []).map(l => {
+            const isRet = l.isRetirada === 'true' || l.categoria === 'Retirada Pessoal';
+            return `
+              <div class="dia-item">
+                <div class="licon ${l.tipo}" style="width:28px;height:28px;font-size:12px;flex-shrink:0">${l.tipo === 'entrada' ? '↑' : '↓'}</div>
+                <div class="lbody" style="flex:1;min-width:0">
+                  <div class="lnome" style="font-size:12px">${l.clienteNome || l.itemNome || l.categoria || '—'}${isRet ? ' <span class="badge b-warn">PESSOAL</span>' : ''}</div>
+                  <div class="lmeta">${lbForma(l.formaPagamento)} ${renderItensMini(l.itemNome, l.observacoes)}</div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
+                  <div class="lval ${l.tipo}" style="font-size:13px">${l.tipo === 'saida' ? '-' : ''}${fmt(l.valor)}</div>
+                  <div style="display:flex;gap:2px">
+                    <button class="btn-e" data-action="edit" data-id="${l.id}" data-date="${l.data}">${svgEdit}</button>
+                    <button class="btn-d" data-action="del" data-id="${l.id}" data-date="${l.data}">${svgDel}</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  });
+  el.innerHTML = html;
+  state.ui.loadFlags.caixaLoadedFor = mes;
+}
+
+async function _fetchCaixaData(dataInicio, dataFim, cacheKey, mes){
+  const r = await api({ action:'getExtrato', token:state.token, dataInicio, dataFim });
+  if(r.status !== 'ok') return;
+  const d = r.data || {};
+  try{ store.set(cacheKey, { d, ts: Date.now() }); }catch(_){}
+  _renderCaixaData(d, mes);
+}
+
+async function loadCaixa(forceReload = false){
   const inp = qs('#cx-data');
   if(inp && !inp.value) inp.value = today().slice(0,7);
   const mes = inp?.value || today().slice(0,7); // YYYY-MM
@@ -1905,96 +1986,60 @@ async function loadCaixa(){
   const dataInicio = `${ano}-${String(m).padStart(2,'0')}-01`;
   const lastDay = new Date(ano, m, 0).getDate();
   const dataFim = `${ano}-${String(m).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
+  const cacheKey = `sc_cx_${mes}`;
 
-  try{
-    const r = await api({ action:'getExtrato', token:state.token, dataInicio, dataFim });
-    if(r.status !== 'ok') return;
-
-    const d = r.data || {};
-
-    // Summary cards
-    qs('#cx-ent').textContent = fmt(d.faturamento);
-    qs('#cx-sai').textContent = fmt(d.totalSaidas || 0);
-    qs('#cx-sal').textContent = fmt((d.faturamento||0) - (d.totalSaidas||0));
-
-    // Formas de pagamento
-    const pf = d.porForma || {};
-    const keys = Object.keys(pf);
-    const fel = qs('#cx-formas');
-    fel.innerHTML = keys.length
-      ? '<div class="slabel" style="margin-bottom:8px">Por forma de pagamento</div>' +
-        keys.map(k => `<div class="forma-row"><span style="font-size:12px;color:var(--dim)">${lbForma(k)}</span><span style="font-size:12px;font-weight:500">${fmt(pf[k])}</span></div>`).join('')
-      : '';
-
-    // Store all items for edit/delete
-    const allItems = (d.dias || []).flatMap(dia => dia.lancamentos || []);
-    state.ui.caixaItems = allItems;
-
-    // Accordion per day (most recent first)
-    const el = qs('#cx-list');
-    const dias = (d.dias || []).slice().reverse();
-
-    if(!dias.length){
-      el.innerHTML = '<div class="empty"><div class="empty-icon">💰</div><p>Nenhum lançamento</p></div>';
+  if(!forceReload){
+    const cached = store.get(cacheKey);
+    if(cached && cached.d){
+      _renderCaixaData(cached.d, mes);
+      // Atualiza em segundo plano discretamente
+      _fetchCaixaData(dataInicio, dataFim, cacheKey, mes).catch(()=>{});
       return;
     }
+  }else{
+    store.del(cacheKey);
+  }
 
-    const tdISO = today();
-    let html = '';
-    dias.forEach((dia, i) => {
-      const id = `cxd${i}`;
-      const isHoje = dia.data === tdISO;
-      const open = isHoje || (i === 0 && !dias.some(x => x.data === tdISO));
-      const br = fmtBR(dia.data);
-      html += `
-        <div>
-          <div class="dia-hdr" onclick="toggleCaixaDia('${id}')">
-            <span style="font-size:12px;font-weight:500${isHoje ? ';color:var(--gold)' : ''}">${br}${isHoje ? ' · hoje' : ''}</span>
-            <span style="display:flex;gap:12px;font-size:12px;font-weight:600">
-              ${dia.entradas > 0 ? `<span style="color:var(--ok)">+${fmt(dia.entradas)}</span>` : ''}
-              ${dia.saidas > 0 ? `<span style="color:var(--err)">-${fmt(dia.saidas)}</span>` : ''}
-            </span>
-          </div>
-          <div class="dia-items" id="${id}" style="display:${open ? 'block' : 'none'}">
-            ${(dia.lancamentos || []).map(l => {
-              const isRet = l.isRetirada === 'true' || l.categoria === 'Retirada Pessoal';
-              return `
-                <div class="dia-item">
-                  <div class="licon ${l.tipo}" style="width:28px;height:28px;font-size:12px;flex-shrink:0">${l.tipo === 'entrada' ? '↑' : '↓'}</div>
-                  <div class="lbody" style="flex:1;min-width:0">
-                    <div class="lnome" style="font-size:12px">${l.clienteNome || l.itemNome || l.categoria || '—'}${isRet ? ' <span class="badge b-warn">PESSOAL</span>' : ''}</div>
-                    <div class="lmeta">${lbForma(l.formaPagamento)} ${renderItensMini(l.itemNome, l.observacoes)}</div>
-                  </div>
-                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
-                    <div class="lval ${l.tipo}" style="font-size:13px">${l.tipo === 'saida' ? '-' : ''}${fmt(l.valor)}</div>
-                    <div style="display:flex;gap:2px">
-                      <button class="btn-e" data-action="edit" data-id="${l.id}" data-date="${l.data}">${svgEdit}</button>
-                      <button class="btn-d" data-action="del" data-id="${l.id}" data-date="${l.data}">${svgDel}</button>
-                    </div>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      `;
-    });
-    el.innerHTML = html;
-
-    state.ui.loadFlags.caixaLoadedFor = mes;
+  try{
+    await _fetchCaixaData(dataInicio, dataFim, cacheKey, mes);
   }catch(e){
     console.error('loadCaixa', e);
   }
 }
 
-async function loadAgenda(){
+function _renderAgendaData(el, list, dataBase){
+  el._currentItems = list;
+  if(state.ui.agView === 'semana'){
+    renderAgendaSemana(el, list, dataBase);
+  }else if(state.ui.agView === 'mes'){
+    renderAgendaMes(el, list, dataBase);
+  }else{
+    renderAgendaDia(el, list, dataBase);
+  }
+  state.ui.loadFlags.agendaLoaded = true;
+}
+
+async function _fetchAgendaData(params, cacheKey, el, dataBase){
+  const r = await api(params);
+  if(r.status !== 'ok'){
+    el.innerHTML = `<div class="empty"><p>Erro: ${r.data?.message || 'falha na consulta'}</p></div>`;
+    return;
+  }
+  const list = r.data || [];
+  try{ store.set(cacheKey, { list, ts: Date.now() }); }catch(_){}
+  _renderAgendaData(el, list, dataBase);
+}
+
+async function loadAgenda(forceReload = false){
   const inp = qs('#ag-data');
   if(inp && !inp.value) inp.value = today();
   const dataBase = inp?.value || today();
   const params = { action:'getAgendamentos', token:state.token };
 
+  let cacheKey;
   if(state.ui.agView === 'dia'){
     params.data = dataBase;
+    cacheKey = `sc_ag_dia_${dataBase}`;
   }else if(state.ui.agView === 'semana'){
     const d = new Date(dataBase + 'T00:00:00');
     d.setDate(d.getDate() - d.getDay());
@@ -2002,35 +2047,33 @@ async function loadAgenda(){
     d.setDate(d.getDate() + 6);
     params.dataInicio = di;
     params.dataFim = d.toISOString().slice(0,10);
+    cacheKey = `sc_ag_sem_${di}`;
   }else{
     const [a,m] = dataBase.split('-');
     params.dataInicio = `${a}-${m}-01`;
     const ld = new Date(parseInt(a,10), parseInt(m,10), 0).getDate();
     params.dataFim = `${a}-${m}-${ld}`;
+    cacheKey = `sc_ag_mes_${a}_${m}`;
   }
 
   const el = qs('#ag-content');
+
+  if(!forceReload){
+    const cached = store.get(cacheKey);
+    if(cached && cached.list){
+      _renderAgendaData(el, cached.list, dataBase);
+      // Atualiza em segundo plano discretamente
+      _fetchAgendaData(params, cacheKey, el, dataBase).catch(()=>{});
+      return;
+    }
+  }else{
+    store.del(cacheKey);
+  }
+
   el.innerHTML = '<div style="text-align:center;padding:30px"><div class="spinner" style="margin:0 auto"></div></div>';
 
   try{
-    const r = await api(params);
-    if(r.status !== 'ok'){
-      el.innerHTML = `<div class="empty"><p>Erro: ${r.data?.message || 'falha na consulta'}</p></div>`;
-      return;
-    }
-
-    const list = r.data || [];
-    el._currentItems = list;
-
-    if(state.ui.agView === 'semana'){
-      renderAgendaSemana(el, list, dataBase);
-    }else if(state.ui.agView === 'mes'){
-      renderAgendaMes(el, list, dataBase);
-    }else{
-      renderAgendaDia(el, list, dataBase);
-    }
-
-    state.ui.loadFlags.agendaLoaded = true;
+    await _fetchAgendaData(params, cacheKey, el, dataBase);
   }catch(e){
     console.error('loadAgenda', e);
     el.innerHTML = '<div class="empty"><p>Erro de conexão.</p></div>';
@@ -2039,19 +2082,14 @@ async function loadAgenda(){
 
 function agCardHtml(ag){
   return `
-    <div class="ag-card ${ag.status}">
+    <div class="ag-card ${ag.status}" data-id="${ag.id}" style="cursor:pointer">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
           <div class="ag-hora">${ag.hora || '—'}</div>
           <div class="ag-cli">${ag.clienteNome || '—'}</div>
           <div class="ag-meta">${ag.servicos || '—'} · ${ag.duracaoMin}min${ag.colaboradorNome ? ' · ' + ag.colaboradorNome : ''}</div>
         </div>
-        <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-          <span class="badge ${ag.status === 'concluido' ? 'b-on' : ag.status === 'cancelado' ? 'b-off' : 'b-info'}">${ag.status === 'concluido' ? 'Concluído' : ag.status === 'cancelado' ? 'Cancelado' : 'Agendado'}</span>
-          ${ag.status === 'agendado' ? `<button class="btn-ok" data-action="concluir" data-id="${ag.id}">${svgCheck}</button>` : ''}
-          <button class="btn-e" data-action="edit" data-id="${ag.id}">${svgEdit}</button>
-          <button class="btn-d" data-action="del" data-id="${ag.id}">${svgDel}</button>
-        </div>
+        <span class="badge ${ag.status === 'concluido' ? 'b-on' : ag.status === 'cancelado' ? 'b-off' : 'b-info'}">${ag.status === 'concluido' ? 'Concluído' : ag.status === 'cancelado' ? 'Cancelado' : 'Agendado'}</span>
       </div>
       ${Number(ag.valor) > 0 ? `<div style="font-family:'Playfair Display',serif;font-size:15px;color:var(--ok);margin-top:6px">${fmt(ag.valor)}</div>` : ''}
     </div>
@@ -2148,7 +2186,7 @@ function renderAgendaSemana(el, list, dataBase){
   el.querySelectorAll('.gcal-event[data-id]').forEach(ev => {
     ev.addEventListener('click', () => {
       const item = list.find(x => String(x.id) === ev.dataset.id);
-      if(item) editAgend(item);
+      if(item) abrirAcaoAgendamento(item);
     });
   });
 }
@@ -2208,11 +2246,11 @@ function renderAgendaMes(el, list, dataBase){
   html += `</div></div>`;
   el.innerHTML = html;
 
-  // Bind pill clicks → open edit drawer
+  // Bind pill clicks → open action drawer
   el.querySelectorAll('.gcal-month-pill[data-id]').forEach(pill => {
     pill.addEventListener('click', () => {
       const item = list.find(x => String(x.id) === pill.dataset.id);
-      if(item) editAgend(item);
+      if(item) abrirAcaoAgendamento(item);
     });
   });
 }
@@ -3086,6 +3124,7 @@ function editAgend(ag){
     <div class="fg"><span class="lbl">Observações</span><input id="ag-obs" type="text" class="inp" value="${ag.observacoes || ''}"/></div>
     <div class="dfooter">
       <button class="btn-sec" id="btn-cancel-ag">Cancelar</button>
+      <button class="btn-d" id="btn-del-ag" title="Excluir">${svgDel}</button>
       <button class="btn-save" id="btn-save-ag">Salvar</button>
     </div>
   `);
@@ -3095,6 +3134,7 @@ function editAgend(ag){
   setTimeout(() => setValorMask(qs('#ag-val'), ag.valor), 20);
 
   qs('#btn-cancel-ag').addEventListener('click', closeDrawer);
+  qs('#btn-del-ag').addEventListener('click', () => { const id = ag.id; closeDrawer(); delAgend(id); });
   qs('#btn-save-ag').addEventListener('click', saveAgend);
 }
 
@@ -3133,7 +3173,7 @@ async function saveAgend(){
     }
     closeDrawer();
     toast(state.ui.editId ? 'Atualizado!' : 'Agendado!','ok');
-    loadAgenda();
+    loadAgenda(true);
   }catch(e){
     toast('Erro.','err');
     btnSv(btn, false);
@@ -3146,18 +3186,64 @@ async function delAgend(id){
     const r = await post({ action:'deleteAgendamento', token:state.token, id });
     if(r.status !== 'ok') return toast('Erro.','err');
     toast('Excluído.','ok');
-    loadAgenda();
+    loadAgenda(true);
   }catch(e){
     toast('Erro.','err');
   }
 }
 
+function abrirAcaoAgendamento(ag){
+  const podeConcluir = ag.status === 'agendado';
+  openDrawer(`
+    <div class="dtitle">${ag.clienteNome || '—'}</div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:20px;font-size:13px;color:var(--dim);line-height:1.8">
+      <div style="color:var(--dark);font-weight:500">${ag.servicos || '—'}</div>
+      <div>${fmtBR(String(ag.data).slice(0,10))}${ag.hora ? ' · ' + ag.hora : ''} · ${ag.duracaoMin || 0}min${ag.colaboradorNome ? ' · ' + ag.colaboradorNome : ''}</div>
+      <div style="margin-top:4px"><span class="badge ${ag.status === 'concluido' ? 'b-on' : ag.status === 'cancelado' ? 'b-off' : 'b-info'}">${ag.status === 'concluido' ? 'Concluído' : ag.status === 'cancelado' ? 'Cancelado' : 'Agendado'}</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${podeConcluir ? `<button class="btn-save" id="btn-acao-concluir" style="padding:16px;font-size:15px">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><polyline points="20 6 9 17 4 12"/></svg>
+        Concluir atendimento
+      </button>` : ''}
+      <button class="btn-sec" id="btn-acao-editar" style="padding:14px;font-size:14px">
+        <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Editar agendamento
+      </button>
+    </div>
+    <div style="margin-top:10px">
+      <button class="btn-sec" id="btn-acao-cancel" style="width:100%;padding:10px;font-size:13px;color:var(--dim)">Fechar</button>
+    </div>
+  `);
+  qs('#btn-acao-cancel').addEventListener('click', closeDrawer);
+  qs('#btn-acao-editar').addEventListener('click', () => { closeDrawer(); editAgend(ag); });
+  if(podeConcluir) qs('#btn-acao-concluir').addEventListener('click', () => { closeDrawer(); concluirAgend(ag); });
+}
+
 function concluirAgend(ag){
+  const agDataISO = String(ag.data).slice(0,10);
+  const dataDiferente = agDataISO !== today();
+  const dateSelectorHtml = dataDiferente ? `
+    <div class="fg">
+      <span class="lbl">Lançar no financeiro em qual data?</span>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--bg4);font-size:13px">
+          <input type="radio" name="cmd-data-choice" value="agendamento" checked style="accent-color:var(--gold-dk);width:16px;height:16px">
+          Data do agendamento — <strong>${fmtBR(agDataISO)}</strong>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--bg4);font-size:13px">
+          <input type="radio" name="cmd-data-choice" value="hoje" style="accent-color:var(--gold-dk);width:16px;height:16px">
+          Hoje — <strong>${fmtBR(today())}</strong>
+        </label>
+      </div>
+    </div>
+  ` : '';
   openDrawer(`
     <div class="dtitle">Concluir Atendimento</div>
     <div style="background:var(--gold-bg);border:1px solid var(--gold-dk);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--dark);line-height:1.6">
       Confirme os dados abaixo. A entrada será registrada no caixa automaticamente.
     </div>
+    ${dateSelectorHtml}
     <div class="fg">
       <span class="lbl">Cliente</span>
       <div style="background:var(--bg4);border:1.5px solid var(--border);border-radius:var(--r);padding:11px 13px;color:var(--dim);font-size:14px">${ag.clienteNome || '—'}</div>
@@ -3208,6 +3294,10 @@ async function salvarComanda(ag){
   const btn = qs('#drawer .btn-save');
   btnSv(btn, true, 'Confirmar e registrar');
 
+  const agDataISO = String(ag.data).slice(0,10);
+  const choiceEl = qs('input[name="cmd-data-choice"]:checked');
+  const lancDataISO = (choiceEl?.value === 'hoje') ? today() : agDataISO;
+
   try{
     const agData = {
       id: ag.id,
@@ -3216,7 +3306,7 @@ async function salvarComanda(ag){
       colaboradorId: ag.colaboradorId,
       colaboradorNome: ag.colaboradorNome,
       servicos,
-      data: String(ag.data).slice(0,10),
+      data: agDataISO,
       hora: ag.hora,
       duracaoMin: ag.duracaoMin,
       valor,
@@ -3237,7 +3327,7 @@ async function salvarComanda(ag){
       formaPagamento,
       isRetirada: false,
       observacoes: observacoes ? `Agendamento · ${observacoes}` : 'Agendamento',
-      data: String(ag.data).slice(0,10)
+      data: lancDataISO
     };
 
     const [r1, r2] = await Promise.all([
@@ -3251,12 +3341,20 @@ async function salvarComanda(ag){
       return;
     }
 
+    // Invalida caches afetados
+    const agMes = agDataISO.slice(0,7);
+    const lancMes = lancDataISO.slice(0,7);
+    store.del(`sc_ag_dia_${agDataISO}`);
+    store.del(`sc_ag_sem_${agDataISO}`);
+    store.del(`sc_ag_mes_${agDataISO.slice(0,4)}_${agDataISO.slice(5,7)}`);
+    store.del(`sc_cx_${agMes}`);
+    if(lancMes !== agMes) store.del(`sc_cx_${lancMes}`);
+
     closeDrawer();
     toast('Atendimento concluído e registrado no caixa!','ok');
-    loadAgenda();
+    loadAgenda(true);
     updateStats();
-    // Recarrega caixa se o agendamento é do dia atual
-    if(String(ag.data).slice(0,10) === today()) loadCaixa();
+    loadCaixa(true);
   }catch(e){
     toast('Erro.','err');
     btnSv(btn, false, 'Confirmar e registrar');
@@ -3721,7 +3819,7 @@ async function saveLanc(){
           const di = qs('#cx-data');
           if(di) di.value = (qs('#f-data')?.value || today()).slice(0,7);
 
-          await Promise.all([loadCaixa(), updateStats(), loadCred(), loadVencHome()]);
+          await Promise.all([loadCaixa(true), updateStats(), loadCred(), loadVencHome()]);
         }catch(e){
           toast('Erro.','err');
           btnSv(btn2, false);
@@ -3780,7 +3878,7 @@ async function saveLanc(){
     toast(state.ui.editId ? 'Atualizado!' : 'Registrado!','ok');
     const dataInp = qs('#cx-data');
     if(dataInp) dataInp.value = (data.data || today()).slice(0,7);
-    await Promise.all([loadCaixa(), updateStats()]);
+    await Promise.all([loadCaixa(true), updateStats()]);
   }catch(e){
     toast('Erro de conexão.','err');
     btnSv(btn, false);
@@ -3793,7 +3891,7 @@ async function delLanc(id){
     const r = await post({ action:'deleteLancamento', token:state.token, id });
     if(r.status !== 'ok') return toast('Erro.','err');
     toast('Excluído.','ok');
-    await Promise.all([loadCaixa(), updateStats()]);
+    await Promise.all([loadCaixa(true), updateStats()]);
   }catch(e){
     toast('Erro.','err');
   }
@@ -3943,7 +4041,7 @@ async function saveFiado(){
 
     closeDrawer();
     toast('Fiado registrado!','ok');
-    await Promise.all([loadCaixa(), updateStats(), loadCred(), loadVencHome()]);
+    await Promise.all([loadCaixa(true), updateStats(), loadCred(), loadVencHome()]);
   }catch(e){
     toast('Erro ao registrar.','err');
     btnSv(btn, false);
@@ -3992,7 +4090,7 @@ async function registrarPgtoFiado(id){
 
     closeModal();
     toast('Pagamento registrado!','ok');
-    await Promise.all([loadCred(), updateStats(), loadCaixa(), loadVencHome()]);
+    await Promise.all([loadCred(), updateStats(), loadCaixa(true), loadVencHome()]);
   }catch(e){
     toast('Erro.','err');
     btnSv(btn, false);
