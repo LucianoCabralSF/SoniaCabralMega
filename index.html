@@ -3776,12 +3776,62 @@ function gerarVencimentosInline(){
 }
 window.gerarVencimentosInline = gerarVencimentosInline;
 
+function getClientesSorted(){
+  return (state.db.clientes || []).slice().sort((a, b) =>
+    String(a?.nome || '').localeCompare(String(b?.nome || ''), 'pt-BR', { sensitivity:'base' })
+  );
+}
+
+function buildClienteOptions(selectedId = ''){
+  return getClientesSorted().map(c =>
+    `<option value="${c.id}|${c.nome}" ${c.id === selectedId ? 'selected' : ''}>${c.nome}</option>`
+  ).join('');
+}
+
+function bindClienteSearch(inputSel = '#f-cli-search', selectSel = '#f-cli'){
+  const input = qs(inputSel);
+  const select = qs(selectSel);
+  if(!input || !select) return;
+
+  const allClientes = getClientesSorted();
+
+  const renderOptions = (query = '') => {
+    const term = String(query || '').trim().toLowerCase();
+    const currentValue = select.value;
+    const filtered = !term ? allClientes : allClientes.filter(c =>
+      String(c.nome || '').toLowerCase().includes(term) ||
+      String(c.telefone || '').replace(/\D/g, '').includes(term.replace(/\D/g, ''))
+    );
+
+    select.innerHTML =
+      `<option value="">- Sem vinculo -</option>` +
+      filtered.map(c => `<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
+
+    if(filtered.some(c => `${c.id}|${c.nome}` === currentValue)){
+      select.value = currentValue;
+    }else if(currentValue){
+      select.value = '';
+    }
+  };
+
+  input.addEventListener('input', e => renderOptions(e.target.value));
+  select.addEventListener('change', () => {
+    const option = select.options[select.selectedIndex];
+    input.value = select.value ? (option?.textContent || '') : '';
+  });
+
+  if(select.value){
+    const option = select.options[select.selectedIndex];
+    input.value = option?.textContent || '';
+  }
+}
+
 function openDrawerLanc(){
   state.ui.editId = null;
   state.ui.tipoLanc = 'entrada';
   state.ui.itensLanc = [];
 
-  const cliOpts = state.db.clientes.map(c => `<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
+  const cliOpts = buildClienteOptions();
 
   openDrawer(`
     <div class="dtitle">Novo Lançamento</div>
@@ -3792,7 +3842,11 @@ function openDrawerLanc(){
     </div>
 
     <div id="f-entrada">
-      <div class="fg"><span class="lbl">Cliente (opcional)</span><select id="f-cli"><option value="">— Sem vínculo —</option>${cliOpts}</select></div>
+      <div class="fg">
+        <span class="lbl">Cliente (opcional)</span>
+        <input id="f-cli-search" type="text" class="inp" placeholder="Digite para buscar cliente"/>
+        <select id="f-cli"><option value="">— Sem vínculo —</option>${cliOpts}</select>
+      </div>
       <div class="itens-list" id="itens-list"></div>
       <button class="btn-add-item" id="btn-add-item-lanc">＋ Adicionar serviço ou produto</button>
       <div class="total-bar"><span class="total-bar-label">Total</span><span class="total-bar-val" id="f-total-display">R$ 0,00</span></div>
@@ -3865,6 +3919,7 @@ function openDrawerLanc(){
   qs('#btn-cancel-lanc').addEventListener('click', closeDrawer);
   qs('#btn-save-lanc').addEventListener('click', saveLanc);
 
+  bindClienteSearch();
   renderItens();
 }
 
@@ -3872,7 +3927,7 @@ function editLanc(l){
   state.ui.editId = l.id;
   state.ui.tipoLanc = l.isRetirada === 'true' ? 'retirada' : l.tipo;
 
-  const cliOpts = state.db.clientes.map(c => `<option value="${c.id}|${c.nome}" ${c.id === l.clienteId ? 'selected' : ''}>${c.nome}</option>`).join('');
+  const cliOpts = buildClienteOptions(l.clienteId);
   const svcOpts = state.db.servicos.filter(s => isAtivo(s.ativo)).map(s => `<option value="${s.id}|${s.nome}|servico" ${s.id === l.itemId ? 'selected' : ''}>${s.nome}</option>`).join('');
   const prdOpts = state.db.produtos.filter(p => isAtivo(p.ativo)).map(p => `<option value="${p.id}|${p.nome}|produto" ${p.id === l.itemId ? 'selected' : ''}>${p.nome}</option>`).join('');
   const t = state.ui.tipoLanc;
@@ -3885,7 +3940,11 @@ function editLanc(l){
       <button class="seg-btn ${t === 'retirada' ? 'active' : ''}" id="seg-r" onclick="setTipoLanc('retirada')">Retirada</button>
     </div>
     <div id="f-entrada" style="display:${t === 'entrada' ? 'block' : 'none'}">
-      <div class="fg"><span class="lbl">Cliente</span><select id="f-cli"><option value="">— Sem vínculo —</option>${cliOpts}</select></div>
+      <div class="fg">
+        <span class="lbl">Cliente</span>
+        <input id="f-cli-search" type="text" class="inp" placeholder="Digite para buscar cliente"/>
+        <select id="f-cli"><option value="">— Sem vínculo —</option>${cliOpts}</select>
+      </div>
       <div class="fg"><span class="lbl">Serviço / Produto</span><select id="f-item"><option value="">— Selecione —</option><optgroup label="Serviços">${svcOpts}</optgroup><optgroup label="Produtos">${prdOpts}</optgroup></select></div>
       <div class="fg">
         <span class="lbl">Forma</span>
@@ -3920,6 +3979,7 @@ function editLanc(l){
 
   qs('#btn-cancel-lanc').addEventListener('click', closeDrawer);
   qs('#btn-save-lanc').addEventListener('click', saveLanc);
+  bindClienteSearch();
 }
 
 async function saveLanc(){
