@@ -383,6 +383,13 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 }
 .sc-val{font-family:'Playfair Display',serif;font-size:28px;color:var(--dark);line-height:1}
 .sc-val.sm{font-size:16px;padding-top:4px}
+.sc-ok::before{background:linear-gradient(90deg,var(--ok),#52b788)}
+.sc-err::before{background:linear-gradient(90deg,var(--err),#e74c3c)}
+.sc-warn::before{background:linear-gradient(90deg,#b08020,var(--gold-lt))}
+.sc-info::before{background:linear-gradient(90deg,var(--info),#2980b9)}
+.sc-dim::before{background:linear-gradient(90deg,var(--border),transparent)}
+.meta-bar-bg{background:var(--bg3);border-radius:4px;height:6px;overflow:hidden;margin-top:4px}
+.meta-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gold-dk),var(--gold-lt));transition:width .6s ease}
 .slabel{
   font-size:9px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;
   margin-bottom:10px
@@ -716,10 +723,23 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
       <div class="dg-date" id="dg-date"></div>
       <div class="dg-div"></div>
       <div class="sg">
-        <div class="sc"><div class="sc-label">Clientes</div><div class="sc-val" id="st-cli">—</div></div>
-        <div class="sc"><div class="sc-label">Caixa Hoje</div><div class="sc-val sm" id="st-cx">—</div></div>
-        <div class="sc"><div class="sc-label">Fiados abertos</div><div class="sc-val sm" id="st-fiad">—</div></div>
-        <div class="sc"><div class="sc-label">Serviços</div><div class="sc-val" id="st-svc">—</div></div>
+        <div class="sc sc-dim"><div class="sc-label">Clientes cadastrados</div><div class="sc-val" id="st-cli">—</div></div>
+        <div class="sc sc-dim"><div class="sc-label">Serviços cadastrados</div><div class="sc-val" id="st-svc">—</div></div>
+        <div class="sc sc-ok"><div class="sc-label">Entradas no mês</div><div class="sc-val sm" id="st-entradas">—</div></div>
+        <div class="sc sc-err"><div class="sc-label">Saídas operacionais</div><div class="sc-val sm" id="st-saidas">—</div></div>
+        <div class="sc sc-warn"><div class="sc-label">Obrigações programadas</div><div class="sc-val sm" id="st-obrig">—</div></div>
+        <div class="sc sc-info"><div class="sc-label">Fiados a receber</div><div class="sc-val sm" id="st-fiad">—</div></div>
+        <div class="sc sc-warn"><div class="sc-label">Retiradas pessoais</div><div class="sc-val sm" id="st-retir">—</div></div>
+        <div class="sc" id="sc-resultado"><div class="sc-label">Resultado Operacional</div><div class="sc-val sm" id="st-resultado">—</div></div>
+      </div>
+      <div class="sc" id="sc-meta" style="margin-bottom:20px">
+        <div class="sc-label">Meta para fechar o mês positivo</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <div class="sc-val sm" id="st-meta-val">—</div>
+          <div id="st-meta-pct" style="font-family:'Playfair Display',serif;font-size:18px;color:var(--dim)">—%</div>
+        </div>
+        <div class="meta-bar-bg"><div class="meta-bar-fill" id="st-meta-bar" style="width:0%"></div></div>
+        <div id="st-meta-sub" style="font-size:10px;color:var(--dim);margin-top:6px">calculando…</div>
       </div>
       <div id="home-atrasados"></div>
       <div class="slabel">⏰ Vencem em 15 dias</div>
@@ -1023,9 +1043,16 @@ function saveDbCache(){
       crediario:     state.db.crediario,
       planejamento:  state.db.planejamento,
       config:        state.db.config,
-      statsDate:     today(),
-      statsCx:       qs('#st-cx')?.textContent || '',
-      ts:            Date.now()
+      statsDate:    today(),
+      stEntradas:   qs('#st-entradas')?.textContent  || '',
+      stSaidas:     qs('#st-saidas')?.textContent    || '',
+      stRetir:      qs('#st-retir')?.textContent     || '',
+      stResultado:  qs('#st-resultado')?.textContent || '',
+      stMetaVal:    qs('#st-meta-val')?.textContent  || '',
+      stMetaPct:    qs('#st-meta-pct')?.textContent  || '',
+      stMetaBarW:   qs('#st-meta-bar')?.style.width  || '0%',
+      stMetaSub:    qs('#st-meta-sub')?.textContent  || '',
+      ts:           Date.now()
     });
   }catch(_){}
 }
@@ -1055,7 +1082,18 @@ function restoreFromCache(){
   qs('#st-svc').textContent  = state.db.servicos.length;
   const abertos = state.db.crediario.filter(x => x.status === 'aberto');
   qs('#st-fiad').textContent = fmt(abertos.reduce((s,x)=>s+(parseFloat(x.saldoDevedor)||0),0));
-  if(c.statsDate === today() && c.statsCx) qs('#st-cx').textContent = c.statsCx;
+  const obrigCache = state.db.planejamento.filter(p => p.tipo === 'despesa' && p.status === 'ativo').reduce((s,p)=>s+(parseFloat(p.valorParcela)||0),0);
+  qs('#st-obrig').textContent = fmt(obrigCache);
+  if(c.statsDate === today() && c.stEntradas){
+    qs('#st-entradas').textContent  = c.stEntradas;
+    qs('#st-saidas').textContent    = c.stSaidas   || '—';
+    qs('#st-retir').textContent     = c.stRetir    || '—';
+    qs('#st-resultado').textContent = c.stResultado|| '—';
+    if(qs('#st-meta-val'))  qs('#st-meta-val').textContent  = c.stMetaVal  || '—';
+    if(qs('#st-meta-pct'))  qs('#st-meta-pct').textContent  = c.stMetaPct  || '—%';
+    if(qs('#st-meta-bar'))  qs('#st-meta-bar').style.width  = c.stMetaBarW || '0%';
+    if(qs('#st-meta-sub'))  qs('#st-meta-sub').textContent  = c.stMetaSub  || '';
+  }
 
   const age = Date.now() - (c.ts || 0);
   return age < 24 * 60 * 60 * 1000 ? 'fresh' : 'stale';
@@ -1082,6 +1120,7 @@ const state = {
     extModo: 'mes',
     extUnlocked: false,
     planFiltro: 'todos',
+    agPendentes: [],
     itensLanc: [],
     caixaItems: [],
     clienteSearch: '',
@@ -1406,11 +1445,54 @@ async function updateStats(){
     qs('#st-svc').textContent = state.db.servicos.length;
 
     const abertos = state.db.crediario.filter(c => c.status === 'aberto');
-    qs('#st-fiad').textContent = fmt(abertos.reduce((s,c)=>s+(parseFloat(c.saldoDevedor)||0),0));
+    const totalFiados = abertos.reduce((s,c)=>s+(parseFloat(c.saldoDevedor)||0),0);
+    qs('#st-fiad').textContent = fmt(totalFiados);
 
-    const r = await api({ action:'getCaixaResumo', token:state.token, data:today() });
-    if(r.status === 'ok'){
-      qs('#st-cx').textContent = fmt(r.data.saldo);
+    const obrig = state.db.planejamento
+      .filter(p => p.tipo === 'despesa' && p.status === 'ativo')
+      .reduce((s,p) => s + (parseFloat(p.valorParcela)||0), 0);
+    qs('#st-obrig').textContent = fmt(obrig);
+
+    // Extrato do mês corrente (reutiliza cache do caixa se disponível)
+    const mes = today().slice(0,7);
+    const cacheKey = `sc_cx_${mes}`;
+    let d = store.get(cacheKey)?.d;
+    if(!d){
+      const lastDay = new Date(parseInt(mes.slice(0,4)), parseInt(mes.slice(5,7)), 0).getDate();
+      const r = await api({ action:'getExtrato', token:state.token, dataInicio:mes+'-01', dataFim:mes+'-'+String(lastDay).padStart(2,'0') });
+      if(r.status === 'ok'){
+        d = r.data || {};
+        try{ store.set(cacheKey, { d, ts: Date.now() }); }catch(_){}
+      }
+    }
+    if(d){
+      const entradas = d.faturamento || 0;
+      const saidas   = d.saidasOp   || 0;
+      const retir    = d.retiradas  || 0;
+      const resOp    = entradas - saidas;
+
+      qs('#st-entradas').textContent  = fmt(entradas);
+      qs('#st-saidas').textContent    = fmt(saidas);
+      qs('#st-retir').textContent     = fmt(retir);
+      qs('#st-resultado').textContent = fmt(resOp);
+
+      const scRes = qs('#sc-resultado');
+      scRes.classList.remove('sc-ok','sc-err');
+      scRes.classList.add(resOp >= 0 ? 'sc-ok' : 'sc-err');
+
+      const meta = obrig > 0 ? obrig : (saidas + retir);
+      const pct  = meta > 0 ? Math.min(100, Math.round((entradas / meta) * 100)) : 0;
+      qs('#st-meta-val').textContent  = fmt(meta);
+      qs('#st-meta-pct').textContent  = pct + '%';
+      qs('#st-meta-bar').style.width  = pct + '%';
+      const falta = meta - entradas;
+      qs('#st-meta-sub').textContent  = falta > 0
+        ? `Falta ${fmt(falta)} para cobrir as obrigações do mês`
+        : `Obrigações cobertas! Margem: ${fmt(-falta)}`;
+
+      const scMeta = qs('#sc-meta');
+      scMeta.classList.remove('sc-ok','sc-err');
+      scMeta.classList.add(falta <= 0 ? 'sc-ok' : (pct >= 70 ? 'sc-warn' : 'sc-err'));
     }
   }catch(_){}
 }
@@ -2008,13 +2090,15 @@ async function loadCaixa(forceReload = false){
 }
 
 function _renderAgendaData(el, list, dataBase){
-  el._currentItems = list;
+  el._agDataBase = dataBase;
+  const pendentes = (state.ui.agView === 'dia' && dataBase === today()) ? (state.ui.agPendentes || []) : [];
+  el._currentItems = [...list, ...pendentes];
   if(state.ui.agView === 'semana'){
     renderAgendaSemana(el, list, dataBase);
   }else if(state.ui.agView === 'mes'){
     renderAgendaMes(el, list, dataBase);
   }else{
-    renderAgendaDia(el, list, dataBase);
+    renderAgendaDia(el, list, dataBase, pendentes);
   }
   state.ui.loadFlags.agendaLoaded = true;
 }
@@ -2057,22 +2141,32 @@ async function loadAgenda(forceReload = false){
   }
 
   const el = qs('#ag-content');
+  const isHojeDia = state.ui.agView === 'dia' && dataBase === today();
 
   if(!forceReload){
     const cached = store.get(cacheKey);
     if(cached && cached.list){
+      // Carrega pendentes do cache antes de renderizar
+      if(isHojeDia){
+        const pc = store.get(`sc_ag_pendentes_${today()}`);
+        state.ui.agPendentes = pc?.list || [];
+      }
       _renderAgendaData(el, cached.list, dataBase);
-      // Atualiza em segundo plano discretamente
+      // Atualiza em segundo plano
       _fetchAgendaData(params, cacheKey, el, dataBase).catch(()=>{});
+      if(isHojeDia) loadAgendaPendentes(false).catch(()=>{});
       return;
     }
   }else{
     store.del(cacheKey);
+    if(isHojeDia) state.ui.agPendentes = [];
   }
 
   el.innerHTML = '<div style="text-align:center;padding:30px"><div class="spinner" style="margin:0 auto"></div></div>';
 
   try{
+    // Carrega pendentes antes do fetch do dia, para que o render já inclua
+    if(isHojeDia) await loadAgendaPendentes(forceReload);
     await _fetchAgendaData(params, cacheKey, el, dataBase);
   }catch(e){
     console.error('loadAgenda', e);
@@ -2080,46 +2174,113 @@ async function loadAgenda(forceReload = false){
   }
 }
 
-function agCardHtml(ag){
+function invalidarPendentes(){
+  store.del(`sc_ag_pendentes_${today()}`);
+  state.ui.agPendentes = [];
+}
+
+async function loadAgendaPendentes(forceReload = false){
+  const cacheKey = `sc_ag_pendentes_${today()}`;
+  if(!forceReload){
+    const cached = store.get(cacheKey);
+    if(cached && Array.isArray(cached.list)){
+      state.ui.agPendentes = cached.list;
+      return;
+    }
+  }else{
+    store.del(cacheKey);
+  }
+  // Busca últimos 60 dias até ontem
+  const df = new Date(); df.setDate(df.getDate() - 1);
+  const di = new Date(); di.setDate(di.getDate() - 60);
+  try{
+    const r = await api({
+      action: 'getAgendamentos', token: state.token,
+      dataInicio: di.toISOString().slice(0,10),
+      dataFim:    df.toISOString().slice(0,10)
+    });
+    if(r.status === 'ok'){
+      const pendentes = (r.data || []).filter(ag => ag.status === 'agendado');
+      state.ui.agPendentes = pendentes;
+      try{ store.set(cacheKey, { list: pendentes, ts: Date.now() }); }catch(_){}
+      // Se ainda estamos na view de hoje, re-renderiza para incluir pendentes
+      const el = qs('#ag-content');
+      if(el?._agDataBase === today() && state.ui.agView === 'dia'){
+        const dayCache = store.get(`sc_ag_dia_${today()}`);
+        if(dayCache?.list) _renderAgendaData(el, dayCache.list, today());
+      }
+    }
+  }catch(_){}
+}
+
+function agCardHtml(ag, isPending = false){
+  const badge = isPending
+    ? `<span class="badge" style="background:var(--err-bg);color:var(--err);border:1px solid var(--err)">Atrasado</span>`
+    : `<span class="badge ${ag.status === 'concluido' ? 'b-on' : ag.status === 'cancelado' ? 'b-off' : 'b-info'}">${ag.status === 'concluido' ? 'Concluído' : ag.status === 'cancelado' ? 'Cancelado' : 'Agendado'}</span>`;
+  const borderStyle = isPending ? 'border-color:var(--err);background:var(--err-bg)' : '';
+  const dataPrefix = isPending ? `<span style="font-size:10px;color:var(--err);font-weight:600">${fmtBR(String(ag.data).slice(0,10))} · </span>` : '';
   return `
-    <div class="ag-card ${ag.status}" data-id="${ag.id}" style="cursor:pointer">
+    <div class="ag-card ${ag.status}" data-id="${ag.id}" style="cursor:pointer;${borderStyle}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
-          <div class="ag-hora">${ag.hora || '—'}</div>
+          <div class="ag-hora">${dataPrefix}${ag.hora || '—'}</div>
           <div class="ag-cli">${ag.clienteNome || '—'}</div>
           <div class="ag-meta">${ag.servicos || '—'} · ${ag.duracaoMin}min${ag.colaboradorNome ? ' · ' + ag.colaboradorNome : ''}</div>
         </div>
-        <span class="badge ${ag.status === 'concluido' ? 'b-on' : ag.status === 'cancelado' ? 'b-off' : 'b-info'}">${ag.status === 'concluido' ? 'Concluído' : ag.status === 'cancelado' ? 'Cancelado' : 'Agendado'}</span>
+        ${badge}
       </div>
       ${Number(ag.valor) > 0 ? `<div style="font-family:'Playfair Display',serif;font-size:15px;color:var(--ok);margin-top:6px">${fmt(ag.valor)}</div>` : ''}
     </div>
   `;
 }
 
-function renderAgendaDia(el, list, dataBase){
-  if(!list.length){
+function renderAgendaDia(el, list, dataBase, pendentes = []){
+  let html = '';
+
+  // Seção de pendentes de dias anteriores
+  if(pendentes.length > 0){
+    const sorted = [...pendentes].sort((a,b) =>
+      String(a.data).localeCompare(String(b.data)) || (a.hora||'').localeCompare(b.hora||''));
+    html += `
+      <div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;padding:8px 12px;background:var(--err-bg);border:1px solid var(--err);border-radius:var(--r)">
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="var(--err)" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span style="font-size:10px;color:var(--err);letter-spacing:1.5px;text-transform:uppercase;font-weight:600">${pendentes.length} pendente${pendentes.length > 1 ? 's' : ''} de dias anteriores — conclua ou reagende</span>
+        </div>
+        ${sorted.map(ag => agCardHtml(ag, true)).join('')}
+      </div>
+    `;
+  }
+
+  if(!list.length && !html){
     el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><p>Nenhum agendamento</p></div>';
     return;
   }
-  const grupos = {};
-  list.forEach(a => {
-    const d = String(a.data).slice(0,10);
-    if(!grupos[d]) grupos[d] = [];
-    grupos[d].push(a);
-  });
-  Object.keys(grupos).forEach(d => {
-    grupos[d].sort((a,b) => (a.hora||'').localeCompare(b.hora||''));
-  });
-  el.innerHTML = Object.keys(grupos).sort().map(data => {
-    const br = fmtBR(data);
-    const isHoje = data === today();
-    return `
-      <div style="margin-bottom:20px">
-        <div style="font-size:10px;color:${isHoje ? 'var(--gold)' : 'var(--dim)'};letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:${isHoje ? '600' : '400'}">${br}${isHoje ? ' · HOJE' : ''}</div>
-        ${grupos[data].map(ag => agCardHtml(ag)).join('')}
-      </div>
-    `;
-  }).join('');
+
+  // Grupos do dia selecionado
+  if(list.length){
+    const grupos = {};
+    list.forEach(a => {
+      const d = String(a.data).slice(0,10);
+      if(!grupos[d]) grupos[d] = [];
+      grupos[d].push(a);
+    });
+    Object.keys(grupos).forEach(d => {
+      grupos[d].sort((a,b) => (a.hora||'').localeCompare(b.hora||''));
+    });
+    html += Object.keys(grupos).sort().map(data => {
+      const br = fmtBR(data);
+      const isHoje = data === today();
+      return `
+        <div style="margin-bottom:20px">
+          <div style="font-size:10px;color:${isHoje ? 'var(--gold)' : 'var(--dim)'};letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:${isHoje ? '600' : '400'}">${br}${isHoje ? ' · HOJE' : ''}</div>
+          ${grupos[data].map(ag => agCardHtml(ag)).join('')}
+        </div>
+      `;
+    }).join('');
+  }
+
+  el.innerHTML = html;
 }
 
 function renderAgendaSemana(el, list, dataBase){
@@ -3173,6 +3334,7 @@ async function saveAgend(){
     }
     closeDrawer();
     toast(state.ui.editId ? 'Atualizado!' : 'Agendado!','ok');
+    invalidarPendentes();
     loadAgenda(true);
   }catch(e){
     toast('Erro.','err');
@@ -3186,6 +3348,7 @@ async function delAgend(id){
     const r = await post({ action:'deleteAgendamento', token:state.token, id });
     if(r.status !== 'ok') return toast('Erro.','err');
     toast('Excluído.','ok');
+    invalidarPendentes();
     loadAgenda(true);
   }catch(e){
     toast('Erro.','err');
@@ -3194,8 +3357,15 @@ async function delAgend(id){
 
 function abrirAcaoAgendamento(ag){
   const podeConcluir = ag.status === 'agendado';
+  const isPastPending = podeConcluir && String(ag.data).slice(0,10) < today();
+  const alertHtml = isPastPending ? `
+    <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--err-bg);border:1px solid var(--err);border-radius:var(--r);margin-bottom:14px;font-size:11px;color:var(--err);font-weight:600">
+      <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Em aberto desde ${fmtBR(String(ag.data).slice(0,10))} — conclua ou reagende
+    </div>` : '';
   openDrawer(`
     <div class="dtitle">${ag.clienteNome || '—'}</div>
+    ${alertHtml}
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:20px;font-size:13px;color:var(--dim);line-height:1.8">
       <div style="color:var(--dark);font-weight:500">${ag.servicos || '—'}</div>
       <div>${fmtBR(String(ag.data).slice(0,10))}${ag.hora ? ' · ' + ag.hora : ''} · ${ag.duracaoMin || 0}min${ag.colaboradorNome ? ' · ' + ag.colaboradorNome : ''}</div>
@@ -3208,7 +3378,7 @@ function abrirAcaoAgendamento(ag){
       </button>` : ''}
       <button class="btn-sec" id="btn-acao-editar" style="padding:14px;font-size:14px">
         <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        Editar agendamento
+        ${isPastPending ? 'Reagendar / Editar' : 'Editar agendamento'}
       </button>
     </div>
     <div style="margin-top:10px">
@@ -3352,6 +3522,7 @@ async function salvarComanda(ag){
 
     closeDrawer();
     toast('Atendimento concluído e registrado no caixa!','ok');
+    invalidarPendentes();
     loadAgenda(true);
     updateStats();
     loadCaixa(true);
