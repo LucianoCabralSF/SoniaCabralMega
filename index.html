@@ -3245,13 +3245,20 @@ async function savePlan(){
 
 function openDrawerAgend(){
   state.ui.editId = null;
-  const cliOpts = state.db.clientes.map(c => `<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
+  const cliOpts = buildClienteOptions();
   const svcOpts = state.db.servicos.filter(s => isAtivo(s.ativo)).map(s => `<option value="${s.nome}">${s.nome} (${s.duracaoMin || 60}min)</option>`).join('');
   const colOpts = state.db.colaboradores.filter(c => isAtivo(c.ativo)).map(c => `<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
 
   openDrawer(`
     <div class="dtitle">Novo Agendamento</div>
-    <div class="fg"><span class="lbl">Cliente *</span><select id="ag-cli"><option value="">— Selecione —</option>${cliOpts}</select></div>
+    <div class="fg">
+      <span class="lbl">Cliente *</span>
+      <div class="cli-autocomplete">
+        <input id="ag-cli-search" type="text" class="inp" placeholder="Digite o nome da cliente"/>
+        <select id="ag-cli" class="cli-hidden-select"><option value="">— Selecione —</option>${cliOpts}</select>
+        <div id="f-cli-dropdown" class="cli-dropdown"></div>
+      </div>
+    </div>
     <div class="fg"><span class="lbl">Serviço</span><select id="ag-svc"><option value="">— Selecione —</option>${svcOpts}</select></div>
     <div class="fg"><span class="lbl">Colaboradora</span><select id="ag-col"><option value="">— Selecione —</option>${colOpts}</select></div>
     <div class="form-row">
@@ -3271,6 +3278,7 @@ function openDrawerAgend(){
 
   qs('#ag-val').addEventListener('input', e => applyValorMask(e.target));
   qs('#ag-d').value = qs('#ag-data')?.value || today();
+  bindClienteSearch('#ag-cli-search', '#ag-cli');
 
   // Auto-preenche duração ao selecionar serviço
   qs('#ag-svc').addEventListener('change', () => {
@@ -3285,12 +3293,19 @@ function openDrawerAgend(){
 
 function editAgend(ag){
   state.ui.editId = ag.id;
-  const cliOpts = state.db.clientes.map(c => `<option value="${c.id}|${c.nome}" ${c.id === ag.clienteId ? 'selected' : ''}>${c.nome}</option>`).join('');
+  const cliOpts = buildClienteOptions(ag.clienteId);
   const colOpts = state.db.colaboradores.filter(c => isAtivo(c.ativo)).map(c => `<option value="${c.id}|${c.nome}" ${c.id === ag.colaboradorId ? 'selected' : ''}>${c.nome}</option>`).join('');
 
   openDrawer(`
     <div class="dtitle">Editar Agendamento</div>
-    <div class="fg"><span class="lbl">Cliente</span><select id="ag-cli"><option value="">— Selecione —</option>${cliOpts}</select></div>
+    <div class="fg">
+      <span class="lbl">Cliente</span>
+      <div class="cli-autocomplete">
+        <input id="ag-cli-search" type="text" class="inp" placeholder="Digite o nome da cliente"/>
+        <select id="ag-cli" class="cli-hidden-select"><option value="">— Selecione —</option>${cliOpts}</select>
+        <div id="f-cli-dropdown" class="cli-dropdown"></div>
+      </div>
+    </div>
     <div class="fg"><span class="lbl">Serviços</span><input id="ag-svc" type="text" class="inp" value="${ag.servicos || ''}"/></div>
     <div class="fg"><span class="lbl">Colaboradora</span><select id="ag-col"><option value="">— Selecione —</option>${colOpts}</select></div>
     <div class="form-row">
@@ -3324,6 +3339,7 @@ function editAgend(ag){
   qs('#btn-cancel-ag').addEventListener('click', closeDrawer);
   qs('#btn-del-ag').addEventListener('click', () => { const id = ag.id; closeDrawer(); delAgend(id); });
   qs('#btn-save-ag').addEventListener('click', saveAgend);
+  bindClienteSearch('#ag-cli-search', '#ag-cli', ag.clienteId);
 }
 
 async function saveAgend(){
