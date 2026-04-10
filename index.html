@@ -1095,6 +1095,7 @@ function saveDbCache(){
       colaboradores: state.db.colaboradores,
       crediario:     state.db.crediario,
       planejamento:  state.db.planejamento,
+      planParcelas:  state.db.planParcelas,
       config:        state.db.config,
       statsDate:    today(),
       stEntradas:   qs('#st-entradas')?.textContent  || '',
@@ -1120,6 +1121,7 @@ function restoreFromCache(){
   state.db.colaboradores = c.colaboradores || [];
   state.db.crediario     = c.crediario     || [];
   state.db.planejamento  = c.planejamento  || [];
+  state.db.planParcelas  = c.planParcelas  || [];
   state.db.config        = c.config        || {};
 
   applyConfig();
@@ -1162,6 +1164,7 @@ const state = {
     colaboradores: [],
     crediario: [],
     planejamento: [],
+    planParcelas: [],
     config: {}
   },
   ui: {
@@ -1453,13 +1456,14 @@ async function loadAll(){
       applyConfig();
     }
 
-    const [cli, svc, prd, col, cred, plan] = await Promise.all([
+    const [cli, svc, prd, col, cred, plan, planParc] = await Promise.all([
       apiTimeout({ action:'getClientes', token:state.token }),
       apiTimeout({ action:'getServicos', token:state.token }),
       apiTimeout({ action:'getProdutos', token:state.token }),
       apiTimeout({ action:'getColaboradores', token:state.token }),
       apiTimeout({ action:'getCrediario', token:state.token }),
-      apiTimeout({ action:'getPlanejamento', token:state.token })
+      apiTimeout({ action:'getPlanejamento', token:state.token }),
+      apiTimeout({ action:'getPlanejamentoParcelas', token:state.token })
     ]);
 
     if(cli.status === 'ok') state.db.clientes = cli.data || [];
@@ -1468,6 +1472,7 @@ async function loadAll(){
     if(col.status === 'ok') state.db.colaboradores = col.data || [];
     if(cred.status === 'ok') state.db.crediario = cred.data || [];
     if(plan.status === 'ok') state.db.planejamento = plan.data || [];
+    if(planParc.status === 'ok') state.db.planParcelas = planParc.data || [];
 
     renderCli();
     renderSvc();
@@ -1612,6 +1617,7 @@ function navTo(page){
   if(page === 'caixa') loadCaixa();
   if(page === 'crediario') loadCred();
   if(page === 'agenda') loadAgenda();
+  if(page === 'planejamento') loadPlanejamento();
   if(page === 'extrato') checkExtLock();
 }
 
@@ -2060,7 +2066,7 @@ function renderPlanLegacy(){
   `).join('');
 }
 
-function renderPlan(){
+function renderPlanAgrupadoLegacy(){
   const el = qs('#list-plan');
   if(!el) return;
   let data = state.db.planejamento;
@@ -2136,12 +2142,82 @@ async function baixarParcelaPlanejamento(id){
     if(r.status !== 'ok') return toast(r.data?.message || 'Erro ao baixar.','err');
     toast('Baixa registrada!','ok');
     closeModal();
-    await Promise.all([loadVencHome(), updateStats(), loadCaixa(true)]);
+    await Promise.all([loadPlanejamento(), loadVencHome(), updateStats(), loadCaixa(true)]);
   }catch(e){
     toast('Erro ao baixar.','err');
   }
 }
 window.baixarParcelaPlanejamento = baixarParcelaPlanejamento;
+
+function renderPlan(){
+  const el = qs('#list-plan');
+  if(!el) return;
+  let data = (state.db.planParcelas || []).slice();
+  if(state.ui.planFiltro !== 'todos') data = data.filter(p => p.tipo === state.ui.planFiltro);
+
+  if(!data.length && (state.db.planejamento || []).length){
+    let planos = state.db.planejamento.slice();
+    if(state.ui.planFiltro !== 'todos') planos = planos.filter(p => p.tipo === state.ui.planFiltro);
+    el.innerHTML = planos.map(p => `
+      <div class="card">
+        <div class="card-top">
+          <div class="cavatar" style="font-size:18px">${p.tipo === 'despesa' ? '📤' : '📥'}</div>
+          <div class="cbody">
+            <div class="cname">${p.descricao || 'Planejamento'}</div>
+            <div class="cmeta">${p.numParcelas}x de ${fmt(p.valorParcela)} · Dia ${p.diaVencimento}</div>
+          </div>
+          <span class="badge ${p.status === 'ativo' ? 'b-on' : 'b-off'}">${p.status}</span>
+        </div>
+        <div class="card-bottom">
+          <button class="btn-s" onclick="abrirParcelasPlanejamento('${p.id}','${String(p.descricao || '').replace(/'/g,"\\'")}')">Ver parcelas</button>
+        </div>
+      </div>
+    `).join('');
+    return;
+  }
+
+  if(!data.length){
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><p>Nenhuma obrigação planejada</p></div>';
+    return;
+  }
+
+  data.sort((a,b) =>
+    String(a.vencimento || '').localeCompare(String(b.vencimento || '')) ||
+    String(a.descricao || '').localeCompare(String(b.descricao || ''), 'pt-BR')
+  );
+
+  el.innerHTML = data.map(p => `
+    <div class="card">
+      <div class="card-top">
+        <div class="cavatar" style="font-size:18px">${p.tipo === 'despesa' ? '📤' : '📥'}</div>
+        <div class="cbody">
+          <div class="cname">${p.descricao || 'Obrigação'}</div>
+          <div class="cmeta">${fmtBR(p.vencimento)} · ${fmt(p.valor)}</div>
+        </div>
+        <span class="badge ${p.pago === 'true' ? 'b-on' : 'b-warn'}">${p.pago === 'true' ? 'Pago' : 'Aberto'}</span>
+      </div>
+      ${p.pago !== 'true' ? `
+        <div class="card-bottom">
+          <button class="btn-ok" onclick="baixarParcelaPlanejamento('${p.id}')">Baixar</button>
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+}
+
+async function loadPlanejamento(){
+  try{
+    const [plan, parc] = await Promise.all([
+      api({ action:'getPlanejamento', token:state.token }),
+      api({ action:'getPlanejamentoParcelas', token:state.token })
+    ]);
+    if(plan.status === 'ok') state.db.planejamento = plan.data || [];
+    if(parc.status === 'ok') state.db.planParcelas = parc.data || [];
+    renderPlan();
+  }catch(e){
+    renderPlan();
+  }
+}
 
 function renderCred(){
   const el = qs('#list-cred');
@@ -3510,9 +3586,15 @@ async function savePlan(){
       return;
     }
 
-    const fr = await api({ action:'getPlanejamento', token:state.token });
+    const [fr, fp] = await Promise.all([
+      api({ action:'getPlanejamento', token:state.token }),
+      api({ action:'getPlanejamentoParcelas', token:state.token })
+    ]);
     if(fr.status === 'ok') state.db.planejamento = fr.data || [];
+    if(fp.status === 'ok') state.db.planParcelas = fp.data || [];
     renderPlan();
+    updateStats();
+    loadVencHome();
     closeDrawer();
     toast('Salvo!','ok');
   }catch(e){
@@ -4155,14 +4237,12 @@ function openQuickClienteModal(inputSel = '#f-cli-search', selectSel = '#f-cli',
   const d = draft || getQuickClienteDraft(inputSel);
   openModal(`
     <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:8px">Nova Cliente</div>
-    <div style="font-size:11px;color:var(--dim);margin-bottom:16px">Cadastre sem sair do lançamento ou agendamento.</div>
+    <div style="font-size:11px;color:var(--dim);margin-bottom:16px">Informe apenas o essencial agora.</div>
     <div class="fg"><span class="lbl">Nome *</span><input id="qcli-nome" type="text" class="inp" value="${d.nome || ''}"/></div>
     <div class="fg"><span class="lbl">Telefone</span><input id="qcli-tel" type="tel" class="inp" placeholder="(00) 00000-0000" maxlength="15" value="${d.telefone || ''}"/></div>
-    <div class="fg"><span class="lbl">E-mail</span><input id="qcli-email" type="email" class="inp" value="${d.email || ''}"/></div>
-    <div class="fg"><span class="lbl">Aniversário</span><input id="qcli-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${d.aniversario || ''}"/></div>
-    <div class="fg"><span class="lbl">Observações</span><textarea id="qcli-obs" class="inp">${d.observacoes || ''}</textarea></div>
+    <div class="fg"><span class="lbl">Data de nascimento</span><input id="qcli-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${d.aniversario || ''}"/></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-      ${('contacts' in navigator && 'ContactsManager' in window) ? `<button type="button" class="btn-sec" id="btn-qcli-import" style="flex:1">Importar do telefone</button>` : ''}
+      <button type="button" class="btn-sec" id="btn-qcli-import" style="flex:1">Importar da agenda</button>
       <button type="button" class="btn-sec" id="btn-qcli-full" style="flex:1">Cadastro completo</button>
     </div>
     <div class="dfooter" style="margin-top:0">
@@ -4183,35 +4263,15 @@ function openQuickClienteModal(inputSel = '#f-cli-search', selectSel = '#f-cli',
 
 function openFullClienteModal(inputSel = '#f-cli-search', selectSel = '#f-cli', draft = null){
   const d = draft || getQuickClienteDraft(inputSel);
-  openModal(`
-    <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:8px">Cadastro Completo</div>
-    <div style="font-size:11px;color:var(--dim);margin-bottom:16px">Mesmo cadastro principal de cliente, sem sair do lançamento ou agendamento.</div>
-    <div class="fg"><span class="lbl">Nome *</span><input id="fcm-nome" type="text" class="inp" value="${d.nome || ''}"/></div>
-    <div class="fg"><span class="lbl">Telefone</span><input id="fcm-tel" type="tel" class="inp" placeholder="(00) 00000-0000" maxlength="15" value="${d.telefone || ''}"/></div>
-    <div class="fg"><span class="lbl">E-mail</span><input id="fcm-email" type="email" class="inp" value="${d.email || ''}"/></div>
-    <div class="fg"><span class="lbl">Aniversário</span><input id="fcm-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${d.aniversario || ''}"/></div>
-    <div class="fg"><span class="lbl">Observações</span><textarea id="fcm-obs" class="inp">${d.observacoes || ''}</textarea></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-      ${('contacts' in navigator && 'ContactsManager' in window) ? `<button type="button" class="btn-sec" id="btn-fcm-import" style="flex:1">Importar do telefone</button>` : ''}
-      <button type="button" class="btn-sec" id="btn-fcm-quick" style="flex:1">Voltar ao rápido</button>
-    </div>
-    <div class="dfooter" style="margin-top:0">
-      <button class="btn-sec" id="btn-fcm-cancel">Cancelar</button>
-      <button class="btn-save" id="btn-fcm-save">Salvar cliente</button>
-    </div>
-  `);
-
-  qs('#fcm-tel')?.addEventListener('input', e => applyTelMask(e.target));
-  qs('#fcm-aniv')?.addEventListener('input', e => applyDataMask(e.target));
-  qs('#btn-fcm-import')?.addEventListener('click', () => importSingleClienteFromAgenda('fcm'));
-  qs('#btn-fcm-quick')?.addEventListener('click', () => openQuickClienteModal(inputSel, selectSel, getModalClienteDraft('fcm')));
-  qs('#btn-fcm-cancel')?.addEventListener('click', closeModal);
-  qs('#btn-fcm-save')?.addEventListener('click', () => saveQuickClienteFromContext(inputSel, selectSel, 'fcm', '#btn-fcm-save'));
+  closeModal();
+  closeDrawer();
+  navTo('clientes');
+  setTimeout(() => openDrawerCliente(d), 80);
 }
 
 async function importSingleClienteFromAgenda(prefix = 'qcli'){
   if(!('contacts' in navigator && 'ContactsManager' in window)){
-    toast('Seu navegador não suporta importar da agenda.','err');
+    toast('Este navegador não permite importar contatos.','err');
     return;
   }
 
