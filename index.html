@@ -4,9 +4,12 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no"/>
 <meta name="theme-color" content="#faf8f4"/>
+<meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="Sonia Cabral"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icon.svg"/>
 <title>Sonia Cabral</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
@@ -1489,7 +1492,7 @@ async function loadAll(){
   }
 }
 
-async function updateStats(){
+async function updateStatsLegacy(){
   try{
     qs('#st-cli').textContent = state.db.clientes.length;
     qs('#st-svc').textContent = state.db.servicos.length;
@@ -1543,6 +1546,55 @@ async function updateStats(){
       const scMeta = qs('#sc-meta');
       scMeta.classList.remove('sc-ok','sc-err');
       scMeta.classList.add(falta <= 0 ? 'sc-ok' : (pct >= 70 ? 'sc-warn' : 'sc-err'));
+    }
+  }catch(_){}
+}
+
+async function updateStats(){
+  try{
+    const mes = today().slice(0,7);
+    const cacheKey = `sc_cx_${mes}`;
+    const r = await api({ action:'getHomeResumo', token:state.token, mes });
+
+    if(r.status === 'ok'){
+      const resumo = r.data || {};
+      const d = resumo.extrato || {};
+      const entradas = d.faturamento || 0;
+      const saidas = d.saidasOp || 0;
+      const retir = d.retiradas || 0;
+      const obrig = resumo.obrigacoesAbertas || 0;
+      const meta = resumo.metaNegocio || (saidas + obrig);
+      const resOp = resumo.resultadoOperacionalProjetado ?? (entradas - meta);
+
+      qs('#st-cli').textContent = resumo.clientes ?? state.db.clientes.length;
+      qs('#st-svc').textContent = resumo.servicos ?? state.db.servicos.length;
+      qs('#st-fiad').textContent = fmt(resumo.fiadosAbertos || 0);
+      qs('#st-obrig').textContent = fmt(obrig);
+      qs('#st-entradas').textContent = fmt(entradas);
+      qs('#st-saidas').textContent = fmt(saidas);
+      qs('#st-retir').textContent = fmt(retir);
+      qs('#st-resultado').textContent = fmt(resOp);
+      try{ store.set(cacheKey, { d, ts: Date.now() }); }catch(_){}
+
+      const scRes = qs('#sc-resultado');
+      scRes.classList.remove('sc-ok','sc-err');
+      scRes.classList.add(resOp >= 0 ? 'sc-ok' : 'sc-err');
+
+      const pct = meta > 0 ? Math.min(100, Math.round((entradas / meta) * 100)) : 100;
+      qs('#st-meta-val').textContent = fmt(meta);
+      qs('#st-meta-pct').textContent = pct + '%';
+      qs('#st-meta-bar').style.width = pct + '%';
+      const falta = meta - entradas;
+      qs('#st-meta-sub').textContent = falta > 0
+        ? `Falta ${fmt(falta)} para cobrir despesas e obrigações abertas`
+        : `Despesas e obrigações cobertas. Margem: ${fmt(-falta)}`;
+
+      const scMeta = qs('#sc-meta');
+      scMeta.classList.remove('sc-ok','sc-err','sc-warn');
+      scMeta.classList.add(falta <= 0 ? 'sc-ok' : (pct >= 70 ? 'sc-warn' : 'sc-err'));
+    }else{
+      qs('#st-cli').textContent = state.db.clientes.length;
+      qs('#st-svc').textContent = state.db.servicos.length;
     }
   }catch(_){}
 }
@@ -1723,8 +1775,15 @@ function bindGlobalEvents(){
   qs('#ag-content').addEventListener('click', onAgendaListClick);
 }
 
+function registerServiceWorker(){
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  }
+}
+
 window.addEventListener('load', async () => {
   try{
+    registerServiceWorker();
     bindGlobalEvents();
 
     state.token = store.get('sc_tok') || '';
@@ -1976,7 +2035,7 @@ function renderColab(){
   `).join('');
 }
 
-function renderPlan(){
+function renderPlanLegacy(){
   const el = qs('#list-plan');
   if(!el) return;
   let data = state.db.planejamento;
@@ -2000,6 +2059,89 @@ function renderPlan(){
     </div>
   `).join('');
 }
+
+function renderPlan(){
+  const el = qs('#list-plan');
+  if(!el) return;
+  let data = state.db.planejamento;
+  if(state.ui.planFiltro !== 'todos') data = data.filter(p => p.tipo === state.ui.planFiltro);
+
+  if(!data.length){
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><p>Nenhum item</p></div>';
+    return;
+  }
+
+  el.innerHTML = data.map(p => `
+    <div class="card">
+      <div class="card-top">
+        <div class="cavatar" style="font-size:18px">${p.tipo === 'despesa' ? '📤' : '📥'}</div>
+        <div class="cbody">
+          <div class="cname">${p.descricao}</div>
+          <div class="cmeta">${p.numParcelas}x de ${fmt(p.valorParcela)} · Dia ${p.diaVencimento}</div>
+        </div>
+        <span class="badge ${p.status === 'ativo' ? 'b-on' : 'b-off'}">${p.status}</span>
+      </div>
+      <div class="card-bottom">
+        <button class="btn-s" onclick="abrirParcelasPlanejamento('${p.id}','${String(p.descricao || '').replace(/'/g,"\\'")}')">Parcelas</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function abrirParcelasPlanejamento(id, descricao){
+  openModal(`
+    <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:4px">${descricao || 'Planejamento'}</div>
+    <div id="plan-parc-list" style="padding:10px 0"><div class="spinner" style="margin:20px auto"></div></div>
+  `);
+
+  try{
+    const r = await api({ action:'getPlanejamentoParcelas', token:state.token, planejamentoId:id });
+    const list = r.status === 'ok' ? (r.data || []) : [];
+    const el = qs('#plan-parc-list');
+    if(!list.length){
+      el.innerHTML = '<div class="empty"><p>Nenhuma parcela encontrada.</p></div>';
+      return;
+    }
+    el.innerHTML = list.map(p => `
+      <div class="venc-card ${p.pago === 'true' ? '' : 'urgente'}" style="margin-bottom:8px">
+        <div class="venc-dot ${p.pago === 'true' ? 'ok' : 'warn'}"></div>
+        <div class="venc-body">
+          <div class="venc-desc">${p.descricao || descricao}</div>
+          <div class="venc-data">${fmtBR(p.vencimento)} · ${p.pago === 'true' ? 'Pago' : 'Em aberto'}</div>
+        </div>
+        <div class="venc-val">${fmt(p.valor)}</div>
+        ${p.pago !== 'true' ? `<button class="btn-ok" data-plan-parc="${p.id}" style="padding:7px 9px">Baixar</button>` : ''}
+      </div>
+    `).join('');
+    qsa('[data-plan-parc]').forEach(btn => {
+      btn.addEventListener('click', () => baixarParcelaPlanejamento(btn.dataset.planParc));
+    });
+  }catch(e){
+    qs('#plan-parc-list').innerHTML = '<div class="empty"><p>Erro ao carregar parcelas.</p></div>';
+  }
+}
+window.abrirParcelasPlanejamento = abrirParcelasPlanejamento;
+
+async function baixarParcelaPlanejamento(id){
+  if(!confirm('Confirmar baixa desta obrigação?')) return;
+  try{
+    const r = await post({
+      action:'pagarParcela',
+      token:state.token,
+      parcelaId:id,
+      registrarCaixa:true,
+      formaPagamento:'dinheiro',
+      observacoes:'Baixa pelo planejamento'
+    });
+    if(r.status !== 'ok') return toast(r.data?.message || 'Erro ao baixar.','err');
+    toast('Baixa registrada!','ok');
+    closeModal();
+    await Promise.all([loadVencHome(), updateStats(), loadCaixa(true)]);
+  }catch(e){
+    toast('Erro ao baixar.','err');
+  }
+}
+window.baixarParcelaPlanejamento = baixarParcelaPlanejamento;
 
 function renderCred(){
   const el = qs('#list-cred');
@@ -2476,7 +2618,7 @@ async function loadCred(){
   }catch(e){}
 }
 
-async function loadVencHome(){
+async function loadVencHomeLegacy(){
   try{
     const [venc, atras] = await Promise.all([
       api({ action:'getVencimentos', token:state.token }),
@@ -2526,6 +2668,99 @@ async function loadVencHome(){
     }
   }catch(e){}
 }
+
+async function loadVencHome(){
+  try{
+    const [venc, atras] = await Promise.all([
+      api({ action:'getVencimentos', token:state.token }),
+      api({ action:'getAtrasados', token:state.token })
+    ]);
+
+    const proximos = venc.status === 'ok' ? (venc.data || []) : [];
+    const atrasados = atras.status === 'ok' ? (atras.data || []) : [];
+    state.ui.vencItems = [...proximos, ...atrasados];
+
+    const cardHtml = v => {
+      const dias = Math.round((new Date(v.vencimento + 'T00:00:00') - new Date()) / (1000*60*60*24));
+      const cls = dias <= 2 ? 'err' : dias <= 5 ? 'warn' : 'ok';
+      const cardCls = dias <= 2 ? 'atrasado' : dias <= 5 ? 'urgente' : '';
+      return `
+        <div class="venc-card ${cardCls}" data-venc-id="${v.id}">
+          <div class="venc-dot ${cls}"></div>
+          <div class="venc-body">
+            <div class="venc-desc">${v.descricao || v.clienteNome || '—'}</div>
+            <div class="venc-data">Vence ${fmtBR(v.vencimento)} · ${v._tipo === 'despesa' ? 'Despesa' : 'A receber'}</div>
+          </div>
+          <div class="venc-val">${fmt(v.valor || v.valorParcela)}</div>
+          <button class="btn-ok btn-baixa-venc" data-id="${v.id}" style="padding:7px 9px">Baixar</button>
+        </div>
+      `;
+    };
+
+    const vel = qs('#home-venc');
+    vel.innerHTML = proximos.length
+      ? proximos.slice(0,6).map(cardHtml).join('')
+      : `<div style="font-size:12px;color:var(--ok);padding:8px 0;font-weight:500">Nenhum vencimento nos próximos 15 dias</div>`;
+
+    const ael = qs('#home-atrasados');
+    ael.innerHTML = atrasados.length
+      ? `
+        <div style="background:var(--err-bg);border:1.5px solid var(--err);border-radius:var(--r);padding:12px 14px;margin-bottom:16px">
+          <div style="font-size:10px;color:var(--err);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:8px">${atrasados.length} obrigação(ões) em atraso</div>
+          ${atrasados.slice(0,3).map(cardHtml).join('')}
+        </div>
+      `
+      : '';
+
+    qsa('.btn-baixa-venc').forEach(btn => {
+      btn.addEventListener('click', () => baixarVencimento(btn.dataset.id));
+    });
+  }catch(e){}
+}
+
+async function baixarVencimento(id){
+  let item = (state.ui.vencItems || []).find(v => String(v.id) === String(id));
+  if(!item){
+    const [venc, atras] = await Promise.all([
+      api({ action:'getVencimentos', token:state.token }),
+      api({ action:'getAtrasados', token:state.token })
+    ]);
+    item = [...(venc.data || []), ...(atras.data || [])].find(v => String(v.id) === String(id));
+  }
+  if(!item) return toast('Vencimento não encontrado.','err');
+
+  const desc = item.descricao || item.clienteNome || 'este vencimento';
+  if(!confirm(`Dar baixa em ${desc}?`)) return;
+
+  try{
+    const body = item._tipo === 'despesa'
+      ? {
+          action:'pagarParcela',
+          token:state.token,
+          parcelaId:item.id,
+          registrarCaixa:true,
+          formaPagamento:'dinheiro',
+          observacoes:'Baixa pelo painel inicial'
+        }
+      : {
+          action:'pagarCrediario',
+          token:state.token,
+          crediarioId:item.crediarioId,
+          valor:Number(item.valor) || 0,
+          parcela:item.numParcela || '',
+          observacoes:'Baixa pelo painel inicial'
+        };
+
+    const r = await post(body);
+    if(r.status !== 'ok') return toast(r.data?.message || 'Erro ao baixar.','err');
+
+    toast('Baixa registrada!','ok');
+    await Promise.all([loadVencHome(), updateStats(), loadCred(), loadCaixa(true)]);
+  }catch(e){
+    toast('Erro ao baixar.','err');
+  }
+}
+window.baixarVencimento = baixarVencimento;
 
 async function loadExtrato(){
   const params = { action:'getExtrato', token:state.token };
@@ -4563,7 +4798,7 @@ async function saveFiado(){
   }
 }
 
-function abrirPgtoFiado(id, nome, saldo, numParc){
+function abrirPgtoFiadoLegacy(id, nome, saldo, numParc){
   openModal(`
     <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:4px">Receber Pagamento</div>
     <div style="font-size:12px;color:var(--dim);margin-bottom:4px">${nome}</div>
@@ -4611,6 +4846,44 @@ async function registrarPgtoFiado(id){
     btnSv(btn, false);
   }
 }
+
+async function abrirPgtoFiado(id, nome, saldo, numParc){
+  let parcelas = [];
+  try{
+    const r = await api({ action:'getCrediarioMovs', token:state.token, crediarioId:id });
+    if(r.status === 'ok') parcelas = (r.data || []).filter(p => p.status === 'aberto');
+  }catch(_){}
+
+  const parcelaOptions = parcelas.length
+    ? `<select id="pg-parc" class="inp">
+        <option value="">Pagamento parcial / sem parcela</option>
+        ${parcelas.map(p => `<option value="${p.numParcela}" data-valor="${p.valor || 0}">Parcela ${p.numParcela} · ${fmt(p.valor)} · vence ${fmtBR(p.vencimento)}</option>`).join('')}
+      </select>`
+    : `<input id="pg-parc" type="number" class="inp" min="1" max="${numParc}" placeholder="Ex: 1"/>`;
+
+  openModal(`
+    <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:4px">Receber Pagamento</div>
+    <div style="font-size:12px;color:var(--dim);margin-bottom:4px">${nome}</div>
+    <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--err);font-weight:600;margin-bottom:20px">Saldo: ${fmt(saldo)}</div>
+    <div class="fg"><span class="lbl">Parcela</span>${parcelaOptions}</div>
+    <div class="fg"><span class="lbl">Valor recebido *</span><input id="pg-val" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
+    <div class="fg"><span class="lbl">Observações</span><input id="pg-obs" type="text" class="inp" placeholder="Opcional..."/></div>
+    <div class="dfooter"><button class="btn-sec" id="btn-cancel-pg">Cancelar</button><button class="btn-save" id="btn-confirm-pg">Confirmar</button></div>
+  `);
+
+  qs('#pg-val').addEventListener('input', e => applyValorMask(e.target));
+  qs('#pg-parc')?.addEventListener('change', e => {
+    const opt = e.target.selectedOptions?.[0];
+    if(opt?.dataset?.valor) setValorMask(qs('#pg-val'), opt.dataset.valor);
+  });
+  if(parcelas[0]){
+    qs('#pg-parc').value = parcelas[0].numParcela;
+    setValorMask(qs('#pg-val'), parcelas[0].valor);
+  }
+  qs('#btn-cancel-pg').addEventListener('click', closeModal);
+  qs('#btn-confirm-pg').addEventListener('click', () => registrarPgtoFiado(id));
+}
+window.abrirPgtoFiado = abrirPgtoFiado;
 
 async function saveConfig(){
   const nome = qs('#cfg-nome')?.value.trim();
