@@ -1177,6 +1177,7 @@ const state = {
     extUnlocked: false,
     planFiltro: 'todos',
     agPendentes: [],
+    agServicos: [],
     itensLanc: [],
     caixaItems: [],
     clienteSearch: '',
@@ -1367,6 +1368,7 @@ function closeDrawer(){
   qs('#drawer').classList.remove('open');
   qs('#doverlay').classList.remove('open');
   state.ui.editId = null;
+  state.ui.agServicos = [];
 }
 
 function openModal(html){
@@ -3557,6 +3559,75 @@ function openDrawerPlan(){
   qs('#btn-save-plan').addEventListener('click', savePlan);
 }
 
+function syncAgendamentoServicosInput(){
+  const input = qs('#ag-svc');
+  if(input) input.value = (state.ui.agServicos || []).map(s => s.nome).join(', ');
+}
+
+function updateAgendamentoDuracao(){
+  const dur = qs('#ag-dur');
+  if(!dur) return;
+  const total = (state.ui.agServicos || []).reduce((s, item) => s + (parseInt(item.duracaoMin, 10) || 0), 0);
+  if(total > 0) dur.value = total;
+}
+
+function renderAgendamentoServicos(){
+  const wrap = qs('#ag-svc-tags');
+  if(!wrap) return;
+  syncAgendamentoServicosInput();
+
+  if(!state.ui.agServicos?.length){
+    wrap.innerHTML = '<div style="font-size:11px;color:var(--dim)">Nenhum serviço adicionado.</div>';
+    return;
+  }
+
+  wrap.innerHTML = state.ui.agServicos.map((item, idx) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;margin-top:6px">
+      <div style="min-width:0">
+        <div style="font-size:13px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.nome}</div>
+        <div style="font-size:10px;color:var(--dim)">${item.duracaoMin || 0} min</div>
+      </div>
+      <button type="button" class="btn-remove-item" onclick="removeAgendamentoServico(${idx})">Remover</button>
+    </div>
+  `).join('');
+}
+
+function addAgendamentoServicoById(id){
+  const svc = state.db.servicos.find(s => String(s.id) === String(id));
+  if(!svc) return;
+  state.ui.agServicos.push({
+    id: svc.id,
+    nome: svc.nome,
+    duracaoMin: parseInt(svc.duracaoMin || 0, 10) || 0
+  });
+  renderAgendamentoServicos();
+  updateAgendamentoDuracao();
+}
+window.addAgendamentoServicoById = addAgendamentoServicoById;
+
+function removeAgendamentoServico(idx){
+  state.ui.agServicos.splice(idx, 1);
+  renderAgendamentoServicos();
+  updateAgendamentoDuracao();
+}
+window.removeAgendamentoServico = removeAgendamentoServico;
+
+function abrirSeletorServicoAgendamento(){
+  const svcOpts = state.db.servicos.filter(s => isAtivo(s.ativo));
+  let html = '<div style="font-family:Playfair Display,serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:16px">Adicionar serviço</div>';
+
+  if(!svcOpts.length){
+    html += '<div style="color:var(--dim);font-size:12px;padding:12px 0">Nenhum serviço cadastrado.</div>';
+  }else{
+    svcOpts.forEach(s => {
+      html += `<div onclick="addAgendamentoServicoById('${s.id}');closeModal()" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:15px;color:var(--text);font-weight:500">${s.nome}</span><span style="color:var(--dim);font-size:12px">${s.duracaoMin || 0} min</span></div>`;
+    });
+  }
+
+  html += '<button onclick="closeModal()" class="btn-sec" style="width:100%;margin-top:16px">Fechar</button>';
+  openModal(html);
+}
+
 async function savePlan(){
   const desc = qs('#pn-desc')?.value.trim();
   if(!desc) return toast('Descrição obrigatória.','err');
@@ -3605,8 +3676,8 @@ async function savePlan(){
 
 function openDrawerAgend(){
   state.ui.editId = null;
+  state.ui.agServicos = [];
   const cliOpts = buildClienteOptions();
-  const svcOpts = state.db.servicos.filter(s => isAtivo(s.ativo)).map(s => `<option value="${s.nome}">${s.nome} (${s.duracaoMin || 60}min)</option>`).join('');
   const colOpts = state.db.colaboradores.filter(c => isAtivo(c.ativo)).map(c => `<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
 
   openDrawer(`
@@ -3619,7 +3690,14 @@ function openDrawerAgend(){
         <div id="f-cli-dropdown" class="cli-dropdown"></div>
       </div>
     </div>
-    <div class="fg"><span class="lbl">Serviço</span><select id="ag-svc"><option value="">— Selecione —</option>${svcOpts}</select></div>
+    <div class="fg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span class="lbl" style="margin:0">Serviços</span>
+        <button type="button" id="btn-add-ag-svc" style="background:var(--gold-bg);border:1.5px solid var(--gold-dk);color:var(--gold-dk);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;letter-spacing:.5px;cursor:pointer">＋ Adicionar</button>
+      </div>
+      <input id="ag-svc" type="text" class="inp" placeholder="Selecione um ou mais serviços" readonly/>
+      <div id="ag-svc-tags" style="margin-top:6px"></div>
+    </div>
     <div class="fg"><span class="lbl">Colaboradora</span><select id="ag-col"><option value="">— Selecione —</option>${colOpts}</select></div>
     <div class="form-row">
       <div class="fg"><span class="lbl">Data *</span><input id="ag-d" type="date" class="inp"/></div>
@@ -3639,13 +3717,8 @@ function openDrawerAgend(){
   qs('#ag-val').addEventListener('input', e => applyValorMask(e.target));
   qs('#ag-d').value = qs('#ag-data')?.value || today();
   bindClienteSearch('#ag-cli-search', '#ag-cli');
-
-  // Auto-preenche duração ao selecionar serviço
-  qs('#ag-svc').addEventListener('change', () => {
-    const nomeSvc = qs('#ag-svc')?.value;
-    const svc = state.db.servicos.find(s => s.nome === nomeSvc);
-    if(svc && svc.duracaoMin) qs('#ag-dur').value = svc.duracaoMin;
-  });
+  qs('#btn-add-ag-svc').addEventListener('click', abrirSeletorServicoAgendamento);
+  renderAgendamentoServicos();
 
   qs('#btn-cancel-ag').addEventListener('click', closeDrawer);
   qs('#btn-save-ag').addEventListener('click', saveAgend);
@@ -3653,6 +3726,18 @@ function openDrawerAgend(){
 
 function editAgend(ag){
   state.ui.editId = ag.id;
+  state.ui.agServicos = String(ag.servicos || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean)
+    .map(nome => {
+      const svc = state.db.servicos.find(item => item.nome === nome);
+      return {
+        id: svc?.id || '',
+        nome,
+        duracaoMin: parseInt(svc?.duracaoMin || 0, 10) || 0
+      };
+    });
   const cliOpts = buildClienteOptions(ag.clienteId);
   const colOpts = state.db.colaboradores.filter(c => isAtivo(c.ativo)).map(c => `<option value="${c.id}|${c.nome}" ${c.id === ag.colaboradorId ? 'selected' : ''}>${c.nome}</option>`).join('');
 
@@ -3666,7 +3751,14 @@ function editAgend(ag){
         <div id="f-cli-dropdown" class="cli-dropdown"></div>
       </div>
     </div>
-    <div class="fg"><span class="lbl">Serviços</span><input id="ag-svc" type="text" class="inp" value="${ag.servicos || ''}"/></div>
+    <div class="fg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span class="lbl" style="margin:0">Serviços</span>
+        <button type="button" id="btn-add-ag-svc" style="background:var(--gold-bg);border:1.5px solid var(--gold-dk);color:var(--gold-dk);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;letter-spacing:.5px;cursor:pointer">＋ Adicionar</button>
+      </div>
+      <input id="ag-svc" type="text" class="inp" value="${ag.servicos || ''}" readonly/>
+      <div id="ag-svc-tags" style="margin-top:6px"></div>
+    </div>
     <div class="fg"><span class="lbl">Colaboradora</span><select id="ag-col"><option value="">— Selecione —</option>${colOpts}</select></div>
     <div class="form-row">
       <div class="fg"><span class="lbl">Data</span><input id="ag-d" type="date" class="inp"/></div>
@@ -3695,6 +3787,8 @@ function editAgend(ag){
   qs('#ag-val').addEventListener('input', e => applyValorMask(e.target));
   qs('#ag-d').value = String(ag.data).slice(0,10);
   setTimeout(() => setValorMask(qs('#ag-val'), ag.valor), 20);
+  qs('#btn-add-ag-svc').addEventListener('click', abrirSeletorServicoAgendamento);
+  renderAgendamentoServicos();
 
   qs('#btn-cancel-ag').addEventListener('click', closeDrawer);
   qs('#btn-del-ag').addEventListener('click', () => { const id = ag.id; closeDrawer(); delAgend(id); });
