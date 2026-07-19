@@ -164,3 +164,53 @@ test('Apps Script deployment includes the shared backend rules', () => {
   assert.match(readme, /Sempre publique o backend antes do frontend/);
   assert.match(readme, /reverta primeiro a Vercel[\s\S]*versão anterior do Web App/);
 });
+
+test('Central de Relacionamento tem navegação, filtros e resumo', () => {
+  assert.match(html, /data-go="relacionamento"/);
+  assert.match(html, /id="page-relacionamento"/);
+  assert.match(html, /function loadRelacionamento\(/);
+  assert.match(html, /function renderRelacionamento\(/);
+  assert.match(html, /id="rel-fila"/);
+  assert.match(html, /id="rel-etapa"/);
+  assert.match(html, /relacionamentoResumo/);
+});
+
+test('WhatsApp assistido só registra depois da confirmação humana', () => {
+  assert.match(html, /https:\/\/wa\.me\//);
+  assert.match(html, /function abrirWhatsAppRelacionamento\(/);
+  assert.match(html, /function confirmarContatoRelacionamento\(/);
+  assert.match(html, /Confirma que a mensagem foi enviada/);
+  assert.match(html, /action:'confirmarContato'/);
+});
+
+test('conclusão envia próximo retorno ou escolha explícita sem retorno', () => {
+  assert.match(html, /id="ag-retorno-data"/);
+  assert.match(html, /id="ag-sem-retorno"/);
+  assert.match(html, /returnRecommendation:/);
+  assert.match(html, /semRetorno:/);
+});
+
+test('campanhas usam público explícito filtrado no frontend', () => {
+  assert.match(html, /function abrirCampanhaRelacionamento\(/);
+  assert.match(html, /function filtrarPublicoCampanha\(/);
+  assert.match(html, /optedOut \|\| !\/\^55\\d\{10,11\}\$\//);
+  assert.match(html, /action:'saveCampanha'/);
+  assert.match(html, /action:'generateCampanha'/);
+  assert.match(html, /clienteIds:/);
+});
+
+test('gaveta mantém largura confortável em telas grandes', () => {
+  assert.match(html, /#drawer\{[\s\S]*?width:min\(720px,100%\);margin:0 auto;/);
+});
+
+test('fixture visual cobre filas, histórico e campanhas', () => {
+  for (const action of [
+    'getRelacionamento','getRelacionamentoResumo','getRelacionamentoEventos','getCampanhas'
+  ]) {
+    assert.match(visualFixture, new RegExp(action));
+  }
+  assert.match(visualFixture, /telefoneValido:\s*false/);
+  assert.match(visualFixture, /fila:\s*'recuperacao'/);
+  assert.match(visualFixture, /fila:\s*'aniversario'/);
+  assert.match(visualFixture, /fila:\s*'campanha'/);
+});

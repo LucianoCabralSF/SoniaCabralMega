@@ -264,6 +264,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 #doverlay.open{opacity:1;pointer-events:auto}
 #drawer{
   position:fixed;bottom:0;left:0;right:0;background:var(--bg2);
+  width:min(720px,100%);margin:0 auto;
   border-top:2px solid var(--gold-dk);border-radius:20px 20px 0 0;z-index:101;
   padding:20px 20px calc(20px + env(safe-area-inset-bottom));
   transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,0,1);
@@ -863,6 +864,37 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 #btn-ext-ver-mes,#btn-ext-ver-per{min-height:52px;min-width:64px;flex:0 0 auto!important}
 .ext-periodo select{min-width:0}
 
+/* Central de Relacionamento */
+.rel-head-actions{display:flex;align-items:center;gap:8px}
+.rel-summary{display:grid;grid-template-columns:repeat(5,minmax(110px,1fr));gap:10px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px}
+.rel-metric{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;box-shadow:var(--shadow);min-width:110px}
+.rel-metric strong{display:block;font-family:'Playfair Display',serif;font-size:24px;color:var(--dark)}
+.rel-metric span{display:block;color:var(--dim);font-size:12px;line-height:1.3}
+.rel-filters{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:14px;box-shadow:var(--shadow)}
+.rel-filter-grid{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:8px}
+.rel-filter-grid .fg{margin-bottom:0}
+.rel-filter-grid select,.rel-filter-grid input{min-width:0}
+.rel-table{display:flex;flex-direction:column;gap:8px}
+.rel-row{display:grid;grid-template-columns:minmax(180px,1.35fr) minmax(150px,1fr) minmax(150px,1fr) minmax(260px,1.4fr);gap:12px;align-items:center;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px;box-shadow:var(--shadow)}
+.rel-name{font-weight:700;color:var(--dark);font-size:16px}.rel-meta{font-size:13px;color:var(--dim);margin-top:2px}
+.rel-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.rel-pill{font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px;background:var(--bg4);color:var(--dim)}
+.rel-pill.stage{background:var(--azul-bg);color:var(--azul-dk)}.rel-pill.recovery{background:var(--err-bg);color:var(--err)}
+.rel-message{font-size:13px;color:var(--dim);line-height:1.45;overflow-wrap:anywhere}
+.rel-actions{display:flex;flex-wrap:wrap;gap:6px}.rel-actions button{min-height:38px;padding:8px 10px;border-radius:9px;font-size:13px;font-weight:700}
+.rel-whatsapp{background:var(--ok-bg);color:var(--ok);border:1px solid rgba(26,122,60,.3)}.rel-whatsapp:disabled{opacity:.45;cursor:not-allowed}
+.rel-stage-btn{background:var(--azul-bg);color:var(--azul-dk);border:1px solid rgba(24,119,242,.25)}
+.rel-history{background:var(--bg4);color:var(--dim);border:1px solid var(--border)}
+.rel-campaign-clients{max-height:280px;overflow:auto;border:1px solid var(--border);border-radius:var(--r);background:var(--bg3)}
+.rel-client-check{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer}.rel-client-check:last-child{border-bottom:0}
+.rel-client-check input{margin-top:4px;accent-color:var(--azul)}
+@media(max-width:760px){
+  .rel-summary{grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}
+  .rel-filter-grid{grid-template-columns:1fr 1fr}
+  .rel-row{display:block}.rel-row>div{margin-bottom:10px}.rel-row>div:last-child{margin-bottom:0}
+  .rel-actions button{flex:1 1 auto}
+}
+@media(max-width:420px){.rel-filter-grid{grid-template-columns:1fr}.rel-head-actions .btn-sec{padding:9px 10px;font-size:13px}}
+
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1025,6 +1057,46 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <div class="card-list" id="list-cli"></div>
     </div>
 
+    <div class="page" id="page-relacionamento">
+      <div class="ph">
+        <div style="display:flex;align-items:center;min-width:0">
+          <button class="icon-btn btn-back-mais" aria-label="Voltar" style="background:var(--bg3);border:1.5px solid var(--border);padding:8px;border-radius:10px;margin-right:8px;color:var(--dim)">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="ptitle">Relacionamento</div>
+        </div>
+        <div class="rel-head-actions">
+          <button class="btn-sec" id="btn-rel-campanha" type="button">Nova campanha</button>
+          <button class="icon-btn" id="btn-reload-rel" type="button" aria-label="Atualizar relacionamento" style="background:var(--bg2);border:1.5px solid var(--border);padding:10px;border-radius:var(--r);color:var(--dim)">
+            <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="rel-summary" id="rel-resumo" aria-live="polite"></div>
+      <div class="rel-filters">
+        <div class="rel-filter-grid">
+          <div class="fg"><label class="lbl" for="rel-fila">Fila</label><select id="rel-fila">
+            <option value="todas">Todas</option><option value="proximo">Retornos próximos</option>
+            <option value="recuperacao">Recuperar clientes</option><option value="aniversario">Aniversariantes</option>
+            <option value="campanha">Campanhas</option><option value="inapto">Contato bloqueado</option>
+          </select></div>
+          <div class="fg"><label class="lbl" for="rel-etapa">Etapa</label><select id="rel-etapa">
+            <option value="todas">Todas</option><option value="pendente">Pendente</option><option value="contatada">Contatada</option>
+            <option value="respondeu">Respondeu</option><option value="agendou">Agendou</option><option value="retornou">Retornou</option>
+          </select></div>
+          <div class="fg"><label class="lbl" for="rel-origem">Origem</label><select id="rel-origem">
+            <option value="todas">Todas</option><option value="retorno">Retorno</option><option value="aniversario">Aniversário</option><option value="campanha">Campanha</option>
+          </select></div>
+          <div class="fg"><label class="lbl" for="rel-campanha">Campanha</label><select id="rel-campanha"><option value="todas">Todas</option></select></div>
+          <div class="fg"><label class="lbl" for="rel-atraso">Atraso mínimo</label><input id="rel-atraso" type="number" min="0" placeholder="0 dias"></div>
+          <div class="fg"><label class="lbl" for="rel-periodo-inicio">De</label><input id="rel-periodo-inicio" type="date"></div>
+          <div class="fg"><label class="lbl" for="rel-periodo-fim">Até</label><input id="rel-periodo-fim" type="date"></div>
+          <div class="fg"><label class="lbl" for="rel-busca">Cliente</label><input id="rel-busca" type="search" placeholder="Nome ou telefone"></div>
+        </div>
+      </div>
+      <div id="rel-list" class="rel-table" aria-live="polite"></div>
+    </div>
+
     <div class="page" id="page-crediario">
       <div class="ph">
         <div class="ptitle">Fiado</div>
@@ -1097,6 +1169,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
         <button class="qb" data-go="planejamento">
           <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           Planej.
+        </button>
+        <button class="qb" data-go="relacionamento" data-view="relacionamento">
+          <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3v-7a4 4 0 0 1-1-2.65V7a4 4 0 0 1 4-4h11a4 4 0 0 1 4 4z"/><path d="M8 9h8M8 13h5"/></svg>
+          Relacionamento
         </button>
         <button class="qb" data-go="config">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -1368,6 +1444,9 @@ const state = {
     crediario: [],
     planejamento: [],
     planParcelas: [],
+    relacionamento: [],
+    relacionamentoResumo: {},
+    campanhas: [],
     config: {}
   },
   ui: {
@@ -1379,6 +1458,13 @@ const state = {
     extModo: 'mes',
     extUnlocked: false,
     planFiltro: 'todos',
+    relFila: 'todas',
+    relEtapa: 'todas',
+    relOrigem: 'todas',
+    relCampanha: 'todas',
+    relCampaignAppointments: [],
+    relCampaignSelected: [],
+    agOportunidadeId: '',
     agPendentes: [],
     agServicos: [],
     itensLanc: [],
@@ -1402,7 +1488,7 @@ const state = {
   }
 };
 
-const subPages = ['servicos','produtos','colaboradores','config','extrato','planejamento','crediario'];
+const subPages = ['servicos','produtos','colaboradores','config','extrato','planejamento','crediario','relacionamento'];
 
 const svgEdit = `<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Editar`;
 const svgDel = `<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Excluir`;
@@ -1682,6 +1768,7 @@ function closeDrawer(){
   qs('#doverlay').classList.remove('open');
   state.ui.editId = null;
   state.ui.agServicos = [];
+  state.ui.agOportunidadeId = '';
   state.ui.itensLanc = [];
   state.ui.editOrig = null;
   state.runtime.lastDrawerFocus?.focus?.();
@@ -1968,6 +2055,317 @@ async function updateStats(){
   }catch(_){}
 }
 
+function relLabel(value){
+  return {
+    pendente:'Pendente', contatada:'Contatada', respondeu:'Respondeu', agendou:'Agendou', retornou:'Retornou',
+    proximo:'Retorno próximo', recuperacao:'Recuperar', aniversario:'Aniversário', campanha:'Campanha',
+    inapto:'Contato bloqueado', encerrado:'Encerrada', retorno:'Retorno'
+  }[value] || value || '—';
+}
+
+function renderRelacionamentoResumo(){
+  const root = qs('#rel-resumo');
+  if(!root) return;
+  const resumo = state.db.relacionamentoResumo || {};
+  const metrics = [
+    ['elegiveis','Oportunidades'],['contatadas','Contatadas'],['responderam','Responderam'],
+    ['agendaram','Agendaram'],['retornaram','Retornaram']
+  ];
+  root.innerHTML = metrics.map(([key,label]) =>
+    `<div class="rel-metric"><strong>${Number(resumo[key]) || 0}</strong><span>${safe(label)}</span></div>`
+  ).join('');
+}
+
+function renderRelacionamentoCampanhas(){
+  const select = qs('#rel-campanha');
+  if(!select) return;
+  const current = state.ui.relCampanha || 'todas';
+  select.innerHTML = '<option value="todas">Todas</option>' + (state.db.campanhas || []).map(campaign =>
+    `<option value="${attr(campaign.id)}">${safe(campaign.nome || 'Campanha')}</option>`
+  ).join('');
+  select.value = (state.db.campanhas || []).some(item => item.id === current) ? current : 'todas';
+}
+
+function itensRelacionamentoFiltrados(){
+  const search = String(qs('#rel-busca')?.value || '').trim().toLocaleLowerCase('pt-BR');
+  const delay = Math.max(0, parseInt(qs('#rel-atraso')?.value || '0', 10) || 0);
+  const start = qs('#rel-periodo-inicio')?.value || '';
+  const end = qs('#rel-periodo-fim')?.value || '';
+  return (state.db.relacionamento || []).filter(item => {
+    if(state.ui.relFila !== 'todas' && item.fila !== state.ui.relFila) return false;
+    if(state.ui.relEtapa !== 'todas' && item.etapa !== state.ui.relEtapa) return false;
+    if(state.ui.relOrigem !== 'todas' && item.origem !== state.ui.relOrigem) return false;
+    if(state.ui.relCampanha !== 'todas' && item.campanhaId !== state.ui.relCampanha) return false;
+    if(delay && (Number(item.diasAtraso) || 0) < delay) return false;
+    if(start && String(item.dataAlvo || '') < start) return false;
+    if(end && String(item.dataAlvo || '') > end) return false;
+    if(search){
+      const haystack = `${item.clienteNome || ''} ${item.telefoneWhatsApp || ''}`.toLocaleLowerCase('pt-BR');
+      if(!haystack.includes(search)) return false;
+    }
+    return true;
+  });
+}
+
+function renderRelacionamento(){
+  renderRelacionamentoResumo();
+  renderRelacionamentoCampanhas();
+  const root = qs('#rel-list');
+  if(!root) return;
+  const items = itensRelacionamentoFiltrados();
+  root.innerHTML = items.map(item => {
+    const phoneLabel = item.telefoneWhatsApp || 'Telefone indisponível';
+    const lastService = item.ultimoServico
+      ? `${item.ultimoAtendimento ? fmtBR(item.ultimoAtendimento) + ' · ' : ''}${item.ultimoServico}`
+      : 'Sem atendimento concluído no histórico';
+    const queueClass = item.fila === 'recuperacao' ? ' recovery' : '';
+    const canSchedule = item.etapa === 'contatada' || item.etapa === 'respondeu';
+    return `<article class="rel-row" data-rel-row="${attr(item.id)}">
+      <div>
+        <div class="rel-name">${safe(item.clienteNome || 'Cliente')}</div>
+        <div class="rel-meta">${safe(phoneLabel)}</div>
+        <div class="rel-pills"><span class="rel-pill${queueClass}">${safe(relLabel(item.fila))}</span><span class="rel-pill stage">${safe(relLabel(item.etapa))}</span></div>
+      </div>
+      <div><div class="rel-meta">Data-alvo</div><strong>${safe(fmtBR(item.dataAlvo) || '—')}</strong><div class="rel-meta">${safe(relLabel(item.origem))}${item.diasAtraso ? ` · ${Number(item.diasAtraso)} dias de atraso` : ''}</div></div>
+      <div><div class="rel-meta">Último atendimento</div><div>${safe(lastService)}</div><div class="rel-message">${safe(item.mensagemSugerida || '')}</div></div>
+      <div class="rel-actions">
+        <button type="button" class="rel-whatsapp" data-rel-action="whatsapp" data-id="${attr(item.id)}" ${item.telefoneValido ? '' : 'disabled'}>WhatsApp</button>
+        ${item.etapa !== 'respondeu' && item.etapa !== 'retornou' ? `<button type="button" class="rel-stage-btn" data-rel-action="stage" data-stage="respondeu" data-id="${attr(item.id)}">Respondeu</button>` : ''}
+        ${canSchedule ? `<button type="button" class="rel-stage-btn" data-rel-action="schedule" data-id="${attr(item.id)}">Agendar</button>` : ''}
+        ${item.etapa !== 'retornou' ? `<button type="button" class="rel-stage-btn" data-rel-action="stage" data-stage="retornou" data-id="${attr(item.id)}">Retornou</button>` : ''}
+        <button type="button" class="rel-history" data-rel-action="history" data-id="${attr(item.id)}">Histórico</button>
+      </div>
+    </article>`;
+  }).join('') || '<div class="empty"><div class="empty-icon">💬</div><p>Nenhuma oportunidade com estes filtros.</p></div>';
+  prepareDynamicUi(root);
+}
+
+async function loadRelacionamento(){
+  const root = qs('#rel-list');
+  if(root) root.innerHTML = '<div class="empty"><div class="spinner" style="margin:0 auto 12px"></div><p>Atualizando relacionamento…</p></div>';
+  try{
+    const [items,resumo,campanhas] = await Promise.all([
+      api({ action:'getRelacionamento', token:state.token }),
+      api({ action:'getRelacionamentoResumo', token:state.token }),
+      api({ action:'getCampanhas', token:state.token })
+    ]);
+    if([items,resumo,campanhas].some(result => result.status !== 'ok')) {
+      throw new Error('Falha ao atualizar o relacionamento.');
+    }
+    state.db.relacionamento = items.data || [];
+    state.db.relacionamentoResumo = resumo.data || {};
+    state.db.campanhas = campanhas.data || [];
+    renderRelacionamento();
+  }catch(error){
+    if(root) root.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><p>Não foi possível atualizar o relacionamento.</p></div>';
+    toast('Não foi possível atualizar o relacionamento.','err');
+  }
+}
+
+async function salvarEtapaRelacionamento(id, stage){
+  try{
+    const result = await post({
+      action:'saveRelacionamentoEtapa', token:state.token, id, etapa:stage,
+      idempotencyKey:SoniaRules.makeIdempotencyKey('relstage')
+    });
+    if(result.status !== 'ok') return toast(result.data?.message || 'Etapa não atualizada.','err');
+    toast(`Etapa alterada para ${relLabel(stage)}.`,'ok');
+    await loadRelacionamento();
+  }catch(_){ toast('Etapa não atualizada.','err'); }
+}
+
+async function abrirHistoricoRelacionamento(id){
+  const item = (state.db.relacionamento || []).find(row => String(row.id) === String(id));
+  openDrawer('<div class="dtitle">Histórico</div><div class="empty"><div class="spinner" style="margin:0 auto 12px"></div><p>Carregando…</p></div>');
+  try{
+    const result = await api({ action:'getRelacionamentoEventos', token:state.token, oportunidadeId:id });
+    if(result.status !== 'ok') throw new Error('Histórico indisponível.');
+    const events = result.data || [];
+    openDrawer(`<div class="dtitle">Histórico de ${safe(item?.clienteNome || 'cliente')}</div>
+      ${events.map(event => `<div class="cred-card"><div class="cred-hdr"><strong>${safe(relLabel(event.etapaNova) || event.tipo || 'Evento')}</strong><span class="rel-meta">${safe(String(event.dataHora || '').replace('T',' '))}</span></div><div class="rel-meta">${safe(event.origemAlteracao || '')}${event.observacoes ? ' · ' + safe(event.observacoes) : ''}</div>${event.mensagem ? `<div class="rel-message" style="margin-top:8px">${safe(event.mensagem)}</div>` : ''}</div>`).join('') || '<div class="empty"><p>Nenhum evento registrado.</p></div>'}
+      <button type="button" class="btn-sec" id="btn-close-rel-history" style="width:100%;margin-top:12px">Fechar</button>`);
+    qs('#btn-close-rel-history').addEventListener('click', closeDrawer);
+  }catch(_){
+    openDrawer('<div class="dtitle">Histórico</div><div class="empty"><p>Histórico indisponível.</p></div><button type="button" class="btn-sec" id="btn-close-rel-history" style="width:100%">Fechar</button>');
+    qs('#btn-close-rel-history').addEventListener('click', closeDrawer);
+  }
+}
+
+function abrirWhatsAppRelacionamento(id){
+  const item = (state.db.relacionamento || []).find(row => String(row.id) === String(id));
+  if(!item || !item.telefoneValido) return toast('Telefone inválido ou contato bloqueado.','err');
+  openDrawer(`<div class="dtitle">Mensagem para ${safe(item.clienteNome || 'cliente')}</div>
+    <div class="fg"><label class="lbl" for="rel-message-edit">Revise antes de abrir o WhatsApp</label><textarea id="rel-message-edit" maxlength="2000">${safe(item.mensagemSugerida || '')}</textarea></div>
+    <div class="dfooter"><button type="button" class="btn-sec" id="btn-cancel-rel-message">Cancelar</button><button type="button" class="btn-save" id="btn-open-rel-whatsapp">Abrir WhatsApp</button></div>`);
+  qs('#btn-cancel-rel-message').addEventListener('click', closeDrawer);
+  qs('#btn-open-rel-whatsapp').addEventListener('click', () => {
+    const message = qs('#rel-message-edit')?.value.trim() || '';
+    if(!message) return toast('Escreva a mensagem antes de continuar.','err');
+    window.open('https://wa.me/' + item.telefoneWhatsApp + '?text=' + encodeURIComponent(message), '_blank', 'noopener');
+    closeDrawer();
+    openModal(`<div class="dtitle">Confirmar envio</div><p style="color:var(--dim);margin:12px 0 20px">Confirma que a mensagem foi enviada?</p><div class="dfooter"><button type="button" class="btn-sec" id="btn-rel-not-sent">Ainda não</button><button type="button" class="btn-save" id="btn-rel-sent">Sim, foi enviada</button></div>`);
+    qs('#btn-rel-not-sent').addEventListener('click', closeModal);
+    qs('#btn-rel-sent').addEventListener('click', () => confirmarContatoRelacionamento(id, message));
+  });
+}
+
+async function confirmarContatoRelacionamento(id, message){
+  const button = qs('#btn-rel-sent');
+  if(button) btnSv(button, true, 'Confirmando');
+  try{
+    const result = await post({
+      action:'confirmarContato', token:state.token, id, mensagem:message,
+      idempotencyKey:SoniaRules.makeIdempotencyKey('relcontact')
+    });
+    if(result.status !== 'ok'){
+      if(button) btnSv(button, false, 'Sim, foi enviada');
+      return toast(result.data?.message || 'Contato não confirmado.','err');
+    }
+    closeModal();
+    toast('Contato confirmado.','ok');
+    await loadRelacionamento();
+  }catch(_){
+    if(button) btnSv(button, false, 'Sim, foi enviada');
+    toast('Contato não confirmado.','err');
+  }
+}
+
+function agendarDoRelacionamento(id){
+  const item = (state.db.relacionamento || []).find(row => String(row.id) === String(id));
+  if(!item) return toast('Oportunidade não encontrada.','err');
+  openDrawerAgend(item);
+}
+
+function campanhaUltimoAtendimentoPorCliente(){
+  const result = {};
+  (state.ui.relCampaignAppointments || []).filter(item => item.status === 'concluido').forEach(item => {
+    const current = result[String(item.clienteId)];
+    const stamp = `${String(item.data || '').slice(0,10)}T${item.hora || ''}`;
+    const currentStamp = current ? `${String(current.data || '').slice(0,10)}T${current.hora || ''}` : '';
+    if(!current || stamp > currentStamp) result[String(item.clienteId)] = item;
+  });
+  return result;
+}
+
+function filtrarPublicoCampanha(){
+  const root = qs('#rel-campaign-clients');
+  if(!root) return [];
+  qsa('input[data-campaign-client]:checked', root).forEach(input => {
+    if(!state.ui.relCampaignSelected.includes(input.value)) state.ui.relCampaignSelected.push(input.value);
+  });
+  const search = String(qs('#rel-campaign-search')?.value || '').trim().toLocaleLowerCase('pt-BR');
+  const service = String(qs('#rel-campaign-service')?.value || '').trim().toLocaleLowerCase('pt-BR');
+  const birthdayMonth = qs('#rel-campaign-birthday')?.value || '';
+  const start = qs('#rel-campaign-last-start')?.value || '';
+  const end = qs('#rel-campaign-last-end')?.value || '';
+  const recoveryOnly = !!qs('#rel-campaign-recovery')?.checked;
+  const lastByClient = campanhaUltimoAtendimentoPorCliente();
+  const recoveryIds = new Set((state.db.relacionamento || []).filter(item => item.fila === 'recuperacao').map(item => String(item.clienteId)));
+  const clients = (state.db.clientes || []).filter(client => {
+    const last = lastByClient[String(client.id)] || {};
+    const phoneDigits = String(client.telefone || '').replace(/\D/g,'');
+    const whatsapp = phoneDigits.length === 10 || phoneDigits.length === 11 ? `55${phoneDigits}` : phoneDigits;
+    const optedOut = client.naoContatar === true || String(client.naoContatar || '').toLowerCase() === 'true';
+    const haystack = `${client.nome || ''} ${client.telefone || ''}`.toLocaleLowerCase('pt-BR');
+    const birthday = String(client.aniversario || '');
+    const monthMatch = birthday.match(/^\d{2}\/(\d{2})/) || birthday.match(/^\d{4}-(\d{2})/);
+    if(optedOut || !/^55\d{10,11}$/.test(whatsapp)) return false;
+    if(search && !haystack.includes(search)) return false;
+    if(service && !String(last.servicos || '').toLocaleLowerCase('pt-BR').includes(service)) return false;
+    if(birthdayMonth && (!monthMatch || monthMatch[1] !== birthdayMonth)) return false;
+    if(start && (!last.data || String(last.data).slice(0,10) < start)) return false;
+    if(end && (!last.data || String(last.data).slice(0,10) > end)) return false;
+    if(recoveryOnly && !recoveryIds.has(String(client.id))) return false;
+    return true;
+  });
+  root.innerHTML = clients.map(client => {
+    const last = lastByClient[String(client.id)] || {};
+    const checked = state.ui.relCampaignSelected.includes(String(client.id)) ? 'checked' : '';
+    return `<label class="rel-client-check"><input type="checkbox" data-campaign-client value="${attr(client.id)}" ${checked}><span><strong>${safe(client.nome || 'Cliente')}</strong><span class="rel-meta" style="display:block">${safe(client.telefone || 'Sem telefone')}${last.data ? ` · ${safe(fmtBR(last.data))} · ${safe(last.servicos || '')}` : ' · sem atendimento concluído'}</span></span></label>`;
+  }).join('') || '<div class="empty"><p>Nenhuma cliente corresponde aos filtros.</p></div>';
+  const count = qs('#rel-campaign-count');
+  if(count) count.textContent = `${clients.length} cliente(s) visível(is) · ${state.ui.relCampaignSelected.length} selecionada(s)`;
+  return clients;
+}
+
+function selecionarPublicoCampanhaVisivel(){
+  qsa('input[data-campaign-client]', qs('#rel-campaign-clients')).forEach(input => {
+    input.checked = true;
+    if(!state.ui.relCampaignSelected.includes(input.value)) state.ui.relCampaignSelected.push(input.value);
+  });
+  filtrarPublicoCampanha();
+}
+
+async function abrirCampanhaRelacionamento(){
+  openDrawer('<div class="dtitle">Nova campanha</div><div class="empty"><div class="spinner" style="margin:0 auto 12px"></div><p>Preparando público…</p></div>');
+  const startDate = new Date();
+  startDate.setFullYear(startDate.getFullYear() - 3);
+  const historyStart = localISO(startDate);
+  try{
+    const appointments = await api({ action:'getAgendamentos', token:state.token, dataInicio:historyStart, dataFim:today() });
+    state.ui.relCampaignAppointments = appointments.status === 'ok' ? appointments.data || [] : [];
+  }catch(_){ state.ui.relCampaignAppointments = []; }
+  state.ui.relCampaignSelected = [];
+  const finish = new Date(); finish.setDate(finish.getDate() + 30);
+  openDrawer(`<div class="dtitle">Nova campanha</div>
+    <div class="fg"><label class="lbl" for="rel-campaign-name">Nome</label><input id="rel-campaign-name" maxlength="120" placeholder="Ex.: Clientes de julho"></div>
+    <div class="fg"><label class="lbl" for="rel-campaign-message">Mensagem</label><textarea id="rel-campaign-message" maxlength="2000" placeholder="Use {nome}, {ultimoServico} ou {dataAlvo}">Olá, {nome}! Preparamos uma condição especial para você.</textarea></div>
+    <div class="form-row"><div class="fg"><label class="lbl" for="rel-campaign-start">Início</label><input id="rel-campaign-start" type="date" value="${attr(today())}"></div><div class="fg"><label class="lbl" for="rel-campaign-end">Fim</label><input id="rel-campaign-end" type="date" value="${attr(localISO(finish))}"></div></div>
+    <div class="slabel" style="margin:16px 0 8px">Filtrar público</div>
+    <div class="form-row"><div class="fg"><label class="lbl" for="rel-campaign-search">Cliente</label><input id="rel-campaign-search" type="search" placeholder="Nome ou telefone"></div><div class="fg"><label class="lbl" for="rel-campaign-service">Último serviço</label><input id="rel-campaign-service" placeholder="Ex.: Mega-Hair"></div></div>
+    <div class="form-row"><div class="fg"><label class="lbl" for="rel-campaign-birthday">Mês do aniversário</label><select id="rel-campaign-birthday"><option value="">Todos</option>${MESES.map((name,index) => `<option value="${String(index+1).padStart(2,'0')}">${safe(name)}</option>`).join('')}</select></div><div class="fg" style="justify-content:flex-end"><label style="display:flex;gap:8px;align-items:center;min-height:52px"><input id="rel-campaign-recovery" type="checkbox"> Somente retornos atrasados</label></div></div>
+    <div class="form-row"><div class="fg"><label class="lbl" for="rel-campaign-last-start">Último atendimento de</label><input id="rel-campaign-last-start" type="date"></div><div class="fg"><label class="lbl" for="rel-campaign-last-end">Até</label><input id="rel-campaign-last-end" type="date"></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0"><span id="rel-campaign-count" class="rel-meta"></span><button type="button" class="btn-sec" id="btn-rel-select-visible">Selecionar visíveis</button></div>
+    <div id="rel-campaign-clients" class="rel-campaign-clients"></div>
+    <div class="dfooter"><button type="button" class="btn-sec" id="btn-cancel-rel-campaign">Cancelar</button><button type="button" class="btn-save" id="btn-save-rel-campaign">Criar campanha</button></div>`);
+  ['#rel-campaign-search','#rel-campaign-service','#rel-campaign-birthday','#rel-campaign-recovery','#rel-campaign-last-start','#rel-campaign-last-end'].forEach(selector => {
+    const control = qs(selector);
+    control?.addEventListener(control.matches('input[type="search"],input:not([type="checkbox"])') ? 'input' : 'change', filtrarPublicoCampanha);
+  });
+  qs('#rel-campaign-clients').addEventListener('change', event => {
+    const input = event.target.closest('input[data-campaign-client]');
+    if(!input) return;
+    state.ui.relCampaignSelected = input.checked
+      ? Array.from(new Set([...state.ui.relCampaignSelected, input.value]))
+      : state.ui.relCampaignSelected.filter(id => id !== input.value);
+    const count = qs('#rel-campaign-count');
+    if(count) count.textContent = `${qsa('input[data-campaign-client]', qs('#rel-campaign-clients')).length} cliente(s) visível(is) · ${state.ui.relCampaignSelected.length} selecionada(s)`;
+  });
+  qs('#btn-rel-select-visible').addEventListener('click', selecionarPublicoCampanhaVisivel);
+  qs('#btn-cancel-rel-campaign').addEventListener('click', closeDrawer);
+  qs('#btn-save-rel-campaign').addEventListener('click', salvarCampanhaRelacionamento);
+  filtrarPublicoCampanha();
+}
+
+async function salvarCampanhaRelacionamento(){
+  const name = qs('#rel-campaign-name')?.value.trim() || '';
+  const message = qs('#rel-campaign-message')?.value.trim() || '';
+  const selected = Array.from(new Set(state.ui.relCampaignSelected));
+  if(!name) return toast('Informe o nome da campanha.','err');
+  if(!message) return toast('Informe a mensagem da campanha.','err');
+  if(!selected.length) return toast('Selecione ao menos uma cliente.','err');
+  const button = qs('#btn-save-rel-campaign');
+  btnSv(button, true, 'Criando');
+  const criteria = {
+    busca:qs('#rel-campaign-search')?.value || '', servico:qs('#rel-campaign-service')?.value || '',
+    aniversarioMes:qs('#rel-campaign-birthday')?.value || '', recuperacao:!!qs('#rel-campaign-recovery')?.checked,
+    ultimoAtendimentoInicio:qs('#rel-campaign-last-start')?.value || '', ultimoAtendimentoFim:qs('#rel-campaign-last-end')?.value || ''
+  };
+  try{
+    const saved = await post({ action:'saveCampanha', token:state.token, nome:name, mensagemModelo:message,
+      dataInicio:qs('#rel-campaign-start')?.value || today(), dataFim:qs('#rel-campaign-end')?.value || today(), criterios:criteria, status:'ativa' });
+    if(saved.status !== 'ok') throw new Error(saved.data?.message || 'Campanha não salva.');
+    const generated = await post({ action:'generateCampanha', token:state.token, campanhaId:saved.data.id, clienteIds:selected });
+    if(generated.status !== 'ok') throw new Error(generated.data?.message || 'Público não gerado.');
+    closeDrawer();
+    toast(`Campanha criada para ${Number(generated.data.total) || 0} cliente(s).`,'ok');
+    await loadRelacionamento();
+  }catch(error){
+    btnSv(button, false, 'Criar campanha');
+    toast(error.message || 'Campanha não criada.','err');
+  }
+}
+
 function navTo(page){
   state.ui.currentPage = page;
 
@@ -1983,6 +2381,7 @@ function navTo(page){
   if(page === 'agenda') loadAgenda();
   if(page === 'planejamento') loadPlanejamento();
   if(page === 'extrato') checkExtLock();
+  if(page === 'relacionamento') loadRelacionamento();
 }
 
 function initExtSelectors(){
@@ -2102,6 +2501,8 @@ function bindGlobalEvents(){
   qs('#btn-open-prd').addEventListener('click', openDrawerPrd);
   qs('#btn-open-colab').addEventListener('click', openDrawerColab);
   qs('#btn-open-plan').addEventListener('click', openDrawerPlan);
+  qs('#btn-rel-campanha').addEventListener('click', abrirCampanhaRelacionamento);
+  qs('#btn-reload-rel').addEventListener('click', loadRelacionamento);
 
   qs('#btn-reload-caixa').addEventListener('click', () => loadCaixa(true));
   qs('#cx-mes-prev').addEventListener('click', () => navegarMesCaixa(-1));
@@ -2147,6 +2548,17 @@ function bindGlobalEvents(){
     btn.addEventListener('click', () => setExtModo(btn.dataset.extMode, btn));
   });
 
+  ['#rel-fila','#rel-etapa','#rel-origem','#rel-campanha'].forEach(selector => {
+    qs(selector).addEventListener('change', event => {
+      const stateKey = { '#rel-fila':'relFila', '#rel-etapa':'relEtapa', '#rel-origem':'relOrigem', '#rel-campanha':'relCampanha' }[selector];
+      state.ui[stateKey] = event.target.value;
+      renderRelacionamento();
+    });
+  });
+  ['#rel-atraso','#rel-periodo-inicio','#rel-periodo-fim','#rel-busca'].forEach(selector => {
+    qs(selector).addEventListener('input', renderRelacionamento);
+  });
+
   qs('#cx-data').addEventListener('change', loadCaixa);
   qs('#ag-data').addEventListener('change', loadAgenda);
 
@@ -2161,6 +2573,15 @@ function bindGlobalEvents(){
   qs('#list-colab').addEventListener('click', onColabListClick);
   qs('#cx-list').addEventListener('click', onCaixaListClick);
   qs('#ag-content').addEventListener('click', onAgendaListClick);
+  qs('#rel-list').addEventListener('click', event => {
+    const button = event.target.closest('button[data-rel-action]');
+    if(!button) return;
+    const id = button.dataset.id;
+    if(button.dataset.relAction === 'whatsapp') abrirWhatsAppRelacionamento(id);
+    if(button.dataset.relAction === 'history') abrirHistoricoRelacionamento(id);
+    if(button.dataset.relAction === 'stage') salvarEtapaRelacionamento(id, button.dataset.stage);
+    if(button.dataset.relAction === 'schedule') agendarDoRelacionamento(id);
+  });
   document.addEventListener('keydown', e => {
     keepFocusInsideDialog(e);
     if(e.key === 'Escape'){
@@ -4188,10 +4609,11 @@ async function savePlan(){
   }
 }
 
-function openDrawerAgend(){
+function openDrawerAgend(relationshipItem = null){
   state.ui.editId = null;
+  state.ui.agOportunidadeId = relationshipItem?.id || '';
   state.ui.agServicos = [];
-  const cliOpts = buildClienteOptions();
+  const cliOpts = buildClienteOptions(relationshipItem?.clienteId || '');
   const colOpts = state.db.colaboradores.filter(c => isAtivo(c.ativo)).map(c => `<option value="${attr(c.id)}|${attr(c.nome)}">${safe(c.nome)}</option>`).join('');
 
   openDrawer(`
@@ -4229,8 +4651,10 @@ function openDrawerAgend(){
   `);
 
   qs('#ag-val').addEventListener('input', e => applyValorMask(e.target));
-  qs('#ag-d').value = qs('#ag-data')?.value || today();
-  bindClienteSearch('#ag-cli-search', '#ag-cli');
+  qs('#ag-d').value = relationshipItem?.dataAlvo && relationshipItem.dataAlvo >= today()
+    ? relationshipItem.dataAlvo
+    : (qs('#ag-data')?.value || today());
+  bindClienteSearch('#ag-cli-search', '#ag-cli', relationshipItem?.clienteId || '');
   qs('#btn-add-ag-svc').addEventListener('click', abrirSeletorServicoAgendamento);
   renderAgendamentoServicos();
 
@@ -4333,7 +4757,8 @@ async function saveAgend(){
     duracaoMin: parseInt(qs('#ag-dur')?.value || '60', 10),
     valor: getValorRaw(qs('#ag-val')),
     status: qs('#ag-status')?.value || 'agendado',
-    observacoes: qs('#ag-obs')?.value || ''
+    observacoes: qs('#ag-obs')?.value || '',
+    oportunidadeId: state.ui.agOportunidadeId || ''
   };
 
   const btn = qs('#drawer .btn-save');
@@ -4346,10 +4771,12 @@ async function saveAgend(){
       btnSv(btn, false);
       return;
     }
+    const fromRelationship = !!state.ui.agOportunidadeId;
     closeDrawer();
     toast(state.ui.editId ? 'Atualizado!' : 'Agendado!','ok');
     invalidarPendentes();
     loadAgenda(true);
+    if(fromRelationship) loadRelacionamento();
   }catch(e){
     toast('Erro.','err');
     btnSv(btn, false);
@@ -4455,6 +4882,12 @@ function concluirAgend(ag){
         </select>
       </div>
     </div>
+    <div style="background:var(--azul-bg);border:1px solid rgba(24,119,242,.25);border-radius:var(--r);padding:12px;margin-bottom:14px">
+      <div class="slabel" style="margin-bottom:10px">Próximo retorno</div>
+      <div class="fg"><label class="lbl" for="ag-retorno-data">Data recomendada</label><input id="ag-retorno-data" class="inp" type="date" min="${attr(agDataISO)}"></div>
+      <div class="fg"><label class="lbl" for="ag-retorno-motivo">Motivo</label><input id="ag-retorno-motivo" class="inp" maxlength="1000" value="${attr(ag.servicos || '')}" placeholder="Ex.: manutenção"></div>
+      <label style="display:flex;align-items:center;gap:9px;cursor:pointer"><input id="ag-sem-retorno" type="checkbox" style="accent-color:var(--azul);width:18px;height:18px"> Sem retorno recomendado</label>
+    </div>
     <div class="fg"><span class="lbl">Observações</span><input id="cmd-obs" type="text" class="inp" value="${attr(ag.observacoes || '')}" placeholder="Opcional…"/></div>
     <div class="dfooter">
       <button class="btn-sec" id="btn-cancel-cmd">Cancelar</button>
@@ -4466,6 +4899,10 @@ function concluirAgend(ag){
   setTimeout(() => { if(ag.valor > 0) setValorMask(qs('#cmd-val'), ag.valor); }, 20);
 
   qs('#btn-add-item-cmd').addEventListener('click', abrirSeletorItemComanda);
+  qs('#ag-sem-retorno').addEventListener('change', event => {
+    qs('#ag-retorno-data').disabled = event.target.checked;
+    qs('#ag-retorno-motivo').disabled = event.target.checked;
+  });
   qs('#btn-cancel-cmd').addEventListener('click', closeDrawer);
   qs('#btn-save-cmd').addEventListener('click', () => salvarComanda(ag));
 }
@@ -4475,8 +4912,12 @@ async function salvarComanda(ag){
   const valor = getValorRaw(qs('#cmd-val'));
   const formaPagamento = qs('#cmd-forma')?.value || 'dinheiro';
   const observacoes = qs('#cmd-obs')?.value.trim() || '';
+  const semRetorno = !!qs('#ag-sem-retorno')?.checked;
+  const retornoData = qs('#ag-retorno-data')?.value || '';
+  const retornoMotivo = qs('#ag-retorno-motivo')?.value.trim() || servicos;
 
   if(!valor || valor <= 0) return toast('Informe o valor.','err');
+  if(!semRetorno && !retornoData) return toast('Informe o próximo retorno ou marque “sem retorno recomendado”.','err');
 
   const btn = qs('#drawer .btn-save');
   btnSv(btn, true, 'Confirmar e registrar');
@@ -4521,7 +4962,8 @@ async function salvarComanda(ag){
       action:'completeAppointment',
       token:state.token,
       appointment:agData,
-      cash:lancData
+      cash:lancData,
+      returnRecommendation:{ data:retornoData, motivo:retornoMotivo, semRetorno:semRetorno }
     });
     if(completion.status !== 'ok'){
       toast(completion.data?.message || 'Não foi possível concluir e registrar o caixa. Nenhuma alteração foi mantida.','err');
@@ -4539,11 +4981,15 @@ async function salvarComanda(ag){
     if(lancMes !== agMes) cacheStore().del(`sc_cx_${lancMes}`);
 
     closeDrawer();
-    toast('Atendimento concluído e registrado no caixa!','ok');
+    const relationshipWarning = completion.data?.relationship?.ok === false
+      ? completion.data.relationship.warning
+      : '';
+    toast(relationshipWarning || 'Atendimento concluído e registrado no caixa!', relationshipWarning ? 'warn' : 'ok');
     invalidarPendentes();
     loadAgenda(true);
     updateStats();
     loadCaixa(true);
+    if(state.ui.currentPage === 'relacionamento') loadRelacionamento();
   }catch(e){
     toast('Erro.','err');
     btnSv(btn, false, 'Confirmar e registrar');

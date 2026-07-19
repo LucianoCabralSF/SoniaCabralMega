@@ -7,12 +7,21 @@ const port = Number(process.env.SONIA_FIXTURE_PORT || 4176);
 const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Manaus' });
 const month = today.slice(0, 7);
 const day = today.slice(8, 10);
+function shiftDate(days) {
+  const [year, currentMonth, currentDay] = today.split('-').map(Number);
+  const date = new Date(Date.UTC(year, currentMonth - 1, currentDay + days));
+  return date.toISOString().slice(0, 10);
+}
+const upcomingDate = shiftDate(5);
+const recoveryDate = shiftDate(-18);
 
 const fixture = {
   getConfig: { salonName: 'Sonia Cabral', horaInicio: '08:00', horaFim: '18:00', intervaloMin: '30' },
   getClientes: [
-    { id: 'cli_1', nome: 'Maria Silva', telefone: '(92) 99999-1111', aniversario: '15/08' },
-    { id: 'cli_2', nome: 'Ana Costa', telefone: '(92) 98888-2222', aniversario: '02/11' }
+    { id: 'cli_1', nome: 'Maria Silva', telefone: '(92) 99999-1111', aniversario: '15/08/1988', naoContatar: 'false' },
+    { id: 'cli_2', nome: 'Ana Costa', telefone: '(92) 98888-2222', aniversario: '02/11/1991', naoContatar: 'false' },
+    { id: 'cli_3', nome: 'Beatriz Lima', telefone: '(92) 97777-3333', aniversario: '19/07/1994', naoContatar: 'true' },
+    { id: 'cli_4', nome: 'Carla Souza', telefone: '123', aniversario: '21/07/1985', naoContatar: 'false' }
   ],
   getServicos: [
     { id: 'svc_1', nome: 'Manutenção Mega-Hair', descricao: 'Manutenção completa', duracaoMin: 120, ativo: 'true' },
@@ -48,12 +57,30 @@ const fixture = {
   ],
   getAgendamentos: [
     { id: 'ag_1', data: today, hora: '09:00', duracaoMin: 120, clienteId: 'cli_1', clienteNome: 'Maria Silva', colaboradorId: 'col_1', colaboradorNome: 'Sonia Cabral', servicos: 'Manutenção Mega-Hair', valor: 500, status: 'agendado' },
-    { id: 'ag_2', data: today, hora: '14:00', duracaoMin: 60, clienteId: 'cli_2', clienteNome: 'Ana Costa', colaboradorId: 'col_1', colaboradorNome: 'Sonia Cabral', servicos: 'Escova', valor: 150, status: 'agendado' }
+    { id: 'ag_2', data: today, hora: '14:00', duracaoMin: 60, clienteId: 'cli_2', clienteNome: 'Ana Costa', colaboradorId: 'col_1', colaboradorNome: 'Sonia Cabral', servicos: 'Escova', valor: 150, status: 'agendado' },
+    { id: 'ag_hist_1', data: shiftDate(-45), hora: '10:00', duracaoMin: 120, clienteId: 'cli_1', clienteNome: 'Maria Silva', colaboradorId: 'col_1', colaboradorNome: 'Sonia Cabral', servicos: 'Manutenção Mega-Hair', valor: 480, status: 'concluido' },
+    { id: 'ag_hist_2', data: shiftDate(-70), hora: '15:00', duracaoMin: 60, clienteId: 'cli_2', clienteNome: 'Ana Costa', colaboradorId: 'col_1', colaboradorNome: 'Sonia Cabral', servicos: 'Escova', valor: 150, status: 'concluido' }
   ],
   getVencimentos: [
     { id: 'pp_1', descricao: 'Aluguel do salão', valor: 1500, vencimento: `${month}-10`, _tipo: 'despesa' }
   ],
   getAtrasados: [],
+  getRelacionamento: [
+    { id: 'rel_1', clienteId: 'cli_1', clienteNome: 'Maria Silva', origem: 'retorno', dataAlvo: upcomingDate, etapa: 'pendente', fila: 'proximo', diasAtraso: 0, telefoneWhatsApp: '5592999991111', telefoneValido: true, ultimoAtendimento: shiftDate(-45), ultimoServico: 'Manutenção Mega-Hair', mensagemSugerida: 'Olá, Maria! Está chegando a época da sua manutenção. Vamos agendar?' },
+    { id: 'rel_2', clienteId: 'cli_2', clienteNome: 'Ana Costa', origem: 'retorno', dataAlvo: recoveryDate, etapa: 'contatada', fila: 'recuperacao', diasAtraso: 18, telefoneWhatsApp: '5592988882222', telefoneValido: true, ultimoAtendimento: shiftDate(-70), ultimoServico: 'Escova', mensagemSugerida: 'Olá, Ana! Podemos reservar seu próximo horário?' },
+    { id: 'rel_3', clienteId: 'cli_3', clienteNome: 'Beatriz Lima', origem: 'aniversario', dataAlvo: today, etapa: 'pendente', fila: 'aniversario', diasAtraso: 0, telefoneWhatsApp: '5592977773333', telefoneValido: false, naoContatar: true, ultimoAtendimento: '', ultimoServico: '', mensagemSugerida: 'Feliz aniversário, Beatriz!' },
+    { id: 'rel_4', clienteId: 'cli_4', clienteNome: 'Carla Souza', origem: 'campanha', campanhaId: 'cam_1', dataAlvo: today, etapa: 'pendente', fila: 'campanha', diasAtraso: 0, telefoneWhatsApp: '', telefoneValido: false, ultimoAtendimento: '', ultimoServico: '', mensagemSugerida: 'Olá, Carla! Temos uma novidade.' }
+  ],
+  getRelacionamentoResumo: {
+    elegiveis: 4, contatadas: 1, responderam: 0, agendaram: 0, retornaram: 0,
+    taxaContato: 0.25, taxaResposta: 0, taxaAgendamento: 0, taxaRetorno: 0
+  },
+  getRelacionamentoEventos: [
+    { id: 'evt_1', oportunidadeId: 'rel_2', clienteId: 'cli_2', tipo: 'contato', etapaAnterior: 'pendente', etapaNova: 'contatada', origemAlteracao: 'manual', dataHora: `${today}T10:30:00`, mensagem: 'Olá, Ana! Podemos reservar seu próximo horário?' }
+  ],
+  getCampanhas: [
+    { id: 'cam_1', nome: 'Clientes de julho', mensagemModelo: 'Olá, {nome}! Temos uma novidade.', dataInicio: today, dataFim: shiftDate(30), status: 'ativa' }
+  ],
   getExtrato: {
     label: 'Período de teste', faturamento: 2350, saidasOp: 200, retiradas: 300,
     totalSaidas: 500, resultadoOp: 2150, resultadoFinal: 1850,
