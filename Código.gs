@@ -10,7 +10,7 @@ const LOGIN_FAILURE_KEY = 'auth_login_failures';
 const PASSWORD_HASH_KEY = 'auth_password_hash';
 const PASSWORD_SALT_KEY = 'auth_password_salt';
 const AUTH_VERSION_KEY = 'auth_version';
-const SHEETS_SCHEMA_VERSION = '3';
+const SHEETS_SCHEMA_VERSION = '4';
 const SHEETS_SCHEMA_VERSION_KEY = 'sheets_schema_version';
 
 const SCHEMAS = {
@@ -38,7 +38,8 @@ const SCHEMAS = {
   caixa: [
     'id','data','tipo','categoria','clienteId','clienteNome',
     'itemId','itemNome','itemTipo','valor','formaPagamento',
-    'observacoes','isRetirada','criadoEm','atualizadoEm','deletadoEm'
+    'observacoes','isRetirada','criadoEm','atualizadoEm','deletadoEm',
+    'dreCategoria'
   ],
   crediario: [
     'id','clienteId','clienteNome','tipo','valorTotal','valorEntrada',
@@ -69,6 +70,10 @@ const SCHEMAS = {
   ],
   campanhas: [
     'id','nome','mensagemModelo','dataInicio','dataFim','criteriosJson','status',
+    'criadoEm','atualizadoEm','deletadoEm'
+  ],
+  dre_mapeamento: [
+    'id','tipo','categoriaCaixa','itemTipo','dreCategoria','ativo',
     'criadoEm','atualizadoEm','deletadoEm'
   ]
 };
@@ -2500,6 +2505,52 @@ function getHomeResumo(e) {
   };
 }
 
+// ── DRE gerencial ─────────────────────────────────────────────
+function validarCategoriaDre_(value) {
+  return DRE_CATEGORIAS_.indexOf(String(value || '')) >= 0;
+}
+
+function listarMapeamentosDre_() {
+  return getCachedRows_('dre_mapeamento');
+}
+
+function salvarClassificacaoDre_(body) {
+  body = body || {};
+  return withDocumentLock_(function () {
+    var id = cleanId_(body.id);
+    var rowNum = rowNumForId_('caixa', id);
+    if (!rowNum) return { error:'Lançamento não encontrado.' };
+    if (!validarCategoriaDre_(body.dreCategoria)) return { error:'Categoria da DRE inválida.' };
+    var sheet = getSheet('caixa');
+    var headers = SCHEMAS.caixa;
+    var current = sheet.getRange(rowNum, 1, 1, headers.length).getValues()[0];
+    var deletedIndex = headers.indexOf('deletadoEm');
+    if (deletedIndex >= 0 && current[deletedIndex]) return { error:'Lançamento excluído não pode ser classificado.' };
+    sheet.getRange(rowNum, SCHEMAS.caixa.indexOf('dreCategoria') + 1).setValue(body.dreCategoria);
+    sheet.getRange(rowNum, SCHEMAS.caixa.indexOf('atualizadoEm') + 1).setValue(nowIso());
+    invalidateSheetCache_('caixa');
+    return { id:id, dreCategoria:body.dreCategoria };
+  });
+}
+
+function salvarMapeamentoDre_(body) {
+  var data = body && body.data ? body.data : {};
+  if (!validarCategoriaDre_(data.dreCategoria)) return { error:'Categoria da DRE inválida.' };
+  var tipo = String(data.tipo || '');
+  if (['entrada','saida',''].indexOf(tipo) < 0) return { error:'Tipo de movimento inválido.' };
+  var categoriaCaixa = cleanText_(data.categoriaCaixa, 120);
+  var itemTipo = cleanText_(data.itemTipo, 40);
+  if (!tipo && !categoriaCaixa && !itemTipo) return { error:'Defina ao menos um critério para o padrão.' };
+  return upsertById_('dre_mapeamento', {
+    id:data.id || '',
+    tipo:tipo,
+    categoriaCaixa:categoriaCaixa,
+    itemTipo:itemTipo,
+    dreCategoria:data.dreCategoria,
+    ativo:normalizeBoolStr(data.ativo, 'true')
+  });
+}
+
 // ── Delete genérico (soft delete) ─────────────────────────────
 function deleteRow(sheetName, id) {
   const allowed = ['colaboradores','servicos','produtos','clientes'];
@@ -2535,6 +2586,7 @@ function readAction_(a, e) {
       return ok(calcularIndicadoresRelacionamento_(listarRelacionamento_(e.parameter)));
     case 'getRelacionamentoEventos': return ok(listarEventosRelacionamento_(e.parameter));
     case 'getCampanhas':        return ok(getCachedRows_('campanhas'));
+    case 'getDreMapeamentos':   return ok(listarMapeamentosDre_());
     default: return err('Ação desconhecida: ' + a);
   }
 }
@@ -2594,6 +2646,8 @@ function doPost(e) {
       case 'saveRelacionamentoEtapa': return result(salvarEtapaRelacionamento_(b));
       case 'saveCampanha':       return result(salvarCampanha_(b));
       case 'generateCampanha':   return result(gerarOportunidadesCampanha_(b));
+      case 'saveDreClassificacao': return result(salvarClassificacaoDre_(b));
+      case 'saveDreMapeamento':  return result(salvarMapeamentoDre_(b));
       default: return err('Ação desconhecida: ' + a);
     }
   } catch (e2) {
