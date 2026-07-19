@@ -214,3 +214,39 @@ test('fixture visual cobre filas, histórico e campanhas', () => {
   assert.match(visualFixture, /fila:\s*'aniversario'/);
   assert.match(visualFixture, /fila:\s*'campanha'/);
 });
+
+test('DRE anual possui navegação, seletor, tabela e aviso provisório', () => {
+  assert.match(html, /data-view="dre-anual"/);
+  assert.match(html, /id="view-dre-anual"/);
+  assert.match(html, /id="dre-ano"/);
+  assert.match(html, /DRE provisória/);
+  assert.match(html, /function loadDreAnual\(/);
+  assert.match(html, /function renderDreAnual\(/);
+});
+
+test('detalhe e classificação da DRE usam rotas dedicadas', () => {
+  assert.match(html, /action:'getDreDetalhe'/);
+  assert.match(html, /action:'saveDreClassificacao'/);
+  assert.match(html, /action:'saveDreMapeamento'/);
+  assert.match(html, /function abrirDetalheDre\(/);
+  assert.match(html, /function salvarClassificacaoDre\(/);
+});
+
+test('DRE usa gráfico local e tabela navegável sem dependência externa', () => {
+  assert.match(html, /function renderDreChart\(/);
+  assert.match(html, /class="dre-scroll"/);
+  assert.match(html, /data-dre-line=/);
+  assert.doesNotMatch(html, /cdn[^\n]*chart|Chart\.js/i);
+});
+
+test('gaveta fechada não permanece exposta para tecnologia assistiva', () => {
+  assert.match(html, /id="drawer" aria-hidden="true"/);
+  assert.match(html, /drawer\.setAttribute\('aria-hidden','false'\)/);
+  assert.match(html, /drawer\.setAttribute\('aria-hidden','true'\)/);
+});
+
+test('fixture visual cobre relatório, detalhe e reclassificação da DRE', () => {
+  for (const action of ['getDreAnual','getDreDetalhe','getDreMapeamentos','saveDreClassificacao','saveDreMapeamento']) {
+    assert.match(visualFixture, new RegExp(action));
+  }
+});

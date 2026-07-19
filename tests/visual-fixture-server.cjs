@@ -15,6 +15,72 @@ function shiftDate(days) {
 const upcomingDate = shiftDate(5);
 const recoveryDate = shiftDate(-18);
 
+function dreLine(values) {
+  const meses = Array.from({ length: 12 }, (_, index) => Number(values[index]) || 0);
+  return { meses, total: meses.reduce((sum, value) => sum + value, 0) };
+}
+
+const dreFixtureLines = {
+  receita_servicos: dreLine([500000,350000,100000]),
+  receita_produtos: dreLine([100000,50000,0]),
+  outras_receitas: dreLine([]),
+  deducoes: dreLine([30000,0,0]),
+  receita_liquida: dreLine([570000,400000,100000]),
+  custos_variaveis: dreLine([120000,90000,70000]),
+  margem_contribuicao: dreLine([450000,310000,30000]),
+  despesas_pessoal: dreLine([100000,100000,100000]),
+  despesas_estrutura: dreLine([80000,80000,80000]),
+  despesas_operacionais: dreLine([20000,30000,0]),
+  resultado_financeiro: dreLine([-10000,5000,0]),
+  resultado_liquido: dreLine([240000,105000,-150000]),
+  retirada: dreLine([50000,40000,0]),
+  resultado_apos_retiradas: dreLine([190000,65000,-150000]),
+  nao_classificado: dreLine([-15000,0,0])
+};
+
+const dreFixtureMovements = [
+  { id:'dre_svc_1', data:'2026-01-10', mes:1, tipo:'entrada', itemTipo:'agendamento', itemNome:'Manutenção Mega-Hair', categoria:'Serviço', dreCategoriaResolvida:'receita_servicos', valorCentavos:500000 },
+  { id:'dre_prod_1', data:'2026-01-11', mes:1, tipo:'entrada', itemTipo:'produto', itemNome:'Linha de tratamento', categoria:'Produto', dreCategoriaResolvida:'receita_produtos', valorCentavos:100000 },
+  { id:'dre_ded_1', data:'2026-01-12', mes:1, tipo:'saida', categoria:'Estorno', itemNome:'Estorno controlado', dreCategoriaResolvida:'deducoes', valorCentavos:30000 },
+  { id:'dre_cost_1', data:'2026-01-13', mes:1, tipo:'saida', categoria:'Material', itemNome:'Material aplicado', dreCategoriaResolvida:'custos_variaveis', valorCentavos:120000 },
+  { id:'dre_pay_1', data:'2026-01-15', mes:1, tipo:'saida', categoria:'Salário', itemNome:'Folha', dreCategoriaResolvida:'despesas_pessoal', valorCentavos:100000 },
+  { id:'dre_rent_1', data:'2026-01-16', mes:1, tipo:'saida', categoria:'Aluguel', itemNome:'Aluguel', dreCategoriaResolvida:'despesas_estrutura', valorCentavos:80000 },
+  { id:'dre_ops_1', data:'2026-01-18', mes:1, tipo:'saida', categoria:'Marketing', itemNome:'Divulgação', dreCategoriaResolvida:'despesas_operacionais', valorCentavos:20000 },
+  { id:'dre_fin_1', data:'2026-01-20', mes:1, tipo:'saida', categoria:'Taxa bancária', itemNome:'Taxa bancária', dreCategoriaResolvida:'resultado_financeiro', valorCentavos:10000 },
+  { id:'dre_with_1', data:'2026-01-22', mes:1, tipo:'saida', categoria:'Retirada Pessoal', itemNome:'Retirada', dreCategoriaResolvida:'retirada', valorCentavos:50000 },
+  { id:'dre_unknown_in', data:'2026-01-24', mes:1, tipo:'entrada', categoria:'Outros', itemNome:'Entrada sem categoria', observacoes:'Classificar esta entrada', dreCategoriaResolvida:'nao_classificado', valorCentavos:10000 },
+  { id:'dre_unknown_out', data:'2026-01-25', mes:1, tipo:'saida', categoria:'Outros', itemNome:'Saída sem categoria', observacoes:'Classificar esta saída', dreCategoriaResolvida:'nao_classificado', valorCentavos:25000 },
+  { id:'dre_svc_2', data:'2026-02-10', mes:2, tipo:'entrada', itemTipo:'agendamento', itemNome:'Serviços de fevereiro', dreCategoriaResolvida:'receita_servicos', valorCentavos:350000 },
+  { id:'dre_prod_2', data:'2026-02-12', mes:2, tipo:'entrada', itemTipo:'produto', itemNome:'Produtos de fevereiro', dreCategoriaResolvida:'receita_produtos', valorCentavos:50000 },
+  { id:'dre_cost_2', data:'2026-02-13', mes:2, tipo:'saida', categoria:'Material', itemNome:'Materiais de fevereiro', dreCategoriaResolvida:'custos_variaveis', valorCentavos:90000 },
+  { id:'dre_pay_2', data:'2026-02-15', mes:2, tipo:'saida', categoria:'Salário', itemNome:'Folha', dreCategoriaResolvida:'despesas_pessoal', valorCentavos:100000 },
+  { id:'dre_rent_2', data:'2026-02-16', mes:2, tipo:'saida', categoria:'Aluguel', itemNome:'Aluguel', dreCategoriaResolvida:'despesas_estrutura', valorCentavos:80000 },
+  { id:'dre_ops_2', data:'2026-02-18', mes:2, tipo:'saida', categoria:'Marketing', itemNome:'Divulgação', dreCategoriaResolvida:'despesas_operacionais', valorCentavos:30000 },
+  { id:'dre_fin_2', data:'2026-02-20', mes:2, tipo:'entrada', categoria:'Rendimento', itemNome:'Rendimento', dreCategoriaResolvida:'resultado_financeiro', valorCentavos:5000 },
+  { id:'dre_with_2', data:'2026-02-22', mes:2, tipo:'saida', categoria:'Retirada Pessoal', itemNome:'Retirada', dreCategoriaResolvida:'retirada', valorCentavos:40000 },
+  { id:'dre_svc_3', data:'2026-03-10', mes:3, tipo:'entrada', itemTipo:'agendamento', itemNome:'Serviços de março', dreCategoriaResolvida:'receita_servicos', valorCentavos:100000 },
+  { id:'dre_cost_3', data:'2026-03-13', mes:3, tipo:'saida', categoria:'Material', itemNome:'Materiais de março', dreCategoriaResolvida:'custos_variaveis', valorCentavos:70000 },
+  { id:'dre_pay_3', data:'2026-03-15', mes:3, tipo:'saida', categoria:'Salário', itemNome:'Folha', dreCategoriaResolvida:'despesas_pessoal', valorCentavos:100000 },
+  { id:'dre_rent_3', data:'2026-03-16', mes:3, tipo:'saida', categoria:'Aluguel', itemNome:'Aluguel', dreCategoriaResolvida:'despesas_estrutura', valorCentavos:80000 }
+];
+
+function dreDetailFixture(line, month) {
+  const composite = {
+    receita_liquida:['receita_servicos','receita_produtos','outras_receitas','deducoes'],
+    margem_contribuicao:['receita_servicos','receita_produtos','outras_receitas','deducoes','custos_variaveis'],
+    resultado_liquido:['receita_servicos','receita_produtos','outras_receitas','deducoes','custos_variaveis','despesas_pessoal','despesas_estrutura','despesas_operacionais','resultado_financeiro'],
+    resultado_apos_retiradas:['receita_servicos','receita_produtos','outras_receitas','deducoes','custos_variaveis','despesas_pessoal','despesas_estrutura','despesas_operacionais','resultado_financeiro','retirada']
+  };
+  const accepted = composite[line] || [line];
+  const negative = new Set(['deducoes','custos_variaveis','despesas_pessoal','despesas_estrutura','despesas_operacionais','retirada']);
+  return dreFixtureMovements.filter(row => accepted.includes(row.dreCategoriaResolvida) && (!month || row.mes === Number(month))).map(row => {
+    let contribution = row.tipo === 'saida' ? -row.valorCentavos : row.valorCentavos;
+    if (!composite[line] && negative.has(row.dreCategoriaResolvida)) contribution = row.valorCentavos;
+    if (composite[line] && negative.has(row.dreCategoriaResolvida)) contribution = -row.valorCentavos;
+    return { ...row, valorContribuicaoCentavos: contribution };
+  });
+}
+
 const fixture = {
   getConfig: { salonName: 'Sonia Cabral', horaInicio: '08:00', horaFim: '18:00', intervaloMin: '30' },
   getClientes: [
@@ -81,6 +147,16 @@ const fixture = {
   getCampanhas: [
     { id: 'cam_1', nome: 'Clientes de julho', mensagemModelo: 'Olá, {nome}! Temos uma novidade.', dataInicio: today, dataFim: shiftDate(30), status: 'ativa' }
   ],
+  getDreAnual: {
+    ano: 2026, linhas: dreFixtureLines, provisoria: true,
+    naoClassificados: { entradas:10000, saidas:25000, saldo:-15000 },
+    conciliacao: { variacaoBrutaElegivel:90000, totalExplicado:90000, diferencaTecnica:0 },
+    indicadores: { faturamento:1100000, resultado:195000, margem:195000/1070000, melhorMes:0, piorMes:2 }
+  },
+  getDreDetalhe: [],
+  getDreMapeamentos: [],
+  saveDreClassificacao: { id:'dre_unknown_in', dreCategoria:'outras_receitas' },
+  saveDreMapeamento: { id:'map_fixture' },
   getExtrato: {
     label: 'Período de teste', faturamento: 2350, saidasOp: 200, retiradas: 300,
     totalSaidas: 500, resultadoOp: 2150, resultadoFinal: 1850,
@@ -103,6 +179,15 @@ const server = http.createServer((request, response) => {
       if (body.action === 'login') return json(response, { status: 'ok', data: { token: 'fixture-token', longToken: !!body.lembrar } });
       if (body.action === 'verificarSenha') return json(response, { status: 'ok', data: { valido: true } });
       let data = Object.prototype.hasOwnProperty.call(fixture, body.action) ? fixture[body.action] : { item: body.data || {}, id: body.id || 'fixture-id' };
+      if (body.action === 'getDreDetalhe') {
+        data = dreDetailFixture(body.linha, body.mes);
+      }
+      if (body.action === 'saveDreClassificacao') {
+        data = { id:body.id, dreCategoria:body.dreCategoria };
+      }
+      if (body.action === 'saveDreMapeamento') {
+        data = { id:'map_fixture', item:body.data || {} };
+      }
       if (body.action === 'getAgendamentos') {
         data = data.filter(item => {
           if (body.data && item.data !== body.data) return false;

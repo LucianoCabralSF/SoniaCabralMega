@@ -895,6 +895,22 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 }
 @media(max-width:420px){.rel-filter-grid{grid-template-columns:1fr}.rel-head-actions .btn-sec{padding:9px 10px;font-size:13px}}
 
+/* DRE gerencial anual */
+.dre-toolbar{display:flex;align-items:flex-end;gap:8px}.dre-toolbar .fg{margin:0;min-width:120px}.dre-toolbar input{min-height:44px}
+.dre-status{border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-size:14px;border:1px solid var(--border);background:var(--bg2)}
+.dre-status.provisional{background:var(--warn-bg);border-color:rgba(154,111,30,.35);color:var(--warn)}.dre-status.closed{background:var(--ok-bg);border-color:rgba(26,122,60,.3);color:var(--ok)}
+.dre-summary{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:10px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
+.dre-metric{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;box-shadow:var(--shadow);min-width:130px}.dre-metric span{display:block;font-size:12px;color:var(--dim)}.dre-metric strong{display:block;font-family:'Playfair Display',serif;font-size:21px;color:var(--dark);overflow-wrap:anywhere}.dre-metric strong.negative{color:var(--err)}
+.dre-chart-card,.dre-reconciliation{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px;box-shadow:var(--shadow)}
+.dre-chart-wrap{max-width:100%;overflow-x:auto}.dre-chart{display:block;width:100%;min-width:720px;height:auto}.dre-chart .dre-axis{stroke:var(--border);stroke-width:1}.dre-chart .dre-revenue{fill:var(--azul)}.dre-chart .dre-result.positive{fill:var(--ok)}.dre-chart .dre-result.negative{fill:var(--err)}.dre-chart text{font-size:11px;fill:var(--dim)}
+.dre-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--dim);margin-bottom:8px}.dre-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px}.dre-legend .revenue{background:var(--azul)}.dre-legend .result{background:var(--ok)}
+.dre-scroll{max-width:100%;overflow:auto;border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);box-shadow:var(--shadow);margin-bottom:14px}
+.dre-table{border-collapse:separate;border-spacing:0;min-width:1500px;width:100%;font-size:13px}.dre-table th,.dre-table td{border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:0;text-align:right;white-space:nowrap}.dre-table thead th{position:sticky;top:0;z-index:3;background:var(--dark);color:var(--gold-lt);padding:10px 8px;font-weight:700}.dre-table th:first-child{position:sticky;left:0;z-index:2;text-align:left;min-width:250px;max-width:250px;padding:10px 12px;background:var(--bg2);white-space:normal}.dre-table thead th:first-child{z-index:4;background:var(--dark)}.dre-table tr.total th,.dre-table tr.total td{background:var(--gold-bg);font-weight:700}.dre-table tr.total th:first-child{background:#f4ecda}.dre-table tr.warning th,.dre-table tr.warning td{background:var(--warn-bg)}.dre-table tr.warning th:first-child{background:#f5ead4}.dre-cell{width:100%;min-height:42px;padding:8px;background:transparent;color:var(--text);text-align:right;font-size:13px;border-radius:0}.dre-cell:hover,.dre-cell:focus-visible{background:var(--azul-bg)}.dre-cell.negative{color:var(--err)}
+.dre-reconciliation{display:flex;gap:16px;justify-content:space-between;align-items:center;flex-wrap:wrap;font-size:13px}.dre-reconciliation strong.ok{color:var(--ok)}.dre-reconciliation strong.error{color:var(--err)}
+.dre-detail{border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:10px;background:var(--bg3)}.dre-detail-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.dre-detail-head strong.negative{color:var(--err)}.dre-detail-meta{font-size:13px;color:var(--dim);margin-top:3px}.dre-classify{border-top:1px solid var(--border);margin-top:10px;padding-top:10px}.dre-classify-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end}.dre-classify-row .fg{margin:0}.dre-map-check{display:flex;align-items:flex-start;gap:8px;margin-top:9px;font-size:13px;color:var(--dim)}
+@media(max-width:760px){.dre-summary{grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}.dre-summary .dre-metric{min-width:0}.dre-toolbar{align-items:center}.dre-toolbar .fg{min-width:96px}.dre-table th:first-child{min-width:190px;max-width:190px}.dre-classify-row{grid-template-columns:1fr}.dre-classify-row button{width:100%}}
+@media(max-width:420px){.dre-summary{grid-template-columns:1fr 1fr}.dre-metric strong{font-size:18px}.dre-toolbar{gap:5px}.dre-toolbar .fg{min-width:82px}.dre-toolbar .btn-sec{padding:9px 10px}}
+
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -1013,6 +1029,30 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       </div>
       <div class="forma-box" id="cx-formas"></div>
       <div id="cx-list"></div>
+    </div>
+
+    <div class="page" id="page-dre-anual">
+      <div id="view-dre-anual">
+        <div class="ph">
+          <div style="display:flex;align-items:center;min-width:0">
+            <button class="icon-btn btn-back-mais" aria-label="Voltar" style="background:var(--bg3);border:1.5px solid var(--border);padding:8px;border-radius:10px;margin-right:8px;color:var(--dim)">
+              <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <div><div class="ptitle">DRE anual</div><div class="rel-meta">Gerencial · regime de caixa</div></div>
+          </div>
+          <div class="dre-toolbar">
+            <div class="fg"><label class="lbl" for="dre-ano">Ano</label><input id="dre-ano" type="number" min="1900" max="2200" step="1"></div>
+            <button class="icon-btn" id="btn-reload-dre" type="button" aria-label="Atualizar DRE" style="background:var(--bg2);border:1.5px solid var(--border);padding:10px;border-radius:var(--r);color:var(--dim)">
+              <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="dre-status" class="dre-status provisional" role="status" aria-live="polite">DRE provisória — verificando classificações…</div>
+        <div id="dre-resumo" class="dre-summary" aria-live="polite"></div>
+        <div id="dre-grafico"></div>
+        <div id="dre-content" aria-live="polite"></div>
+        <div id="dre-conciliacao"></div>
+      </div>
     </div>
 
     <div class="page" id="page-agenda">
@@ -1166,6 +1206,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
           <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
           Extrato
         </button>
+        <button class="qb" data-go="dre-anual" data-view="dre-anual">
+          <svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="4" y2="10"/><line x1="10" y1="20" x2="10" y2="4"/><line x1="16" y1="20" x2="16" y2="13"/><line x1="22" y1="20" x2="2" y2="20"/></svg>
+          DRE anual
+        </button>
         <button class="qb" data-go="planejamento">
           <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           Planej.
@@ -1290,7 +1334,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 </div>
 
 <div id="doverlay"></div>
-<div id="drawer"><div class="dhandle"></div><div id="drawer-content"></div></div>
+<div id="drawer" aria-hidden="true"><div class="dhandle"></div><div id="drawer-content"></div></div>
 
 <script src="/rules.js"></script>
 <script>
@@ -1306,6 +1350,32 @@ const brlFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currenc
 const fmt = v => brlFormatter.format(Number(v) || 0);
 
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const MESES_CURTOS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const DRE_ROWS = [
+  ['receita_servicos','Receita bruta de serviços'],
+  ['receita_produtos','Receita bruta de produtos'],
+  ['outras_receitas','Outras receitas operacionais'],
+  ['deducoes','(-) Deduções, estornos e impostos'],
+  ['receita_liquida','Receita líquida','total'],
+  ['custos_variaveis','(-) Custos variáveis'],
+  ['margem_contribuicao','Margem de contribuição','total'],
+  ['despesas_pessoal','(-) Despesas com pessoal'],
+  ['despesas_estrutura','(-) Estrutura'],
+  ['despesas_operacionais','(-) Outras despesas operacionais'],
+  ['resultado_financeiro','(+/-) Resultado financeiro'],
+  ['resultado_liquido','Resultado líquido gerencial','total'],
+  ['retirada','Retiradas dos proprietários'],
+  ['resultado_apos_retiradas','Resultado após retiradas','total'],
+  ['nao_classificado','Movimentos a classificar','warning']
+];
+const DRE_CATEGORY_OPTIONS = [
+  ['receita_servicos','Receita de serviços'],['receita_produtos','Receita de produtos'],
+  ['outras_receitas','Outras receitas'],['deducoes','Deduções, estornos e impostos'],
+  ['custos_variaveis','Custos variáveis'],['despesas_pessoal','Despesas com pessoal'],
+  ['despesas_estrutura','Estrutura'],['despesas_operacionais','Outras despesas operacionais'],
+  ['resultado_financeiro','Resultado financeiro'],['retirada','Retirada dos proprietários'],
+  ['fora_dre','Fora da DRE']
+];
 
 // Navegação de mês do Caixa (substitui o input type="month", que não funciona no iPhone)
 function setCaixaMes(mes){
@@ -1447,6 +1517,8 @@ const state = {
     relacionamento: [],
     relacionamentoResumo: {},
     campanhas: [],
+    dreAnual: null,
+    dreMapeamentos: [],
     config: {}
   },
   ui: {
@@ -1464,6 +1536,7 @@ const state = {
     relCampanha: 'todas',
     relCampaignAppointments: [],
     relCampaignSelected: [],
+    dreDetail: [],
     agOportunidadeId: '',
     agPendentes: [],
     agServicos: [],
@@ -1488,7 +1561,7 @@ const state = {
   }
 };
 
-const subPages = ['servicos','produtos','colaboradores','config','extrato','planejamento','crediario','relacionamento'];
+const subPages = ['servicos','produtos','colaboradores','config','extrato','planejamento','crediario','relacionamento','dre-anual'];
 
 const svgEdit = `<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Editar`;
 const svgDel = `<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Excluir`;
@@ -1756,6 +1829,7 @@ function openDrawer(html){
   content.innerHTML = html;
   prepareDynamicUi(content);
   drawer.classList.add('open');
+  drawer.setAttribute('aria-hidden','false');
   qs('#doverlay').classList.add('open');
   drawer.setAttribute('role','dialog');
   drawer.setAttribute('aria-modal','true');
@@ -1764,7 +1838,12 @@ function openDrawer(html){
 }
 
 function closeDrawer(){
-  qs('#drawer').classList.remove('open');
+  const drawer = qs('#drawer');
+  drawer.classList.remove('open');
+  drawer.setAttribute('aria-hidden','true');
+  drawer.removeAttribute('role');
+  drawer.removeAttribute('aria-modal');
+  drawer.removeAttribute('aria-label');
   qs('#doverlay').classList.remove('open');
   state.ui.editId = null;
   state.ui.agServicos = [];
@@ -2366,6 +2445,171 @@ async function salvarCampanhaRelacionamento(){
   }
 }
 
+function moneyFromCents(value){
+  return brlFormatter.format((Number(value) || 0) / 100);
+}
+
+function dreCategoryLabel(value){
+  return Object.fromEntries(DRE_CATEGORY_OPTIONS)[value] || {
+    nao_classificado:'Não classificado', receita_liquida:'Receita líquida',
+    margem_contribuicao:'Margem de contribuição', resultado_liquido:'Resultado líquido',
+    resultado_apos_retiradas:'Resultado após retiradas'
+  }[value] || value || '—';
+}
+
+function renderDreTable(data){
+  const months = Array.from({ length:12 }, (_, index) => index);
+  return '<div class="dre-scroll"><table class="dre-table"><thead><tr><th scope="col">Linha</th>' +
+    months.map(index => '<th scope="col">' + MESES_CURTOS[index] + '</th>').join('') +
+    '<th scope="col">Total</th></tr></thead><tbody>' +
+    DRE_ROWS.map(([key,label,kind]) => {
+      const row = data.linhas?.[key] || { meses:Array(12).fill(0), total:0 };
+      const cells = months.map(index => {
+        const value = Number(row.meses?.[index]) || 0;
+        return '<td><button type="button" class="dre-cell' + (value < 0 ? ' negative' : '') + '" data-dre-line="' +
+          attr(key) + '" data-dre-month="' + (index + 1) + '" aria-label="Detalhar ' + attr(label) + ' em ' + attr(MESES[index]) + '">' +
+          moneyFromCents(value) + '</button></td>';
+      }).join('');
+      const total = Number(row.total) || 0;
+      return '<tr class="' + attr(kind || '') + '"><th scope="row">' + safe(label) + '</th>' + cells +
+        '<td><button type="button" class="dre-cell' + (total < 0 ? ' negative' : '') + '" data-dre-line="' + attr(key) +
+        '" aria-label="Detalhar total anual de ' + attr(label) + '">' + moneyFromCents(total) + '</button></td></tr>';
+    }).join('') + '</tbody></table></div>';
+}
+
+function renderDreChart(data){
+  const revenue = data.linhas?.receita_liquida?.meses || Array(12).fill(0);
+  const result = data.linhas?.resultado_liquido?.meses || Array(12).fill(0);
+  const values = revenue.concat(result).map(value => Math.abs(Number(value) || 0));
+  const max = Math.max(1, ...values);
+  const width = 720, baseline = 112, group = width / 12;
+  const bars = revenue.map((value,index) => {
+    const revenueValue = Number(value) || 0;
+    const resultValue = Number(result[index]) || 0;
+    const revenueH = revenueValue ? Math.max(1, Math.round(Math.abs(revenueValue) / max * 92)) : 0;
+    const resultH = resultValue ? Math.max(1, Math.round(Math.abs(resultValue) / max * 92)) : 0;
+    const x = Math.round(index * group + 8);
+    const revenueY = revenueValue >= 0 ? baseline - revenueH : baseline;
+    const resultY = resultValue >= 0 ? baseline - resultH : baseline;
+    return '<rect x="' + x + '" y="' + revenueY + '" width="18" height="' + revenueH + '" class="dre-revenue"><title>' +
+      safe(MESES[index] + ': receita líquida ' + moneyFromCents(revenueValue)) + '</title></rect>' +
+      '<rect x="' + (x + 22) + '" y="' + resultY + '" width="18" height="' + resultH + '" class="dre-result ' +
+      (resultValue < 0 ? 'negative' : 'positive') + '"><title>' + safe(MESES[index] + ': resultado ' + moneyFromCents(resultValue)) + '</title></rect>' +
+      '<text x="' + (x + 20) + '" y="232" text-anchor="middle">' + MESES_CURTOS[index] + '</text>';
+  }).join('');
+  return '<div class="dre-chart-card"><div class="slabel" style="margin-bottom:8px">Evolução mensal</div>' +
+    '<div class="dre-legend"><span><i class="revenue"></i>Receita líquida</span><span><i class="result"></i>Resultado gerencial</span></div>' +
+    '<div class="dre-chart-wrap"><svg class="dre-chart" viewBox="0 0 720 245" role="img" aria-label="Receita líquida e resultado por mês">' +
+    '<line class="dre-axis" x1="0" y1="' + baseline + '" x2="' + width + '" y2="' + baseline + '"/>' + bars + '</svg></div></div>';
+}
+
+function renderDreAnual(data){
+  if(!data || !data.linhas) return;
+  state.db.dreAnual = data;
+  const status = qs('#dre-status');
+  const pendingIn = Number(data.naoClassificados?.entradas) || 0;
+  const pendingOut = Number(data.naoClassificados?.saidas) || 0;
+  status.className = 'dre-status ' + (data.provisoria ? 'provisional' : 'closed');
+  status.textContent = data.provisoria
+    ? `DRE provisória — ${moneyFromCents(pendingIn)} em entradas e ${moneyFromCents(pendingOut)} em saídas aguardam classificação.`
+    : 'DRE conciliada — todos os movimentos elegíveis estão classificados.';
+
+  const result = Number(data.indicadores?.resultado) || 0;
+  const margin = Number(data.indicadores?.margem) || 0;
+  const best = data.indicadores?.melhorMes;
+  const worst = data.indicadores?.piorMes;
+  const monthMetric = index => index === null || typeof index === 'undefined'
+    ? 'Sem movimento'
+    : `${MESES[Number(index)]} · ${moneyFromCents(data.linhas.resultado_liquido.meses[Number(index)])}`;
+  qs('#dre-resumo').innerHTML = [
+    ['Faturamento anual',moneyFromCents(data.indicadores?.faturamento)],
+    ['Resultado gerencial',moneyFromCents(result),result < 0 ? 'negative' : ''],
+    ['Margem líquida',new Intl.NumberFormat('pt-BR',{style:'percent',maximumFractionDigits:1}).format(margin)],
+    ['Melhor mês',monthMetric(best)],['Pior mês',monthMetric(worst)]
+  ].map(([label,value,kind]) => `<div class="dre-metric"><span>${safe(label)}</span><strong class="${attr(kind || '')}">${safe(value)}</strong></div>`).join('');
+  qs('#dre-grafico').innerHTML = renderDreChart(data);
+  qs('#dre-content').innerHTML = renderDreTable(data);
+  const difference = Number(data.conciliacao?.diferencaTecnica) || 0;
+  qs('#dre-conciliacao').innerHTML = `<div class="dre-reconciliation"><div><strong>Conciliação técnica</strong><div class="rel-meta">Variação do caixa elegível ${moneyFromCents(data.conciliacao?.variacaoBrutaElegivel)} · total explicado ${moneyFromCents(data.conciliacao?.totalExplicado)}</div></div><strong class="${difference === 0 ? 'ok' : 'error'}">${difference === 0 ? 'Fechada sem diferença' : 'Diferença ' + moneyFromCents(difference)}</strong></div>`;
+  prepareDynamicUi(qs('#view-dre-anual'));
+}
+
+async function loadDreAnual(){
+  const yearControl = qs('#dre-ano');
+  const year = Number(yearControl?.value || new Date().getFullYear());
+  if(yearControl && !yearControl.value) yearControl.value = String(year);
+  qs('#dre-content').innerHTML = '<div class="empty"><div class="spinner" style="margin:0 auto 12px"></div><p>Montando a DRE anual…</p></div>';
+  try{
+    const [report,mappings] = await Promise.all([
+      api({ action:'getDreAnual', token:state.token, ano:year }),
+      api({ action:'getDreMapeamentos', token:state.token })
+    ]);
+    if(report.status !== 'ok') throw new Error(report.data?.message || 'Não foi possível carregar a DRE.');
+    state.db.dreMapeamentos = mappings.status === 'ok' ? mappings.data || [] : [];
+    renderDreAnual(report.data);
+  }catch(error){
+    qs('#dre-content').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><p>Não foi possível carregar a DRE anual.</p></div>';
+    toast(error.message || 'Não foi possível carregar a DRE.','err');
+  }
+}
+
+function renderDetalheDre(items, line, month){
+  state.ui.dreDetail = items || [];
+  const label = DRE_ROWS.find(row => row[0] === line)?.[1] || dreCategoryLabel(line);
+  const period = month ? MESES[Number(month) - 1] : 'total anual';
+  const sum = (items || []).reduce((total,row) => total + (Number(row.valorContribuicaoCentavos) || 0), 0);
+  const categoryOptions = '<option value="" selected>Selecione…</option>' + DRE_CATEGORY_OPTIONS.map(([value,text]) => `<option value="${attr(value)}">${safe(text)}</option>`).join('');
+  const rows = (items || []).map(row => {
+    const id = String(row.id || '');
+    const pending = row.dreCategoriaResolvida === 'nao_classificado';
+    const canMap = !!(row.categoria || row.itemTipo);
+    return `<article class="dre-detail" data-dre-detail-id="${attr(id)}"><div class="dre-detail-head"><div><strong>${safe(row.itemNome || row.categoria || row.observacoes || 'Movimento')}</strong><div class="dre-detail-meta">${safe(fmtBR(row.data))} · ${safe(row.tipo === 'saida' ? 'Saída' : 'Entrada')} · ${safe(dreCategoryLabel(row.dreCategoriaResolvida))}</div></div><strong class="${Number(row.valorContribuicaoCentavos) < 0 ? 'negative' : ''}">${moneyFromCents(row.valorContribuicaoCentavos)}</strong></div>${row.observacoes ? `<div class="dre-detail-meta">${safe(row.observacoes)}</div>` : ''}${pending ? `<div class="dre-classify"><div class="dre-classify-row"><div class="fg"><label class="lbl">Classificar como</label><select data-dre-category>${categoryOptions}</select></div><button type="button" class="btn-save" data-dre-classify="${attr(id)}">Salvar</button></div><label class="dre-map-check"><input type="checkbox" data-dre-map ${canMap ? '' : 'disabled'}> Aplicar também aos próximos movimentos semelhantes${canMap ? '' : ' (sem padrão seguro disponível)'}</label></div>` : ''}</article>`;
+  }).join('') || '<div class="empty"><p>Nenhum movimento compõe esta célula.</p></div>';
+  return `<div class="dtitle">${safe(label)} · ${safe(period)}</div><div class="dre-status ${sum < 0 ? 'provisional' : 'closed'}">Soma do detalhe: <strong>${moneyFromCents(sum)}</strong></div>${rows}<button type="button" class="btn-sec" id="btn-close-dre-detail" style="width:100%;margin-top:8px">Fechar</button>`;
+}
+
+async function abrirDetalheDre(line, month){
+  const year = Number(qs('#dre-ano')?.value || new Date().getFullYear());
+  openDrawer('<div class="dtitle">Detalhe da DRE</div><div class="empty"><div class="spinner" style="margin:0 auto 12px"></div><p>Carregando movimentos…</p></div>');
+  try{
+    const result = await api({ action:'getDreDetalhe', token:state.token, ano:year, linha:line, mes:month || '' });
+    if(result.status !== 'ok') throw new Error(result.data?.message || 'Detalhe indisponível.');
+    openDrawer(renderDetalheDre(result.data || [], line, month));
+    qs('#btn-close-dre-detail')?.addEventListener('click', closeDrawer);
+    qsa('[data-dre-classify]', qs('#drawer-content')).forEach(button => button.addEventListener('click', () => {
+      const card = button.closest('[data-dre-detail-id]');
+      const id = button.dataset.dreClassify;
+      const category = qs('[data-dre-category]', card)?.value || '';
+      const applySimilar = !!qs('[data-dre-map]', card)?.checked;
+      const row = state.ui.dreDetail.find(item => String(item.id) === String(id)) || {};
+      salvarClassificacaoDre(id, category, applySimilar, { tipo:row.tipo || '', categoriaCaixa:row.categoria || '', itemTipo:row.itemTipo || '' }, button);
+    }));
+  }catch(error){
+    openDrawer(`<div class="dtitle">Detalhe da DRE</div><div class="empty"><p>${safe(error.message || 'Detalhe indisponível.')}</p></div><button type="button" class="btn-sec" id="btn-close-dre-detail" style="width:100%">Fechar</button>`);
+    qs('#btn-close-dre-detail')?.addEventListener('click', closeDrawer);
+  }
+}
+
+async function salvarClassificacaoDre(id, category, applySimilar, mapping, button){
+  if(!category) return toast('Escolha uma categoria.','err');
+  btnSv(button, true, 'Salvando');
+  try{
+    const one = await post({ action:'saveDreClassificacao', token:state.token, id:id, dreCategoria:category });
+    if(one.status !== 'ok') throw new Error(one.data?.message || 'Classificação não salva.');
+    let warning = '';
+    if(applySimilar){
+      const many = await post({ action:'saveDreMapeamento', token:state.token, data:Object.assign({}, mapping, { dreCategoria:category, ativo:true }) });
+      if(many.status !== 'ok') warning = many.data?.message || 'Lançamento salvo, mas o padrão não foi criado.';
+    }
+    closeDrawer();
+    await loadDreAnual();
+    toast(warning || 'Classificação salva e DRE recalculada.', warning ? 'warn' : 'ok');
+  }catch(error){
+    btnSv(button, false, 'Salvar');
+    toast(error.message || 'Classificação não salva.','err');
+  }
+}
+
 function navTo(page){
   state.ui.currentPage = page;
 
@@ -2382,6 +2626,7 @@ function navTo(page){
   if(page === 'planejamento') loadPlanejamento();
   if(page === 'extrato') checkExtLock();
   if(page === 'relacionamento') loadRelacionamento();
+  if(page === 'dre-anual') loadDreAnual();
 }
 
 function initExtSelectors(){
@@ -2503,6 +2748,8 @@ function bindGlobalEvents(){
   qs('#btn-open-plan').addEventListener('click', openDrawerPlan);
   qs('#btn-rel-campanha').addEventListener('click', abrirCampanhaRelacionamento);
   qs('#btn-reload-rel').addEventListener('click', loadRelacionamento);
+  qs('#btn-reload-dre').addEventListener('click', loadDreAnual);
+  qs('#dre-ano').addEventListener('change', loadDreAnual);
 
   qs('#btn-reload-caixa').addEventListener('click', () => loadCaixa(true));
   qs('#cx-mes-prev').addEventListener('click', () => navegarMesCaixa(-1));
@@ -2582,6 +2829,10 @@ function bindGlobalEvents(){
     if(button.dataset.relAction === 'stage') salvarEtapaRelacionamento(id, button.dataset.stage);
     if(button.dataset.relAction === 'schedule') agendarDoRelacionamento(id);
   });
+  qs('#dre-content').addEventListener('click', event => {
+    const button = event.target.closest('button[data-dre-line]');
+    if(button) abrirDetalheDre(button.dataset.dreLine, button.dataset.dreMonth || '');
+  });
   document.addEventListener('keydown', e => {
     keepFocusInsideDialog(e);
     if(e.key === 'Escape'){
@@ -2611,6 +2862,7 @@ window.addEventListener('load', async () => {
     });
 
     initExtSelectors();
+    qs('#dre-ano').value = String(new Date().getFullYear());
     setCaixaMes(today().slice(0,7));
     qs('#ag-data').value = today();
 
