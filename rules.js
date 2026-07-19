@@ -51,6 +51,7 @@
   function splitMoney(totalCents, count, maxCount = 36) {
     if (!Number.isInteger(totalCents) || totalCents < 0) throw new Error('Total em centavos inválido.');
     if (!Number.isInteger(count) || count < 1 || count > maxCount) throw new Error('Número de parcelas inválido.');
+    if (totalCents > 0 && count > totalCents) throw new Error('Cada parcela precisa ter ao menos um centavo.');
     const base = Math.floor(totalCents / count);
     const remainder = totalCents % count;
     return Array.from({ length: count }, (_, index) => base + (index < remainder ? 1 : 0));
@@ -70,6 +71,21 @@
       return { ok: false, code: 'installment_mismatch', message: 'Para baixar a parcela, receba exatamente o valor dela. Para pagamento parcial, selecione “sem parcela”.' };
     }
     return { ok: true, code: 'ok', message: '' };
+  }
+
+  function allocatePayment(openInstallmentCents, paymentCents) {
+    const values = Array.from(openInstallmentCents || []);
+    if (!values.length || values.some(value => !Number.isInteger(value) || value < 0)) throw new Error('Parcelas abertas inválidas.');
+    if (!Number.isInteger(paymentCents) || paymentCents <= 0 || paymentCents > values.reduce((sum, value) => sum + value, 0)) {
+      throw new Error('Pagamento inválido para as parcelas abertas.');
+    }
+    let pendingPayment = paymentCents;
+    return values.map(originalCents => {
+      const appliedCents = Math.min(originalCents, pendingPayment);
+      pendingPayment -= appliedCents;
+      const remainingCents = originalCents - appliedCents;
+      return { originalCents, appliedCents, remainingCents, paid: remainingCents === 0 };
+    });
   }
 
   function escapeHtml(value) {
@@ -101,6 +117,7 @@
 
   return Object.freeze({
     addMonthsClamped,
+    allocatePayment,
     escapeAttr,
     escapeHtml,
     isValidIsoDate,

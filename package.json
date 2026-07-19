@@ -4,7 +4,8 @@
   "version": "2.1.0",
   "description": "Sistema de gestão do salão Sonia Cabral",
   "scripts": {
-    "test": "node --test tests/*.test.cjs"
+    "test": "node --test tests/*.test.cjs",
+    "preview:fixture": "node tests/visual-fixture-server.cjs"
   },
   "engines": {
     "node": ">=20"

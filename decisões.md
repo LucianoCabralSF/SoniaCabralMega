@@ -65,6 +65,20 @@ Luciano autorizou a correção integral dos problemas encontrados, pediu que dec
 - O backend real e a planilha real não serão usados durante os testes.
 - As mudanças serão mantidas no branch atual e registradas em commits locais, deixando o diretório solicitado pronto para revisão e deploy.
 
+## Decisões tomadas durante a implementação
+
+- Leituras autenticadas também passam a usar `POST`, para que tokens não apareçam em URLs, históricos ou logs. O `GET` foi mantido somente como compatibilidade temporária do backend.
+- Cache “fresco” foi reduzido de 24 horas para 5 minutos e, mesmo quando exibido imediatamente, é confirmado em segundo plano. Sem “manter conectada”, dados e token ficam apenas na sessão da aba.
+- Pagamento parcial sem parcela selecionada é aplicado às parcelas abertas mais antigas: quita as que couberem e reduz o valor da próxima. Assim, a soma das parcelas continua igual ao saldo.
+- Concluir atendimento e registrar a entrada no caixa virou uma única operação protegida no backend. Se uma etapa falhar, o agendamento volta ao estado anterior.
+- Criação de fiado, recebimentos e baixas financeiras usam identificadores de operação para impedir duplicidade em reenvios ou respostas de rede perdidas.
+- A visualização mensal da agenda em celular passa a ter rolagem horizontal legível, em vez de comprimir nomes e horários para fontes muito pequenas.
+- Exclusões em cascata de fiado e planejamento restauram as linhas anteriores se uma gravação intermediária falhar.
+- Parâmetros de data e período das consultas são validados no backend; intervalos invertidos e datas impossíveis são rejeitados com mensagem compreensível.
+- Foi mantido um servidor local de demonstração com dados fictícios (`npm run preview:fixture`) para revisar telas e fluxos sem usar senha, planilha ou dados reais.
+- A inspeção visual foi feita em 1280×720 e 390×844. Não houve erro de navegador nem rolagem lateral da página; o calendário usa rolagem própria, diálogos têm nome acessível, o foco começa no primeiro campo e permanece dentro do diálogo ao usar Tab.
+- O código será integrado ao branch principal local depois da verificação final. Não será publicado automaticamente em produção, porque a solicitação não definiu um alvo de deploy e publicar mudaria o sistema ao vivo; a versão ficará pronta para esse passo após a revisão do Luciano.
+
 ## Riscos residuais aceitos
 
 - Apps Script + senha compartilhada continua sendo menos robusto que autenticação individual com provedor de identidade.

@@ -1,7 +1,8 @@
-const CACHE_NAME = 'sonia-cabral-v1';
+const CACHE_NAME = 'sonia-cabral-v3';
 const APP_SHELL = [
   '/',
   '/index.html',
+  '/rules.js',
   '/manifest.json',
   '/icon.svg'
 ];
@@ -29,13 +30,28 @@ self.addEventListener('fetch', event => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)
+        .then(res => {
+          if (res.ok) caches.open(CACHE_NAME).then(cache => cache.put('/index.html', res.clone()));
+          return res;
+        })
+        .catch(async () => {
+          const cached = await caches.match('/index.html');
+          return cached || new Response('Aplicativo indisponível sem conexão.', {
+            status: 503,
+            headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+          });
+        })
+    );
+    return;
+  }
+
   event.respondWith(
-    fetch(req)
-      .then(res => {
-        const copy = res.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
-        return res;
-      })
-      .catch(() => caches.match(req).then(cached => cached || caches.match('/index.html')))
+    caches.match(req).then(cached => cached || fetch(req).then(res => {
+      if (res.ok) caches.open(CACHE_NAME).then(cache => cache.put(req, res.clone()));
+      return res;
+    }).catch(() => new Response('Recurso indisponível.', { status: 503 })))
   );
 });

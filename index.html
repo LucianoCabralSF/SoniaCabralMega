@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#f0f2f5"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -60,6 +60,12 @@ html,body{
 }
 button{cursor:pointer;font-family:inherit;border:none;outline:none}
 input,textarea,select{font-family:inherit;font-size:16px;outline:none;color:var(--text)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,[tabindex]:focus-visible{
+  outline:3px solid var(--azul);outline-offset:2px
+}
+.icon-btn,.btn-add{min-width:44px;min-height:44px}
+.sync-status{font-size:12px;color:rgba(255,255,255,.75);margin-left:auto;margin-right:6px;white-space:nowrap}
+.sync-status.warn{color:#ffd98a}.sync-status.ok{color:#9de2b2}
 input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;color-scheme:light;cursor:pointer}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -702,6 +708,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 
 /* === Agenda: grade mensal === */
 .gcal-month{width:100%}
+#ag-content{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .gcal-month-title{text-align:center;font-family:'Playfair Display',serif;font-size:18px;font-style:italic;color:var(--dark);margin-bottom:10px}
 .gcal-month-header{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1.5px solid var(--border)}
 .gcal-month-hcell{text-align:center;padding:5px 2px;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)}
@@ -746,9 +753,10 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   .gcal-hday-name{font-size:8px}
   .gcal-event{padding:2px 4px}
   .gcal-event-hora{font-size:13px}
-  .gcal-month-cell{min-height:52px;padding:2px}
-  .gcal-month-hcell{font-size:8px;padding:4px 1px;letter-spacing:.5px}
-  .gcal-month-pill{font-size:8px;padding:1px 3px}
+  .gcal-month{min-width:560px}
+  .gcal-month-cell{min-height:72px;padding:3px}
+  .gcal-month-hcell{font-size:12px;padding:5px 2px;letter-spacing:.5px}
+  .gcal-month-pill{font-size:12px;padding:3px 4px}
   .gcal-month-num{font-size:13px;width:18px;height:18px;line-height:18px}
 }
 
@@ -866,7 +874,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <div class="spinner"></div>
 </div>
 
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 <div id="modal-overlay"><div id="modal-box"><div id="modal-content"></div></div></div>
 
 <div id="screen-login" style="display:none!important">
@@ -892,7 +900,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <div class="hdot"><span style="font-family:'Playfair Display',serif;font-size:15px;font-style:italic;color:var(--gold-lt)">SC</span></div>
       <div class="htitle" id="h-salonname">Sonia Cabral</div>
     </div>
-    <button class="icon-btn" id="btn-logout">
+    <div id="sync-status" class="sync-status" role="status" aria-live="polite">Atualizando…</div>
+    <button class="icon-btn" id="btn-logout" aria-label="Sair" title="Sair">
       <svg viewBox="0 0 24 24">
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
         <polyline points="16 17 21 12 16 7"/>
@@ -914,7 +923,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
         <div class="sc sc-warn"><div class="sc-label">Obrigações programadas</div><div class="sc-val sm" id="st-obrig">—</div></div>
         <div class="sc sc-info"><div class="sc-label">Fiados a receber</div><div class="sc-val sm" id="st-fiad">—</div></div>
         <div class="sc sc-warn"><div class="sc-label">Retiradas pessoais</div><div class="sc-val sm" id="st-retir">—</div></div>
-        <div class="sc" id="sc-resultado"><div class="sc-label">Resultado Operacional</div><div class="sc-val sm" id="st-resultado">—</div></div>
+        <div class="sc" id="sc-resultado"><div class="sc-label">Resultado projetado</div><div class="sc-val sm" id="st-resultado">—</div></div>
       </div>
       <div class="sc" id="sc-meta" style="margin-bottom:20px">
         <div class="sc-label">Meta para fechar o mês positivo</div>
@@ -948,7 +957,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <div class="page" id="page-caixa">
       <div class="ph">
         <div class="ptitle">Caixa</div>
-        <button class="btn-add" id="btn-open-lanc">+</button>
+        <button class="btn-add" id="btn-open-lanc" aria-label="Novo lançamento">+</button>
       </div>
       <div class="cdate-bar">
         <input type="hidden" id="cx-data"/>
@@ -957,7 +966,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
           <div class="mes-nav-label" id="cx-mes-label"></div>
           <button class="mes-nav-btn" id="cx-mes-next" aria-label="Próximo mês">▶</button>
         </div>
-        <button class="icon-btn" id="btn-reload-caixa" style="background:var(--bg2);border:1.5px solid var(--border);padding:10px;border-radius:var(--r)">
+        <button class="icon-btn" id="btn-reload-caixa" aria-label="Atualizar caixa" style="background:var(--bg2);border:1.5px solid var(--border);padding:10px;border-radius:var(--r)">
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="23 4 23 10 17 10"/>
             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
@@ -976,7 +985,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <div class="page" id="page-agenda">
       <div class="ph">
         <div class="ptitle">Agenda</div>
-        <button class="btn-add" id="btn-open-agend">+</button>
+        <button class="btn-add" id="btn-open-agend" aria-label="Novo agendamento">+</button>
       </div>
       <div class="seg" id="ag-seg">
         <button class="seg-btn active" data-ag-view="dia">Dia</button>
@@ -985,7 +994,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       </div>
       <div class="cdate-bar">
         <input type="date" id="ag-data"/>
-        <button class="icon-btn" id="btn-reload-agenda" style="background:var(--bg2);border:1.5px solid var(--border);padding:10px;border-radius:var(--r)">
+        <button class="icon-btn" id="btn-reload-agenda" aria-label="Atualizar agenda" style="background:var(--bg2);border:1.5px solid var(--border);padding:10px;border-radius:var(--r)">
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="23 4 23 10 17 10"/>
             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
@@ -998,7 +1007,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <div class="page" id="page-clientes">
       <div class="ph">
         <div class="ptitle">Clientes</div>
-        <button class="btn-add" id="btn-open-cliente">+</button>
+        <button class="btn-add" id="btn-open-cliente" aria-label="Nova cliente">+</button>
       </div>
       <div class="search-bar">
         <span class="si">
@@ -1018,7 +1027,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <div class="page" id="page-crediario">
       <div class="ph">
         <div class="ptitle">Fiado</div>
-        <button class="btn-add" id="btn-open-fiado">+</button>
+        <button class="btn-add" id="btn-open-fiado" aria-label="Novo fiado">+</button>
       </div>
       <div class="seg" id="cred-seg">
         <button class="seg-btn active" data-cred-filter="aberto">Em aberto</button>
@@ -1030,7 +1039,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 
     <div class="page" id="page-extrato">
       <div class="ph">
-        <button class="icon-btn btn-back-mais" style="background:var(--bg3);border:1.5px solid var(--border);padding:8px;border-radius:10px;margin-right:8px">
+        <button class="icon-btn btn-back-mais" aria-label="Voltar" style="background:var(--bg3);border:1.5px solid var(--border);padding:8px;border-radius:10px;margin-right:8px">
           <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div class="ptitle">Extrato</div>
@@ -1097,44 +1106,44 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 
     <div class="page" id="page-servicos">
       <div class="ph">
-        <button class="icon-btn btn-back-mais" style="background:var(--bg3);border:1.5px solid var(--border);padding:8px;border-radius:10px;margin-right:8px">
+        <button class="icon-btn btn-back-mais" aria-label="Voltar" style="background:var(--bg3);border:1.5px solid var(--border);padding:8px;border-radius:10px;margin-right:8px">
           <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div class="ptitle">Serviços</div>
-        <button class="btn-add" id="btn-open-svc">+</button>
+        <button class="btn-add" id="btn-open-svc" aria-label="Novo serviço">+</button>
       </div>
       <div class="card-list" id="list-svc"></div>
     </div>
 
     <div class="page" id="page-produtos">
       <div class="ph">
-        <button class="icon-btn btn-back-mais" style="background:var(--bg3);border:1.5px solid var(--border);padding:8px;border-radius:10px;margin-right:8px">
+        <button class="icon-btn btn-back-mais" aria-label="Voltar" style="background:var(--bg3);border:1.5px solid var(--border);padding:8px;border-radius:10px;margin-right:8px">
           <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div class="ptitle">Produtos</div>
-        <button class="btn-add" id="btn-open-prd">+</button>
+        <button class="btn-add" id="btn-open-prd" aria-label="Novo produto">+</button>
       </div>
       <div class="card-list" id="list-prd"></div>
     </div>
 
     <div class="page" id="page-colaboradores">
       <div class="ph">
-        <button class="icon-btn btn-back-mais" style="background:var(--bg3);border:1.5px solid var(--border);padding:8px;border-radius:10px;margin-right:8px">
+        <button class="icon-btn btn-back-mais" aria-label="Voltar" style="background:var(--bg3);border:1.5px solid var(--border);padding:8px;border-radius:10px;margin-right:8px">
           <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div class="ptitle">Equipe</div>
-        <button class="btn-add" id="btn-open-colab">+</button>
+        <button class="btn-add" id="btn-open-colab" aria-label="Nova colaboradora">+</button>
       </div>
       <div class="card-list" id="list-colab"></div>
     </div>
 
     <div class="page" id="page-planejamento">
       <div class="ph">
-        <button class="icon-btn btn-back-mais" style="background:var(--bg3);border:1.5px solid var(--border);padding:8px;border-radius:10px;margin-right:8px">
+        <button class="icon-btn btn-back-mais" aria-label="Voltar" style="background:var(--bg3);border:1.5px solid var(--border);padding:8px;border-radius:10px;margin-right:8px">
           <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div class="ptitle">Planejamento</div>
-        <button class="btn-add" id="btn-open-plan">+</button>
+        <button class="btn-add" id="btn-open-plan" aria-label="Novo planejamento">+</button>
       </div>
       <div class="seg" id="plan-seg">
         <button class="seg-btn active" data-plan-filter="todos">Todos</button>
@@ -1146,7 +1155,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 
     <div class="page" id="page-config">
       <div class="ph">
-        <button class="icon-btn btn-back-mais" style="background:var(--bg3);border:1.5px solid var(--border);padding:8px;border-radius:10px;margin-right:8px">
+        <button class="icon-btn btn-back-mais" aria-label="Voltar" style="background:var(--bg3);border:1.5px solid var(--border);padding:8px;border-radius:10px;margin-right:8px">
           <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div class="ptitle">Config</div>
@@ -1167,8 +1176,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       </div>
       <div class="cfg-sec">
         <div class="cfg-title">Segurança</div>
-        <div class="fg"><span class="lbl">Nova senha</span><input class="inp" id="cfg-s1" type="password"/></div>
-        <div class="fg"><span class="lbl">Confirmar</span><input class="inp" id="cfg-s2" type="password"/></div>
+        <div class="fg"><label class="lbl" for="cfg-s-atual">Senha atual</label><input class="inp" id="cfg-s-atual" type="password" autocomplete="current-password"/></div>
+        <div class="fg"><label class="lbl" for="cfg-s1">Nova senha (mínimo 8 caracteres)</label><input class="inp" id="cfg-s1" type="password" autocomplete="new-password" minlength="8"/></div>
+        <div class="fg"><label class="lbl" for="cfg-s2">Confirmar</label><input class="inp" id="cfg-s2" type="password" autocomplete="new-password" minlength="8"/></div>
         <button class="btn-gold" id="btn-save-senha">Alterar senha</button>
       </div>
       <div class="cfg-sec" style="border-color:var(--err)">
@@ -1205,6 +1215,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <div id="doverlay"></div>
 <div id="drawer"><div class="dhandle"></div><div id="drawer-content"></div></div>
 
+<script src="/rules.js"></script>
 <script>
 window.__API_URL__ = 'https://script.google.com/macros/s/AKfycbwdgffUDDPyPXyE_4YRBf4wrfLXitwfFQ6Wn5zIwvb3z7YDhnHeZzFmnjt6U1m7bgSMBA/exec';
 </script>
@@ -1212,6 +1223,8 @@ window.__API_URL__ = 'https://script.google.com/macros/s/AKfycbwdgffUDDPyPXyE_4Y
 <script>
     const API = window.__API_URL__ || 'https://script.google.com/macros/s/AKfycbwdgffUDDPyPXyE_4YRBf4wrfLXitwfFQ6Wn5zIwvb3z7YDhnHeZzFmnjt6U1m7bgSMBA/exec';
 
+const safe = SoniaRules.escapeHtml;
+const attr = SoniaRules.escapeAttr;
 const brlFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmt = v => brlFormatter.format(Number(v) || 0);
 
@@ -1243,10 +1256,33 @@ const store = {
   del(k){ localStorage.removeItem(k); }
 };
 
+const sessionStore = {
+  get(k){
+    try { return JSON.parse(sessionStorage.getItem(k)); } catch { return null; }
+  },
+  set(k,v){ sessionStorage.setItem(k, JSON.stringify(v)); },
+  del(k){ sessionStorage.removeItem(k); }
+};
+
+function clearSensitiveLocalData(){
+  ['sc_tok','sc_ltok','sc_db'].forEach(k => {
+    store.del(k);
+    sessionStore.del(k);
+  });
+  try{
+    Object.keys(localStorage).filter(k => k.startsWith('sc_')).forEach(k => localStorage.removeItem(k));
+    Object.keys(sessionStorage).filter(k => k.startsWith('sc_')).forEach(k => sessionStorage.removeItem(k));
+  }catch(_){}
+}
+
+function cacheStore(){
+  return state?.longToken ? store : sessionStore;
+}
+
 // ── Cache de dados ────────────────────────────────────────────
 function saveDbCache(){
   try{
-    store.set('sc_db', {
+    cacheStore().set('sc_db', {
       clientes:      state.db.clientes,
       servicos:      state.db.servicos,
       produtos:      state.db.produtos,
@@ -1254,7 +1290,12 @@ function saveDbCache(){
       crediario:     state.db.crediario,
       planejamento:  state.db.planejamento,
       planParcelas:  state.db.planParcelas,
-      config:        state.db.config,
+      config: {
+        salonName: state.db.config?.salonName || '',
+        horaInicio: state.db.config?.horaInicio || '08:00',
+        horaFim: state.db.config?.horaFim || '18:00',
+        intervaloMin: state.db.config?.intervaloMin || 30
+      },
       statsDate:    today(),
       stEntradas:   qs('#st-entradas')?.textContent  || '',
       stSaidas:     qs('#st-saidas')?.textContent    || '',
@@ -1270,7 +1311,7 @@ function saveDbCache(){
 }
 
 function restoreFromCache(){
-  const c = store.get('sc_db');
+  const c = cacheStore().get('sc_db');
   if(!c) return false;
 
   state.db.clientes      = c.clientes      || [];
@@ -1295,7 +1336,10 @@ function restoreFromCache(){
   qs('#st-svc').textContent  = state.db.servicos.length;
   const abertos = state.db.crediario.filter(x => x.status === 'aberto');
   qs('#st-fiad').textContent = fmt(abertos.reduce((s,x)=>s+(parseFloat(x.saldoDevedor)||0),0));
-  const obrigCache = state.db.planejamento.filter(p => p.tipo === 'despesa' && p.status === 'ativo').reduce((s,p)=>s+(parseFloat(p.valorParcela)||0),0);
+  const monthEnd = `${today().slice(0,7)}-31`;
+  const obrigCache = state.db.planParcelas
+    .filter(p => p.tipo === 'despesa' && !isPago(p.pago) && !isPago(p.status) && p.vencimento && p.vencimento <= monthEnd)
+    .reduce((s,p)=>s+(parseFloat(p.valor)||0),0);
   qs('#st-obrig').textContent = fmt(obrigCache);
   if(c.statsDate === today() && c.stEntradas){
     qs('#st-entradas').textContent  = c.stEntradas;
@@ -1309,7 +1353,7 @@ function restoreFromCache(){
   }
 
   const age = Date.now() - (c.ts || 0);
-  return age < 24 * 60 * 60 * 1000 ? 'fresh' : 'stale';
+  return age < 5 * 60 * 1000 ? 'fresh' : 'stale';
 }
 
 const state = {
@@ -1338,6 +1382,9 @@ const state = {
     agServicos: [],
     itensLanc: [],
     caixaItems: [],
+    paymentKey: '',
+    currentPayment: null,
+    fiadoKey: '',
     clienteSearch: '',
     loadFlags: {
       bootstrapped: false,
@@ -1348,7 +1395,9 @@ const state = {
   },
   runtime: {
     cliSearchTimer: null,
-    toastTimer: null
+    toastTimer: null,
+    lastDrawerFocus: null,
+    lastModalFocus: null
   }
 };
 
@@ -1397,6 +1446,11 @@ function parseISO(str){
 
 function isAtivo(v){
   return v === true || String(v).toLowerCase() === 'true';
+}
+
+function isPago(v){
+  const normalized = String(v ?? '').toLowerCase();
+  return v === true || normalized === 'true' || normalized === 'pago';
 }
 
 function lbForma(f){
@@ -1470,11 +1524,7 @@ function renderItensMini(itemNome, obs){
 }
 
 function escAttr(s){
-  return String(s ?? '')
-    .replace(/&/g,'&amp;')
-    .replace(/"/g,'&quot;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;');
+  return attr(s);
 }
 
 function parseObsItens(obs){
@@ -1490,23 +1540,14 @@ function parseObsItens(obs){
 
 function _checarSessao(r){
   if(r?.status === 'error' && /sess[aã]o expirada/i.test(r?.data?.message || '')){
-    store.del('sc_tok');
-    store.del('sc_ltok');
-    state.token = '';
-    state.longToken = '';
+    limparSessao(true);
     toast('Sua sessão expirou. Entre com a senha novamente.','err');
-    showLogin();
   }
   return r;
 }
 
 async function api(params){
-  const url = new URL(API);
-  Object.entries(params || {}).forEach(([k,v]) => {
-    if(v !== undefined && v !== null) url.searchParams.set(k, String(v));
-  });
-  const r = await fetch(url.toString(), { method: 'GET' });
-  return _checarSessao(await r.json());
+  return post({ ...(params || {}), readOnly:true });
 }
 
 async function post(body){
@@ -1530,7 +1571,7 @@ function apiTimeout(params, ms=10000){
   return Promise.race([
     api(params),
     new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), ms))
-  ]).catch(() => ({ status:'err' }));
+  ]).catch(() => ({ status:'network_error', data:{ message:'Sem conexão com o servidor.' } }));
 }
 
 function toast(msg, type=''){
@@ -1539,6 +1580,64 @@ function toast(msg, type=''){
   el.className = 'show' + (type ? ' ' + type : '');
   clearTimeout(state.runtime.toastTimer);
   state.runtime.toastTimer = setTimeout(() => { el.className = ''; }, 3200);
+}
+
+function setSyncStatus(status, detail=''){
+  const el = qs('#sync-status');
+  if(!el) return;
+  const labels = { syncing:'Atualizando…', ok:'Atualizado agora', cached:'Dados salvos', offline:'Sem conexão' };
+  el.textContent = detail || labels[status] || '';
+  el.className = 'sync-status ' + (status === 'ok' ? 'ok' : (status === 'offline' ? 'warn' : ''));
+}
+
+function sanitizeDynamicMarkup(root=document){
+  if(!root?.querySelectorAll) return;
+  root.querySelectorAll('script,iframe,object,embed,base,meta,link,form').forEach(el => el.remove());
+  root.querySelectorAll('*').forEach(el => {
+    Array.from(el.attributes || []).forEach(a => {
+      const name = a.name.toLowerCase();
+      const value = String(a.value || '').trim();
+      const allowedHandler = /^(?:toggleCaixaDia\('[A-Za-z0-9_-]+'\)|toggleDia\('dd\d+'\)|applyDataMask\(this\);verificarDataRetro\(this\)|addItemDireto\(this\)|addItemComanda\(this\)|removeAgendamentoServico\(\d+\)|removeItem\(\d+\)|updateItemValor\(\d+,this\)|setTipoLanc\('(?:entrada|saida|retirada)'\)|closeModal\(\))$/.test(value);
+      if(name.startsWith('on') && !allowedHandler) el.removeAttribute(a.name);
+      if(['href','src','action','formaction','xlink:href'].includes(name) && /^\s*(?:javascript|data:text\/html)/i.test(value)) el.removeAttribute(a.name);
+      if(name === 'style' && /(?:expression\s*\(|url\s*\(\s*['"]?\s*javascript:)/i.test(value)) el.removeAttribute(a.name);
+      if(['srcdoc','autofocus'].includes(name)) el.removeAttribute(a.name);
+    });
+  });
+}
+
+function ensureAccessibleControls(root=document){
+  if(!root?.querySelectorAll) return;
+  root.querySelectorAll('.fg').forEach((group, index) => {
+    const control = group.querySelector('input,select,textarea');
+    const label = group.querySelector('.lbl');
+    if(!control || !label) return;
+    if(!control.id) control.id = `field-${Date.now()}-${index}`;
+    if(label.tagName === 'LABEL') label.htmlFor = control.id;
+    else{
+      const replacement = document.createElement('label');
+      replacement.className = label.className;
+      replacement.htmlFor = control.id;
+      replacement.textContent = label.textContent;
+      label.replaceWith(replacement);
+    }
+  });
+  root.querySelectorAll('button').forEach(button => {
+    if(!button.getAttribute('aria-label') && !button.textContent.trim()){
+      let label = button.getAttribute('title') || '';
+      if(!label && button.matches('.btn-back,[id*="back"]')) label = 'Voltar';
+      if(!label && button.matches('.btn-add,[id*="open"]')) label = 'Adicionar';
+      if(!label && button.matches('.btn-d,[id*="del"]')) label = 'Excluir';
+      if(!label && button.matches('.btn-e')) label = 'Editar';
+      if(!label && button.matches('[id*="reload"]')) label = 'Atualizar';
+      button.setAttribute('aria-label', label || 'Ação');
+    }
+  });
+}
+
+function prepareDynamicUi(root){
+  sanitizeDynamicMarkup(root);
+  ensureAccessibleControls(root);
 }
 
 function showLoading(v){
@@ -1564,9 +1663,17 @@ function showApp(){
 }
 
 function openDrawer(html){
-  qs('#drawer-content').innerHTML = html;
-  qs('#drawer').classList.add('open');
+  state.runtime.lastDrawerFocus = document.activeElement;
+  const content = qs('#drawer-content');
+  const drawer = qs('#drawer');
+  content.innerHTML = html;
+  prepareDynamicUi(content);
+  drawer.classList.add('open');
   qs('#doverlay').classList.add('open');
+  drawer.setAttribute('role','dialog');
+  drawer.setAttribute('aria-modal','true');
+  drawer.setAttribute('aria-label', (content.querySelector('.dtitle')?.textContent || 'Formulário').trim().slice(0,120));
+  setTimeout(() => qs('#drawer input:not([type="hidden"]), #drawer select, #drawer textarea, #drawer button')?.focus(), 0);
 }
 
 function closeDrawer(){
@@ -1576,15 +1683,45 @@ function closeDrawer(){
   state.ui.agServicos = [];
   state.ui.itensLanc = [];
   state.ui.editOrig = null;
+  state.runtime.lastDrawerFocus?.focus?.();
 }
 
 function openModal(html){
-  qs('#modal-content').innerHTML = html;
+  state.runtime.lastModalFocus = document.activeElement;
+  const content = qs('#modal-content');
+  const modal = qs('#modal-box');
+  content.innerHTML = html;
+  prepareDynamicUi(content);
   qs('#modal-overlay').classList.add('open');
+  modal.setAttribute('role','dialog');
+  modal.setAttribute('aria-modal','true');
+  modal.setAttribute('aria-label', (content.querySelector('.dtitle')?.textContent || content.firstElementChild?.textContent || 'Janela de diálogo').trim().slice(0,120));
+  setTimeout(() => qs('#modal-box input:not([type="hidden"]), #modal-box select, #modal-box textarea, #modal-box button')?.focus(), 0);
 }
 
 function closeModal(){
   qs('#modal-overlay').classList.remove('open');
+  state.runtime.lastModalFocus?.focus?.();
+}
+
+function keepFocusInsideDialog(event){
+  if(event.key !== 'Tab') return;
+  const activeDialog = qs('#modal-overlay')?.classList.contains('open')
+    ? qs('#modal-box')
+    : (qs('#drawer')?.classList.contains('open') ? qs('#drawer') : null);
+  if(!activeDialog) return;
+  const focusable = qsa('button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])', activeDialog)
+    .filter(el => el.offsetParent !== null);
+  if(!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if(event.shiftKey && (document.activeElement === first || !activeDialog.contains(document.activeElement))){
+    event.preventDefault();
+    last.focus();
+  }else if(!event.shiftKey && (document.activeElement === last || !activeDialog.contains(document.activeElement))){
+    event.preventDefault();
+    first.focus();
+  }
 }
 
 function btnSv(btn, loading, labelDefault='Salvar'){
@@ -1593,9 +1730,12 @@ function btnSv(btn, loading, labelDefault='Salvar'){
   btn.disabled = loading;
 }
 
-function limparSessao(){
+function limparSessao(clearData=false){
   store.del('sc_tok');
   store.del('sc_ltok');
+  sessionStore.del('sc_tok');
+  sessionStore.del('sc_ltok');
+  if(clearData) clearSensitiveLocalData();
   state.token = '';
   state.longToken = '';
   showLogin();
@@ -1613,6 +1753,7 @@ function applyConfig(){
 
 async function doLogin(){
   const senha = qs('#inp-senha').value.trim();
+  const lembrar = !!qs('#chk-lembrar')?.checked;
   if(!senha) return toast('Informe a senha.','err');
 
   const btn = qs('#btn-login');
@@ -1620,7 +1761,7 @@ async function doLogin(){
   btn.disabled = true;
 
   try{
-    const r = await api({ action:'login', senha });
+    const r = await post({ action:'login', senha, lembrar });
     if(r.status !== 'ok'){
       btn.textContent = 'Entrar';
       btn.disabled = false;
@@ -1630,9 +1771,11 @@ async function doLogin(){
     state.token = r.data.token;
     state.longToken = r.data.longToken || '';
 
-    store.set('sc_tok', state.token);
-    if(state.longToken){
+    clearSensitiveLocalData();
+    if(lembrar && state.longToken){
       store.set('sc_ltok', state.longToken);
+    }else{
+      sessionStore.set('sc_tok', state.token);
     }
 
     showApp();
@@ -1644,19 +1787,26 @@ async function doLogin(){
   }
 }
 
-function logout(){
-  limparSessao();
+async function logout(){
+  const token = state.token;
+  limparSessao(true);
+  if(token){
+    try{ await post({ action:'logout', token }); }catch(_){}
+  }
 }
 
 async function loadAll(){
+  setSyncStatus('syncing');
   try{
     const testCfg = await apiTimeout({ action:'getConfig', token:state.token }, 8000);
+    if(testCfg.status === 'network_error') throw new Error('network_error');
     if(testCfg.status === 'error'){
       // Só encerra sessão em erro de autenticação — outros erros não deslogam
       const msg = testCfg.data?.message || '';
       if(msg === 'Sessão expirada.' || msg === 'Sessão inválida.'){
         limparSessao();
       }
+      setSyncStatus('offline', 'Falha ao atualizar');
       return;
     }
 
@@ -1674,6 +1824,9 @@ async function loadAll(){
       apiTimeout({ action:'getPlanejamento', token:state.token }),
       apiTimeout({ action:'getPlanejamentoParcelas', token:state.token })
     ]);
+
+    const coreOk = [cli, svc, prd, col, cred, plan, planParc].every(r => r.status === 'ok');
+    if(!coreOk) throw new Error('Falha ao sincronizar os dados principais.');
 
     if(cli.status === 'ok') state.db.clientes = cli.data || [];
     if(svc.status === 'ok') state.db.servicos = svc.data || [];
@@ -1699,10 +1852,11 @@ async function loadAll(){
     state.ui.loadFlags.bootstrapped = true;
     state.ui.loadFlags.homeLoaded = true;
     saveDbCache();
+    setSyncStatus('ok');
   }catch(e){
     console.error('loadAll error:', e);
-    // Só desloga se não havia cache — erro em background não encerra sessão
-    if(!store.get('sc_db')) limparSessao();
+    setSyncStatus('offline');
+    if(!cacheStore().get('sc_db')) toast('Não foi possível atualizar. Verifique a conexão e tente novamente.','err');
   }
 }
 
@@ -1723,13 +1877,13 @@ async function updateStatsLegacy(){
     // Extrato do mês corrente (reutiliza cache do caixa se disponível)
     const mes = today().slice(0,7);
     const cacheKey = `sc_cx_${mes}`;
-    let d = store.get(cacheKey)?.d;
+    let d = cacheStore().get(cacheKey)?.d;
     if(!d){
       const lastDay = new Date(parseInt(mes.slice(0,4)), parseInt(mes.slice(5,7)), 0).getDate();
       const r = await api({ action:'getExtrato', token:state.token, dataInicio:mes+'-01', dataFim:mes+'-'+String(lastDay).padStart(2,'0') });
       if(r.status === 'ok'){
         d = r.data || {};
-        try{ store.set(cacheKey, { d, ts: Date.now() }); }catch(_){}
+        try{ cacheStore().set(cacheKey, { d, ts: Date.now() }); }catch(_){}
       }
     }
     if(d){
@@ -1788,7 +1942,7 @@ async function updateStats(){
       qs('#st-saidas').textContent = fmt(saidas);
       qs('#st-retir').textContent = fmt(retir);
       qs('#st-resultado').textContent = fmt(resOp);
-      try{ store.set(cacheKey, { d, ts: Date.now() }); }catch(_){}
+      try{ cacheStore().set(cacheKey, { d, ts: Date.now() }); }catch(_){}
 
       const scRes = qs('#sc-resultado');
       scRes.classList.remove('sc-ok','sc-err');
@@ -1990,6 +2144,13 @@ function bindGlobalEvents(){
   qs('#list-colab').addEventListener('click', onColabListClick);
   qs('#cx-list').addEventListener('click', onCaixaListClick);
   qs('#ag-content').addEventListener('click', onAgendaListClick);
+  document.addEventListener('keydown', e => {
+    keepFocusInsideDialog(e);
+    if(e.key === 'Escape'){
+      if(qs('#modal-overlay')?.classList.contains('open')) closeModal();
+      else if(qs('#drawer')?.classList.contains('open')) closeDrawer();
+    }
+  });
 }
 
 function registerServiceWorker(){
@@ -2002,11 +2163,10 @@ window.addEventListener('load', async () => {
   try{
     registerServiceWorker();
     bindGlobalEvents();
+    prepareDynamicUi(document);
 
-    state.token = store.get('sc_tok') || '';
     state.longToken = store.get('sc_ltok') || '';
-    // Prefere longToken (persiste 30 dias) para evitar expiry do token de sessão curta
-    state.token = state.longToken || state.token || '';
+    state.token = state.longToken || sessionStore.get('sc_tok') || '';
 
     qs('#dg-date').textContent = new Date().toLocaleDateString('pt-BR',{
       weekday:'long',year:'numeric',month:'long',day:'numeric'
@@ -2020,9 +2180,9 @@ window.addEventListener('load', async () => {
       const cacheState = restoreFromCache();
       if(cacheState === 'fresh'){
         showApp();
-        // Cache fresco (< 24h): atualiza stats em segundo plano, não recarrega dados pesados
-        updateStats().catch(()=>{});
-        loadVencHome().catch(()=>{});
+        setSyncStatus('cached');
+        // Exibe o cache imediatamente e confirma os dados com o servidor em segundo plano.
+        loadAll().catch(e => console.warn('Refresh background:', e));
         state.ui.loadFlags.bootstrapped = true;
       }else if(cacheState === 'stale'){
         showApp();
@@ -2137,16 +2297,16 @@ function renderCli(list){
     card.className = 'card';
     card.innerHTML = `
       <div class="card-top">
-        <div class="cavatar">${((c.nome || '?')[0] || '?').toUpperCase()}</div>
+        <div class="cavatar">${safe(((c.nome || '?')[0] || '?').toUpperCase())}</div>
         <div class="cbody">
-          <div class="cname">${c.nome || '—'}</div>
-          <div class="cmeta">${c.telefone || '—'}${c.aniversario ? ' · 🎂 ' + c.aniversario : ''}</div>
+          <div class="cname">${safe(c.nome || '—')}</div>
+          <div class="cmeta">${safe(c.telefone || '—')}${c.aniversario ? ' · 🎂 ' + safe(c.aniversario) : ''}</div>
         </div>
       </div>
       <div class="card-bottom">
-        <button class="btn-s" data-action="hist" data-id="${c.id}">${svgHist}</button>
-        <button class="btn-e" data-action="edit" data-id="${c.id}">${svgEdit}</button>
-        <button class="btn-d" data-action="del" data-id="${c.id}">${svgDel}</button>
+        <button class="btn-s" data-action="hist" data-id="${attr(c.id)}">${svgHist}</button>
+        <button class="btn-e" data-action="edit" data-id="${attr(c.id)}">${svgEdit}</button>
+        <button class="btn-d" data-action="del" data-id="${attr(c.id)}">${svgDel}</button>
       </div>
     `;
     frag.appendChild(card);
@@ -2181,14 +2341,14 @@ function renderSvc(){
       <div class="card-top">
         <div class="cavatar" style="font-size:18px">✂</div>
         <div class="cbody">
-          <div class="cname">${s.nome}</div>
-          <div class="cmeta">${s.descricao || '—'} · ${s.duracaoMin || 60}min</div>
+          <div class="cname">${safe(s.nome)}</div>
+          <div class="cmeta">${safe(s.descricao || '—')} · ${safe(s.duracaoMin || 60)}min</div>
         </div>
         <span class="badge ${isAtivo(s.ativo) ? 'b-on' : 'b-off'}">${isAtivo(s.ativo) ? 'Ativo' : 'Inativo'}</span>
       </div>
       <div class="card-bottom">
         <button class="btn-e" data-action="edit" data-index="${i}">${svgEdit}</button>
-        <button class="btn-d" data-action="del" data-id="${s.id}">${svgDel}</button>
+        <button class="btn-d" data-action="del" data-id="${attr(s.id)}">${svgDel}</button>
       </div>
     </div>
   `).join('');
@@ -2207,14 +2367,14 @@ function renderPrd(){
       <div class="card-top">
         <div class="cavatar" style="font-size:18px">🛍</div>
         <div class="cbody">
-          <div class="cname">${p.nome}</div>
-          <div class="cmeta">${Number(p.preco) > 0 ? fmt(p.preco) + ' · ' : ''}${p.descricao || '—'}</div>
+          <div class="cname">${safe(p.nome)}</div>
+          <div class="cmeta">${Number(p.preco) > 0 ? fmt(p.preco) + ' · ' : ''}${safe(p.descricao || '—')}</div>
         </div>
         <span class="badge ${isAtivo(p.ativo) ? 'b-on' : 'b-off'}">${isAtivo(p.ativo) ? 'Ativo' : 'Inativo'}</span>
       </div>
       <div class="card-bottom">
         <button class="btn-e" data-action="edit" data-index="${i}">${svgEdit}</button>
-        <button class="btn-d" data-action="del" data-id="${p.id}">${svgDel}</button>
+        <button class="btn-d" data-action="del" data-id="${attr(p.id)}">${svgDel}</button>
       </div>
     </div>
   `).join('');
@@ -2231,16 +2391,16 @@ function renderColab(){
   el.innerHTML = state.db.colaboradores.map((c, i) => `
     <div class="card">
       <div class="card-top">
-        <div class="cavatar">${((c.nome || '?')[0] || '?').toUpperCase()}</div>
+        <div class="cavatar">${safe(((c.nome || '?')[0] || '?').toUpperCase())}</div>
         <div class="cbody">
-          <div class="cname">${c.nome}</div>
-          <div class="cmeta">${c.cargo || '—'} · ${c.horaInicio || '08:00'}–${c.horaFim || '18:00'}</div>
+          <div class="cname">${safe(c.nome)}</div>
+          <div class="cmeta">${safe(c.cargo || '—')} · ${safe(c.horaInicio || '08:00')}–${safe(c.horaFim || '18:00')}</div>
         </div>
         <span class="badge ${isAtivo(c.ativo) ? 'b-on' : 'b-off'}">${isAtivo(c.ativo) ? 'Ativa' : 'Inativa'}</span>
       </div>
       <div class="card-bottom">
         <button class="btn-e" data-action="edit" data-index="${i}">${svgEdit}</button>
-        <button class="btn-d" data-action="del" data-id="${c.id}">${svgDel}</button>
+        <button class="btn-d" data-action="del" data-id="${attr(c.id)}">${svgDel}</button>
       </div>
     </div>
   `).join('');
@@ -2262,10 +2422,10 @@ function renderPlanLegacy(){
       <div class="card-top">
         <div class="cavatar" style="font-size:18px">${p.tipo === 'despesa' ? '📤' : '📥'}</div>
         <div class="cbody">
-          <div class="cname">${p.descricao}</div>
-          <div class="cmeta">${p.numParcelas}x de ${fmt(p.valorParcela)} · Dia ${p.diaVencimento}</div>
+          <div class="cname">${safe(p.descricao)}</div>
+          <div class="cmeta">${safe(Number(p.numParcelas) || 0)}x de ${fmt(p.valorParcela)} · Dia ${safe(Number(p.diaVencimento) || 0)}</div>
         </div>
-        <span class="badge ${p.status === 'ativo' ? 'b-on' : 'b-off'}">${p.status}</span>
+        <span class="badge ${p.status === 'ativo' ? 'b-on' : 'b-off'}">${safe(p.status)}</span>
       </div>
     </div>
   `).join('');
@@ -2287,13 +2447,13 @@ function renderPlanAgrupadoLegacy(){
       <div class="card-top">
         <div class="cavatar" style="font-size:18px">${p.tipo === 'despesa' ? '📤' : '📥'}</div>
         <div class="cbody">
-          <div class="cname">${p.descricao}</div>
-          <div class="cmeta">${p.numParcelas}x de ${fmt(p.valorParcela)} · Dia ${p.diaVencimento}</div>
+          <div class="cname">${safe(p.descricao)}</div>
+          <div class="cmeta">${safe(Number(p.numParcelas) || 0)}x de ${fmt(p.valorParcela)} · Dia ${safe(Number(p.diaVencimento) || 0)}</div>
         </div>
-        <span class="badge ${p.status === 'ativo' ? 'b-on' : 'b-off'}">${p.status}</span>
+        <span class="badge ${p.status === 'ativo' ? 'b-on' : 'b-off'}">${safe(p.status)}</span>
       </div>
       <div class="card-bottom">
-        <button class="btn-s" onclick="abrirParcelasPlanejamento('${p.id}','${String(p.descricao || '').replace(/'/g,"\\'")}')">Parcelas</button>
+        <button class="btn-s" type="button">Parcelas</button>
       </div>
     </div>
   `).join('');
@@ -2301,7 +2461,7 @@ function renderPlanAgrupadoLegacy(){
 
 async function abrirParcelasPlanejamento(id, descricao){
   openModal(`
-    <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:4px">${descricao || 'Planejamento'}</div>
+    <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:4px">${safe(descricao || 'Planejamento')}</div>
     <div id="plan-parc-list" style="padding:10px 0"><div class="spinner" style="margin:20px auto"></div></div>
   `);
 
@@ -2314,14 +2474,14 @@ async function abrirParcelasPlanejamento(id, descricao){
       return;
     }
     el.innerHTML = list.map(p => `
-      <div class="venc-card ${p.pago === 'true' ? '' : 'urgente'}" style="margin-bottom:8px">
-        <div class="venc-dot ${p.pago === 'true' ? 'ok' : 'warn'}"></div>
+      <div class="venc-card ${isPago(p.pago) ? '' : 'urgente'}" style="margin-bottom:8px">
+        <div class="venc-dot ${isPago(p.pago) ? 'ok' : 'warn'}"></div>
         <div class="venc-body">
-          <div class="venc-desc">${p.descricao || descricao}</div>
-          <div class="venc-data">${fmtBR(p.vencimento)} · ${p.pago === 'true' ? 'Pago' : 'Em aberto'}</div>
+          <div class="venc-desc">${safe(p.descricao || descricao)}</div>
+          <div class="venc-data">${fmtBR(p.vencimento)} · ${isPago(p.pago) ? 'Pago' : 'Em aberto'}</div>
         </div>
         <div class="venc-val">${fmt(p.valor)}</div>
-        ${p.pago !== 'true' ? `<button class="btn-ok" data-plan-parc="${p.id}" style="padding:7px 9px">Baixar</button>` : ''}
+        ${!isPago(p.pago) ? `<button class="btn-ok" data-plan-parc="${attr(p.id)}" style="padding:7px 9px">Baixar</button>` : ''}
       </div>
     `).join('');
     qsa('[data-plan-parc]').forEach(btn => {
@@ -2370,17 +2530,22 @@ function renderPlan(){
         <div class="card-top">
           <div class="cavatar" style="font-size:18px">${p.tipo === 'despesa' ? '📤' : '📥'}</div>
           <div class="cbody">
-            <div class="cname">${p.descricao || 'Planejamento'}</div>
-            <div class="cmeta">${p.numParcelas}x de ${fmt(p.valorParcela)} · Dia ${p.diaVencimento}</div>
+            <div class="cname">${safe(p.descricao || 'Planejamento')}</div>
+            <div class="cmeta">${safe(Number(p.numParcelas) || 0)}x de ${fmt(p.valorParcela)} · Dia ${safe(Number(p.diaVencimento) || 0)}</div>
           </div>
-          <span class="badge ${p.status === 'ativo' ? 'b-on' : 'b-off'}">${p.status}</span>
+          <span class="badge ${p.status === 'ativo' ? 'b-on' : 'b-off'}">${safe(p.status)}</span>
         </div>
         <div class="card-bottom">
-          <button class="btn-e" onclick="editPlan('${p.id}')">${svgEdit}</button>
-          <button class="btn-s" onclick="abrirParcelasPlanejamento('${p.id}','${String(p.descricao || '').replace(/'/g,"\\'")}')">Ver parcelas</button>
+          <button class="btn-e" data-plan-edit="${attr(p.id)}">${svgEdit}</button>
+          <button class="btn-s" data-plan-open="${attr(p.id)}">Ver parcelas</button>
         </div>
       </div>
     `).join('');
+    qsa('[data-plan-edit]', el).forEach(btn => btn.addEventListener('click', () => editPlan(btn.dataset.planEdit)));
+    qsa('[data-plan-open]', el).forEach(btn => btn.addEventListener('click', () => {
+      const plan = planos.find(p => String(p.id) === String(btn.dataset.planOpen));
+      abrirParcelasPlanejamento(btn.dataset.planOpen, plan?.descricao || 'Planejamento');
+    }));
     return;
   }
 
@@ -2399,23 +2564,29 @@ function renderPlan(){
       <div class="card-top">
         <div class="cavatar" style="font-size:18px">${p.tipo === 'despesa' ? '📤' : '📥'}</div>
         <div class="cbody">
-          <div class="cname">${p.descricao || 'Obrigação'}</div>
+          <div class="cname">${safe(p.descricao || 'Obrigação')}</div>
           <div class="cmeta">${fmtBR(p.vencimento)} · ${fmt(p.valor)}</div>
         </div>
-        <span class="badge ${p.pago === 'true' ? 'b-on' : 'b-warn'}">${p.pago === 'true' ? 'Pago' : 'Aberto'}</span>
+        <span class="badge ${isPago(p.pago) ? 'b-on' : 'b-warn'}">${isPago(p.pago) ? 'Pago' : 'Aberto'}</span>
       </div>
-      ${p.pago !== 'true' ? `
+      ${!isPago(p.pago) ? `
         <div class="card-bottom">
-          <button class="btn-e" onclick="editPlan('${p.planejamentoId || p.id}')">${svgEdit}</button>
-          <button class="btn-ok" onclick="baixarParcelaPlanejamento('${p.id}')">Baixar</button>
+          <button class="btn-e" data-plan-edit="${attr(p.planejamentoId || p.id)}">${svgEdit}</button>
+          <button class="btn-ok" data-plan-pay="${attr(p.id)}">Baixar</button>
         </div>
       ` : `
         <div class="card-bottom">
-          <button class="btn-e" onclick="editPlan('${p.planejamentoId || p.id}')">${svgEdit}</button>
+          <button class="btn-e" data-plan-edit="${attr(p.planejamentoId || p.id)}">${svgEdit}</button>
         </div>
       `}
     </div>
   `).join('');
+  qsa('[data-plan-edit]', el).forEach(btn => btn.addEventListener('click', () => editPlan(btn.dataset.planEdit)));
+  qsa('[data-plan-open]', el).forEach(btn => btn.addEventListener('click', () => {
+    const plan = (state.db.planejamento || []).find(p => String(p.id) === String(btn.dataset.planOpen));
+    abrirParcelasPlanejamento(btn.dataset.planOpen, plan?.descricao || 'Planejamento');
+  }));
+  qsa('[data-plan-pay]', el).forEach(btn => btn.addEventListener('click', () => baixarParcelaPlanejamento(btn.dataset.planPay)));
 }
 
 async function loadPlanejamento(){
@@ -2447,10 +2618,10 @@ function renderCred(){
   el.innerHTML = data.map(c => `
     <div class="cred-card">
       <div class="cred-hdr">
-        <div style="font-size:16px;font-weight:500">${c.clienteNome}</div>
+        <div style="font-size:16px;font-weight:500">${safe(c.clienteNome)}</div>
         <div style="display:flex;gap:8px;align-items:center">
-          <span class="badge ${c.status === 'aberto' ? 'b-off' : 'b-on'}">${c.status}</span>
-          <button class="btn-d" onclick="delFiado('${c.id}')" title="Excluir fiado">${svgDel}</button>
+          <span class="badge ${c.status === 'aberto' ? 'b-off' : 'b-on'}">${safe(c.status)}</span>
+          <button class="btn-d" data-cred-del="${attr(c.id)}" title="Excluir fiado">${svgDel}</button>
         </div>
       </div>
       <div class="cred-vals">
@@ -2459,11 +2630,16 @@ function renderCred(){
         <div class="cv-item"><div class="cv-label">Saldo</div><div class="cv-num err">${fmt(c.saldoDevedor)}</div></div>
       </div>
       ${c.status === 'aberto'
-        ? `<button class="btn-pagar" onclick="abrirPgtoFiado('${c.id}','${(c.clienteNome || '').replace(/'/g,"\\'")}',${Number(c.saldoDevedor) || 0},${Number(c.numParcelas) || 1})">Registrar Pagamento</button>`
+        ? `<button class="btn-pagar" data-cred-pay="${attr(c.id)}">Registrar Pagamento</button>`
         : ''
       }
     </div>
   `).join('');
+  qsa('[data-cred-del]', el).forEach(btn => btn.addEventListener('click', () => delFiado(btn.dataset.credDel)));
+  qsa('[data-cred-pay]', el).forEach(btn => btn.addEventListener('click', () => {
+    const item = data.find(c => String(c.id) === String(btn.dataset.credPay));
+    if(item) abrirPgtoFiado(item.id, item.clienteNome, Number(item.saldoDevedor) || 0, Number(item.numParcelas) || 1);
+  }));
 }
 
 function _renderCaixaData(d, mes){
@@ -2476,7 +2652,7 @@ function _renderCaixaData(d, mes){
   const fel = qs('#cx-formas');
   fel.innerHTML = keys.length
     ? '<div class="slabel" style="margin-bottom:8px">Por forma de pagamento</div>' +
-      keys.map(k => `<div class="forma-row"><span style="font-size:14px;color:var(--dim)">${lbForma(k)}</span><span style="font-size:14px;font-weight:500">${fmt(pf[k])}</span></div>`).join('')
+      keys.map(k => `<div class="forma-row"><span style="font-size:14px;color:var(--dim)">${safe(lbForma(k))}</span><span style="font-size:14px;font-weight:500">${fmt(pf[k])}</span></div>`).join('')
     : '';
 
   const allItems = (d.dias || []).flatMap(dia => dia.lancamentos || []);
@@ -2510,18 +2686,19 @@ function _renderCaixaData(d, mes){
         <div class="dia-items" id="${id}" style="display:${open ? 'block' : 'none'}">
           ${(dia.lancamentos || []).map(l => {
             const isRet = l.isRetirada === 'true' || l.categoria === 'Retirada Pessoal';
+            const tipo = l.tipo === 'saida' ? 'saida' : 'entrada';
             return `
               <div class="dia-item">
-                <div class="licon ${l.tipo}" style="width:28px;height:28px;font-size:14px;flex-shrink:0">${l.tipo === 'entrada' ? '↑' : '↓'}</div>
+                <div class="licon ${tipo}" style="width:28px;height:28px;font-size:14px;flex-shrink:0">${tipo === 'entrada' ? '↑' : '↓'}</div>
                 <div class="lbody" style="flex:1;min-width:0">
-                  <div class="lnome" style="font-size:14px">${l.clienteNome || l.itemNome || l.categoria || '—'}${isRet ? ' <span class="badge b-warn">PESSOAL</span>' : ''}</div>
-                  <div class="lmeta">${lbForma(l.formaPagamento)} ${renderItensMini(l.itemNome, l.observacoes)}</div>
+                  <div class="lnome" style="font-size:14px">${safe(l.clienteNome || l.itemNome || l.categoria || '—')}${isRet ? ' <span class="badge b-warn">PESSOAL</span>' : ''}</div>
+                  <div class="lmeta">${safe(lbForma(l.formaPagamento))} ${safe(renderItensMini(l.itemNome, l.observacoes))}</div>
                 </div>
                 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
-                  <div class="lval ${l.tipo}" style="font-size:15px">${l.tipo === 'saida' ? '-' : ''}${fmt(l.valor)}</div>
+                  <div class="lval ${tipo}" style="font-size:15px">${tipo === 'saida' ? '-' : ''}${fmt(l.valor)}</div>
                   <div style="display:flex;gap:2px">
-                    <button class="btn-e" data-action="edit" data-id="${l.id}" data-date="${l.data}">${svgEdit}</button>
-                    <button class="btn-d" data-action="del" data-id="${l.id}" data-date="${l.data}">${svgDel}</button>
+                    <button class="btn-e" data-action="edit" data-id="${attr(l.id)}" data-date="${attr(l.data)}">${svgEdit}</button>
+                    <button class="btn-d" data-action="del" data-id="${attr(l.id)}" data-date="${attr(l.data)}">${svgDel}</button>
                   </div>
                 </div>
               </div>
@@ -2539,7 +2716,7 @@ async function _fetchCaixaData(dataInicio, dataFim, cacheKey, mes){
   const r = await api({ action:'getExtrato', token:state.token, dataInicio, dataFim });
   if(r.status !== 'ok') return;
   const d = r.data || {};
-  try{ store.set(cacheKey, { d, ts: Date.now() }); }catch(_){}
+  try{ cacheStore().set(cacheKey, { d, ts: Date.now() }); }catch(_){}
   _renderCaixaData(d, mes);
 }
 
@@ -2555,7 +2732,7 @@ async function loadCaixa(forceReload = false){
   const cacheKey = `sc_cx_${mes}`;
 
   if(!forceReload){
-    const cached = store.get(cacheKey);
+    const cached = cacheStore().get(cacheKey);
     if(cached && cached.d){
       _renderCaixaData(cached.d, mes);
       // Atualiza em segundo plano discretamente
@@ -2563,7 +2740,7 @@ async function loadCaixa(forceReload = false){
       return;
     }
   }else{
-    store.del(cacheKey);
+    cacheStore().del(cacheKey);
   }
 
   try{
@@ -2590,11 +2767,11 @@ function _renderAgendaData(el, list, dataBase){
 async function _fetchAgendaData(params, cacheKey, el, dataBase){
   const r = await api(params);
   if(r.status !== 'ok'){
-    el.innerHTML = `<div class="empty"><p>Erro: ${r.data?.message || 'falha na consulta'}</p></div>`;
+    el.innerHTML = `<div class="empty"><p>Erro: ${safe(r.data?.message || 'falha na consulta')}</p></div>`;
     return;
   }
   const list = r.data || [];
-  try{ store.set(cacheKey, { list, ts: Date.now() }); }catch(_){}
+  try{ cacheStore().set(cacheKey, { list, ts: Date.now() }); }catch(_){}
   _renderAgendaData(el, list, dataBase);
 }
 
@@ -2628,11 +2805,11 @@ async function loadAgenda(forceReload = false){
   const isHojeDia = state.ui.agView === 'dia' && dataBase === today();
 
   if(!forceReload){
-    const cached = store.get(cacheKey);
+    const cached = cacheStore().get(cacheKey);
     if(cached && cached.list){
       // Carrega pendentes do cache antes de renderizar
       if(isHojeDia){
-        const pc = store.get(`sc_ag_pendentes_${today()}`);
+        const pc = cacheStore().get(`sc_ag_pendentes_${today()}`);
         state.ui.agPendentes = pc?.list || [];
       }
       _renderAgendaData(el, cached.list, dataBase);
@@ -2642,7 +2819,7 @@ async function loadAgenda(forceReload = false){
       return;
     }
   }else{
-    store.del(cacheKey);
+    cacheStore().del(cacheKey);
     if(isHojeDia) state.ui.agPendentes = [];
   }
 
@@ -2659,20 +2836,20 @@ async function loadAgenda(forceReload = false){
 }
 
 function invalidarPendentes(){
-  store.del(`sc_ag_pendentes_${today()}`);
+  cacheStore().del(`sc_ag_pendentes_${today()}`);
   state.ui.agPendentes = [];
 }
 
 async function loadAgendaPendentes(forceReload = false){
   const cacheKey = `sc_ag_pendentes_${today()}`;
   if(!forceReload){
-    const cached = store.get(cacheKey);
+    const cached = cacheStore().get(cacheKey);
     if(cached && Array.isArray(cached.list)){
       state.ui.agPendentes = cached.list;
       return;
     }
   }else{
-    store.del(cacheKey);
+    cacheStore().del(cacheKey);
   }
   // Busca últimos 60 dias até ontem (datas locais — toISOString virava o dia após as 20h em Manaus)
   const df = new Date(); df.setDate(df.getDate() - 1);
@@ -2686,11 +2863,11 @@ async function loadAgendaPendentes(forceReload = false){
     if(r.status === 'ok'){
       const pendentes = (r.data || []).filter(ag => ag.status === 'agendado');
       state.ui.agPendentes = pendentes;
-      try{ store.set(cacheKey, { list: pendentes, ts: Date.now() }); }catch(_){}
+      try{ cacheStore().set(cacheKey, { list: pendentes, ts: Date.now() }); }catch(_){}
       // Se ainda estamos na view de hoje, re-renderiza para incluir pendentes
       const el = qs('#ag-content');
       if(el?._agDataBase === today() && state.ui.agView === 'dia'){
-        const dayCache = store.get(`sc_ag_dia_${today()}`);
+        const dayCache = cacheStore().get(`sc_ag_dia_${today()}`);
         if(dayCache?.list) _renderAgendaData(el, dayCache.list, today());
       }
     }
@@ -2698,18 +2875,19 @@ async function loadAgendaPendentes(forceReload = false){
 }
 
 function agCardHtml(ag, isPending = false){
+  const status = ['concluido','cancelado','agendado'].includes(ag.status) ? ag.status : 'agendado';
   const badge = isPending
     ? `<span class="badge" style="background:var(--err-bg);color:var(--err);border:1px solid var(--err)">Atrasado</span>`
-    : `<span class="badge ${ag.status === 'concluido' ? 'b-on' : ag.status === 'cancelado' ? 'b-off' : 'b-info'}">${ag.status === 'concluido' ? 'Concluído' : ag.status === 'cancelado' ? 'Cancelado' : 'Agendado'}</span>`;
+    : `<span class="badge ${status === 'concluido' ? 'b-on' : status === 'cancelado' ? 'b-off' : 'b-info'}">${status === 'concluido' ? 'Concluído' : status === 'cancelado' ? 'Cancelado' : 'Agendado'}</span>`;
   const borderStyle = isPending ? 'border-color:var(--err);background:var(--err-bg)' : '';
   const dataPrefix = isPending ? `<span style="font-size:13px;color:var(--err);font-weight:600">${fmtBR(String(ag.data).slice(0,10))} · </span>` : '';
   return `
-    <div class="ag-card ${ag.status}" data-id="${ag.id}" style="cursor:pointer;${borderStyle}">
+    <div class="ag-card ${status}" data-id="${attr(ag.id)}" style="cursor:pointer;${borderStyle}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
-          <div class="ag-hora">${dataPrefix}${ag.hora || '—'}</div>
-          <div class="ag-cli">${ag.clienteNome || '—'}</div>
-          <div class="ag-meta">${ag.servicos || '—'} · ${ag.duracaoMin}min${ag.colaboradorNome ? ' · ' + ag.colaboradorNome : ''}</div>
+          <div class="ag-hora">${dataPrefix}${safe(ag.hora || '—')}</div>
+          <div class="ag-cli">${safe(ag.clienteNome || '—')}</div>
+          <div class="ag-meta">${safe(ag.servicos || '—')} · ${safe(ag.duracaoMin || 0)}min${ag.colaboradorNome ? ' · ' + safe(ag.colaboradorNome) : ''}</div>
         </div>
         ${badge}
       </div>
@@ -2812,12 +2990,12 @@ function renderAgendaSemana(el, list, dataBase){
       ags.forEach(ag => {
         const clr = ag.status==='concluido' ? 'var(--ok)' : ag.status==='cancelado' ? 'var(--err)' : 'var(--info)';
         const bg  = ag.status==='concluido' ? 'var(--ok-bg)' : ag.status==='cancelado' ? 'var(--err-bg)' : 'var(--info-bg)';
-        html += `<div class="gcal-event" data-id="${ag.id}"
+        html += `<div class="gcal-event" data-id="${attr(ag.id)}"
           style="position:relative;height:auto;top:auto;left:auto;right:auto;
                  background:${bg};border-left-color:${clr};color:${clr};margin-bottom:4px">
-          <div class="gcal-event-hora">${ag.hora || '—'}</div>
-          <div style="font-size:13px;font-weight:500;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${ag.clienteNome || ''}</div>
-          <div class="gcal-event-desc">${ag.servicos || ''}</div>
+          <div class="gcal-event-hora">${safe(ag.hora || '—')}</div>
+          <div style="font-size:13px;font-weight:500;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${safe(ag.clienteNome || '')}</div>
+          <div class="gcal-event-desc">${safe(ag.servicos || '')}</div>
         </div>`;
       });
     }
@@ -2877,7 +3055,7 @@ function renderAgendaMes(el, list, dataBase){
       visible.forEach(ag => {
         const clr = ag.status==='concluido' ? 'var(--ok)' : ag.status==='cancelado' ? 'var(--err)' : 'var(--info)';
         const bg  = ag.status==='concluido' ? 'var(--ok-bg)' : ag.status==='cancelado' ? 'var(--err-bg)' : 'var(--info-bg)';
-        html += `<div class="gcal-month-pill" data-id="${ag.id}" style="background:${bg};color:${clr}">${ag.hora ? ag.hora+' ' : ''}${ag.clienteNome || ag.servicos || '—'}</div>`;
+        html += `<div class="gcal-month-pill" data-id="${attr(ag.id)}" style="background:${bg};color:${clr}">${ag.hora ? safe(ag.hora)+' ' : ''}${safe(ag.clienteNome || ag.servicos || '—')}</div>`;
       });
       if(extra > 0) html += `<div class="gcal-month-mais">+${extra} mais</div>`;
       html += `</div>`;
@@ -2927,7 +3105,7 @@ async function loadVencHomeLegacy(){
           <div class="venc-card ${cardCls}">
             <div class="venc-dot ${cls}"></div>
             <div class="venc-body">
-              <div class="venc-desc">${v.descricao || v.clienteNome || '—'}</div>
+              <div class="venc-desc">${safe(v.descricao || v.clienteNome || '—')}</div>
               <div class="venc-data">Vence ${fmtBR(v.vencimento)} · ${v._tipo === 'despesa' ? 'Despesa' : 'A receber'}</div>
             </div>
             <div class="venc-val">${fmt(v.valor || v.valorParcela)}</div>
@@ -2947,7 +3125,7 @@ async function loadVencHomeLegacy(){
             <div class="alert-bar">
               <div class="alert-bar-icon">🔴</div>
               <div class="alert-bar-body">
-                <div class="alert-bar-desc">${v.descricao || v.clienteNome || '—'}</div>
+                <div class="alert-bar-desc">${safe(v.descricao || v.clienteNome || '—')}</div>
                 <div class="alert-bar-meta">Venceu ${fmtBR(v.vencimento)}</div>
               </div>
               <div class="alert-bar-val">${fmt(v.valor || v.valorParcela)}</div>
@@ -2977,14 +3155,14 @@ async function loadVencHome(){
       const cls = dias <= 2 ? 'err' : dias <= 5 ? 'warn' : 'ok';
       const cardCls = dias <= 2 ? 'atrasado' : dias <= 5 ? 'urgente' : '';
       return `
-        <div class="venc-card ${cardCls}" data-venc-id="${v.id}">
+        <div class="venc-card ${cardCls}" data-venc-id="${attr(v.id)}">
           <div class="venc-dot ${cls}"></div>
           <div class="venc-body">
-            <div class="venc-desc">${v.descricao || v.clienteNome || '—'}</div>
+            <div class="venc-desc">${safe(v.descricao || v.clienteNome || '—')}</div>
             <div class="venc-data">Vence ${fmtBR(v.vencimento)} · ${v._tipo === 'despesa' ? 'Despesa' : 'A receber'}</div>
           </div>
           <div class="venc-val">${fmt(v.valor || v.valorParcela)}</div>
-          <button class="btn-ok btn-baixa-venc" data-id="${v.id}" style="padding:7px 9px">Baixar</button>
+          <button class="btn-ok btn-baixa-venc" data-id="${attr(v.id)}" style="padding:7px 9px">Baixar</button>
         </div>
       `;
     };
@@ -3022,7 +3200,7 @@ async function baixarVencimento(id){
   if(!item) return toast('Vencimento não encontrado.','err');
 
   const desc = item.descricao || item.clienteNome || 'este vencimento';
-  if(!confirm(`Dar baixa em ${desc}?`)) return;
+  if(!confirm(`Confirmar baixa de “${desc}”?\n\nValor: ${fmt(item.valor || item.valorParcela)}\nVencimento: ${fmtBR(item.vencimento)}\nForma registrada: Dinheiro`)) return;
 
   await comTrava(async () => {
   try{
@@ -3041,6 +3219,7 @@ async function baixarVencimento(id){
           crediarioId:item.crediarioId,
           valor:Number(item.valor) || 0,
           parcela:item.numParcela || '',
+          idempotencyKey:`home:${item.id}`,
           observacoes:'Baixa pelo painel inicial'
         };
 
@@ -3062,7 +3241,8 @@ async function loadExtrato(){
   if(state.ui.extModo === 'periodo'){
     const di = parseISO(qs('#ext-di')?.value || '');
     const df = parseISO(qs('#ext-df')?.value || '');
-    if(!di || !df || di === 'NaN-NaN-NaN') return toast('Informe as datas.','err');
+    if(!SoniaRules.isValidIsoDate(di) || !SoniaRules.isValidIsoDate(df)) return toast('Informe datas válidas.','err');
+    if(di > df) return toast('A data inicial deve vir antes da data final.','err');
 
     const diff = (new Date(df) - new Date(di)) / (1000*60*60*24);
     if(diff > 7 && !state.ui.extUnlocked){
@@ -3098,7 +3278,7 @@ async function loadExtrato(){
 }
 
 function renderExtrato(d, el){
-  let html = `<div class="ext-header"><div class="ext-label">${d.label || 'Extrato'}</div><div class="ext-sub">${d.total || 0} lançamentos</div></div>`;
+  let html = `<div class="ext-header"><div class="ext-label">${safe(d.label || 'Extrato')}</div><div class="ext-sub">${Number(d.total) || 0} lançamentos</div></div>`;
   const resOp = d.resultadoOp || 0;
   const dizimo = Math.max(0, resOp) * 0.10;
   const pacto = dizimo / 2;
@@ -3109,7 +3289,7 @@ function renderExtrato(d, el){
       <div class="ext-rc"><div class="ext-rc-label">Despesas Op.</div><div class="ext-rc-val neg">${fmt(d.saidasOp)}</div></div>
     </div>
     <div class="result-box ${resOp >= 0 ? 'destaque-ok' : 'destaque-err'}" style="margin-bottom:12px">
-      <div><div class="result-label">Resultado Operacional</div><div class="result-sub">Entradas − Despesas da empresa</div></div>
+      <div><div class="result-label">Resultado antes de retiradas</div><div class="result-sub">Entradas − Despesas da empresa</div></div>
       <div class="result-val ${resOp >= 0 ? 'pos' : 'neg'}" style="font-size:26px">${fmt(resOp)}</div>
     </div>
     ${dizimo > 0 ? `
@@ -3137,7 +3317,7 @@ function renderExtrato(d, el){
     html += `<div class="bk-box"><div class="bk-title">Entradas por forma de pagamento</div>`;
     Object.entries(d.porForma).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{
       const pct = d.faturamento > 0 ? ((v / d.faturamento) * 100).toFixed(1) : 0;
-      html += `<div class="bk-row"><span class="bk-label">${lbForma(k)}</span><span class="bk-val">${fmt(v)}<span class="bk-pct">${pct}%</span></span></div>`;
+      html += `<div class="bk-row"><span class="bk-label">${safe(lbForma(k))}</span><span class="bk-val">${fmt(v)}<span class="bk-pct">${pct}%</span></span></div>`;
     });
     html += `</div>`;
   }
@@ -3146,7 +3326,7 @@ function renderExtrato(d, el){
     html += `<div class="bk-box"><div class="bk-title">Saídas por categoria</div>`;
     Object.entries(d.porCategoria).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{
       const pct = d.saidasOp > 0 ? ((v / d.saidasOp) * 100).toFixed(1) : 0;
-      html += `<div class="bk-row"><span class="bk-label">${k}</span><span class="bk-val" style="color:var(--err)">${fmt(v)}<span class="bk-pct">${pct}%</span></span></div>`;
+      html += `<div class="bk-row"><span class="bk-label">${safe(k)}</span><span class="bk-val" style="color:var(--err)">${fmt(v)}<span class="bk-pct">${pct}%</span></span></div>`;
     });
     html += `</div>`;
   }
@@ -3165,16 +3345,18 @@ function renderExtrato(d, el){
             </span>
           </div>
           <div class="dia-items" id="dd${i}" style="display:${i === 0 ? 'block' : 'none'}">
-            ${(dia.lancamentos || []).map(l => `
+            ${(dia.lancamentos || []).map(l => {
+              const tipo = l.tipo === 'saida' ? 'saida' : 'entrada';
+              return `
               <div class="dia-item">
-                <div class="licon ${l.tipo}" style="width:28px;height:28px;font-size:14px">${l.tipo === 'entrada' ? '↑' : '↓'}</div>
+                <div class="licon ${tipo}" style="width:28px;height:28px;font-size:14px">${tipo === 'entrada' ? '↑' : '↓'}</div>
                 <div class="lbody">
-                  <div class="lnome" style="font-size:14px">${l.itemNome || l.categoria || '—'}${l.clienteNome ? ' · ' + l.clienteNome : ''}</div>
-                  <div class="lmeta">${lbForma(l.formaPagamento)}</div>
+                  <div class="lnome" style="font-size:14px">${safe(l.itemNome || l.categoria || '—')}${l.clienteNome ? ' · ' + safe(l.clienteNome) : ''}</div>
+                  <div class="lmeta">${safe(lbForma(l.formaPagamento))}</div>
                 </div>
-                <div class="lval ${l.tipo}" style="font-size:16px">${l.tipo === 'saida' ? '-' : ''}${fmt(l.valor)}</div>
+                <div class="lval ${tipo}" style="font-size:16px">${tipo === 'saida' ? '-' : ''}${fmt(l.valor)}</div>
               </div>
-            `).join('')}
+            `;}).join('')}
           </div>
         </div>
       `;
@@ -3249,11 +3431,11 @@ function openDrawerCliente(prefill = null){
   state.ui.editId = null;
   openDrawer(`
     <div class="dtitle">Nova Cliente</div>
-    <div class="fg"><span class="lbl">Nome *</span><input id="fc-nome" type="text" class="inp" value="${d.nome || ''}"/></div>
-    <div class="fg"><span class="lbl">Telefone</span><input id="fc-tel" type="tel" class="inp" placeholder="(00) 00000-0000" maxlength="15" value="${d.telefone || ''}"/></div>
-    <div class="fg"><span class="lbl">E-mail</span><input id="fc-email" type="email" class="inp" value="${d.email || ''}"/></div>
-    <div class="fg"><span class="lbl">Aniversário</span><input id="fc-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${d.aniversario || ''}"/></div>
-    <div class="fg"><span class="lbl">Observações</span><textarea id="fc-obs" class="inp">${d.observacoes || ''}</textarea></div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="fc-nome" type="text" class="inp" value="${attr(d.nome || '')}"/></div>
+    <div class="fg"><span class="lbl">Telefone</span><input id="fc-tel" type="tel" class="inp" placeholder="(00) 00000-0000" maxlength="15" value="${attr(d.telefone || '')}"/></div>
+    <div class="fg"><span class="lbl">E-mail</span><input id="fc-email" type="email" class="inp" value="${attr(d.email || '')}"/></div>
+    <div class="fg"><span class="lbl">Aniversário</span><input id="fc-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${attr(d.aniversario || '')}"/></div>
+    <div class="fg"><span class="lbl">Observações</span><textarea id="fc-obs" class="inp">${safe(d.observacoes || '')}</textarea></div>
     <div class="dfooter">
       <button class="btn-sec" id="btn-cancel-cli">Cancelar</button>
       <button class="btn-save" id="btn-save-cli">Salvar</button>
@@ -3270,11 +3452,11 @@ function editCli(c){
   state.ui.editId = c.id;
   openDrawer(`
     <div class="dtitle">Editar Cliente</div>
-    <div class="fg"><span class="lbl">Nome *</span><input id="fc-nome" type="text" class="inp" value="${c.nome || ''}"/></div>
-    <div class="fg"><span class="lbl">Telefone</span><input id="fc-tel" type="tel" class="inp" value="${c.telefone || ''}" maxlength="15"/></div>
-    <div class="fg"><span class="lbl">E-mail</span><input id="fc-email" type="email" class="inp" value="${c.email || ''}"/></div>
-    <div class="fg"><span class="lbl">Aniversário</span><input id="fc-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${c.aniversario || ''}"/></div>
-    <div class="fg"><span class="lbl">Observações</span><textarea id="fc-obs" class="inp">${c.observacoes || ''}</textarea></div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="fc-nome" type="text" class="inp" value="${attr(c.nome || '')}"/></div>
+    <div class="fg"><span class="lbl">Telefone</span><input id="fc-tel" type="tel" class="inp" value="${attr(c.telefone || '')}" maxlength="15"/></div>
+    <div class="fg"><span class="lbl">E-mail</span><input id="fc-email" type="email" class="inp" value="${attr(c.email || '')}"/></div>
+    <div class="fg"><span class="lbl">Aniversário</span><input id="fc-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${attr(c.aniversario || '')}"/></div>
+    <div class="fg"><span class="lbl">Observações</span><textarea id="fc-obs" class="inp">${safe(c.observacoes || '')}</textarea></div>
     <div class="dfooter">
       <button class="btn-sec" id="btn-cancel-cli">Cancelar</button>
       <button class="btn-save" id="btn-save-cli">Salvar</button>
@@ -3297,7 +3479,7 @@ async function saveCli(){
   try{
     const r = await persistCliente(data);
     if(r.status !== 'ok'){
-      toast('Erro.','err');
+      toast(r.data?.message || 'Não foi possível salvar a cliente.','err');
       btnSv(btn, false);
       return;
     }
@@ -3310,10 +3492,11 @@ async function saveCli(){
 }
 
 async function delCli(id){
-  if(!confirm('Excluir?')) return;
+  const item = state.db.clientes.find(c => String(c.id) === String(id));
+  if(!confirm(`Excluir a cliente “${item?.nome || 'sem nome'}”?\n\nO histórico financeiro existente será mantido.`)) return;
   try{
     const r = await post({ action:'deleteRow', token:state.token, sheet:'clientes', id });
-    if(r.status !== 'ok') return toast('Erro.','err');
+    if(r.status !== 'ok') return toast(r.data?.message || 'Não foi possível excluir a cliente.','err');
     state.db.clientes = state.db.clientes.filter(c => c.id !== id);
     renderCli();
     updateStats();
@@ -3390,7 +3573,7 @@ async function importarDaAgenda() {
 }
 
 async function verHist(clienteId, nome){
-  openDrawer(`<div class="dtitle">Histórico</div><div style="color:var(--dim);margin-bottom:16px">${nome}</div><div style="color:var(--dim);font-size:14px">Carregando…</div>`);
+  openDrawer(`<div class="dtitle">Histórico</div><div style="color:var(--dim);margin-bottom:16px">${safe(nome)}</div><div style="color:var(--dim);font-size:14px">Carregando…</div>`);
 
   try{
     const [hist, cred] = await Promise.all([
@@ -3398,7 +3581,7 @@ async function verHist(clienteId, nome){
       api({ action:'getCrediario', token:state.token, clienteId })
     ]);
 
-    let html = `<div class="dtitle">Histórico</div><div style="font-size:14px;color:var(--dim);margin-bottom:16px">${nome}</div>`;
+    let html = `<div class="dtitle">Histórico</div><div style="font-size:14px;color:var(--dim);margin-bottom:16px">${safe(nome)}</div>`;
 
     if(cred.status === 'ok' && cred.data.length){
       const c = cred.data.find(x => x.status === 'aberto');
@@ -3412,8 +3595,8 @@ async function verHist(clienteId, nome){
       html += hist.data.slice().reverse().map(h => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
           <div>
-            <div style="font-size:15px;font-weight:500">${h.itemNome || h.categoria || '—'}</div>
-            <div style="font-size:13px;color:var(--dim)">${fmtBR(String(h.data).slice(0,10))} · ${lbForma(h.formaPagamento)}</div>
+            <div style="font-size:15px;font-weight:500">${safe(h.itemNome || h.categoria || '—')}</div>
+            <div style="font-size:13px;color:var(--dim)">${fmtBR(String(h.data).slice(0,10))} · ${safe(lbForma(h.formaPagamento))}</div>
           </div>
           <div style="font-family:'Playfair Display',serif;font-size:17px;color:var(--ok);font-weight:600">${fmt(h.valor)}</div>
         </div>
@@ -3424,6 +3607,7 @@ async function verHist(clienteId, nome){
 
     html += '<div class="dfooter"><button class="btn-save" style="width:100%" id="btn-fechar-hist">Fechar</button></div>';
     qs('#drawer-content').innerHTML = html;
+    prepareDynamicUi(qs('#drawer-content'));
     qs('#btn-fechar-hist').addEventListener('click', closeDrawer);
   }catch(e){
     toast('Erro.','err');
@@ -3452,10 +3636,10 @@ function editSvc(s){
   state.ui.editId = s.id;
   openDrawer(`
     <div class="dtitle">Editar Serviço</div>
-    <div class="fg"><span class="lbl">Nome *</span><input id="sv-nome" type="text" class="inp" value="${s.nome || ''}"/></div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="sv-nome" type="text" class="inp" value="${attr(s.nome || '')}"/></div>
     <div class="form-row">
-      <div class="fg"><span class="lbl">Descrição</span><input id="sv-desc" type="text" class="inp" value="${s.descricao || ''}"/></div>
-      <div class="fg"><span class="lbl">Duração (min)</span><input id="sv-dur" type="number" class="inp" value="${s.duracaoMin || 60}"/></div>
+      <div class="fg"><span class="lbl">Descrição</span><input id="sv-desc" type="text" class="inp" value="${attr(s.descricao || '')}"/></div>
+      <div class="fg"><span class="lbl">Duração (min)</span><input id="sv-dur" type="number" class="inp" value="${attr(Number(s.duracaoMin) || 60)}"/></div>
     </div>
     <div class="fg">
       <span class="lbl">Status</span>
@@ -3491,7 +3675,7 @@ async function saveSvc(){
   try{
     const r = await post({ action:'saveServico', token:state.token, data });
     if(r.status !== 'ok'){
-      toast('Erro.','err');
+      toast(r.data?.message || 'Não foi possível salvar o serviço.','err');
       btnSv(btn, false);
       return;
     }
@@ -3517,10 +3701,11 @@ async function saveSvc(){
 }
 
 async function delSvc(id){
-  if(!confirm('Excluir?')) return;
+  const item = state.db.servicos.find(s => String(s.id) === String(id));
+  if(!confirm(`Excluir o serviço “${item?.nome || 'sem nome'}”?\n\nAgendamentos e lançamentos antigos serão mantidos.`)) return;
   try{
     const r = await post({ action:'deleteRow', token:state.token, sheet:'servicos', id });
-    if(r.status !== 'ok') return toast('Erro.','err');
+    if(r.status !== 'ok') return toast(r.data?.message || 'Não foi possível excluir o serviço.','err');
     state.db.servicos = state.db.servicos.filter(s => s.id !== id);
     renderSvc();
     updateStats();
@@ -3554,10 +3739,10 @@ function editPrd(p){
   state.ui.editId = p.id;
   openDrawer(`
     <div class="dtitle">Editar Produto</div>
-    <div class="fg"><span class="lbl">Nome *</span><input id="pr-nome" type="text" class="inp" value="${p.nome || ''}"/></div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="pr-nome" type="text" class="inp" value="${attr(p.nome || '')}"/></div>
     <div class="form-row">
       <div class="fg"><span class="lbl">Preço padrão (R$)</span><input id="pr-preco" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
-      <div class="fg"><span class="lbl">Descrição</span><input id="pr-desc" type="text" class="inp" value="${p.descricao || ''}"/></div>
+      <div class="fg"><span class="lbl">Descrição</span><input id="pr-desc" type="text" class="inp" value="${attr(p.descricao || '')}"/></div>
     </div>
     <div class="fg">
       <span class="lbl">Status</span>
@@ -3596,7 +3781,7 @@ async function savePrd(){
   try{
     const r = await post({ action:'saveProduto', token:state.token, data });
     if(r.status !== 'ok'){
-      toast('Erro.','err');
+      toast(r.data?.message || 'Não foi possível salvar o produto.','err');
       btnSv(btn, false);
       return;
     }
@@ -3621,10 +3806,11 @@ async function savePrd(){
 }
 
 async function delPrd(id){
-  if(!confirm('Excluir?')) return;
+  const item = state.db.produtos.find(p => String(p.id) === String(id));
+  if(!confirm(`Excluir o produto “${item?.nome || 'sem nome'}”?\n\nLançamentos antigos serão mantidos.`)) return;
   try{
     const r = await post({ action:'deleteRow', token:state.token, sheet:'produtos', id });
-    if(r.status !== 'ok') return toast('Erro.','err');
+    if(r.status !== 'ok') return toast(r.data?.message || 'Não foi possível excluir o produto.','err');
     state.db.produtos = state.db.produtos.filter(p => p.id !== id);
     renderPrd();
     toast('Excluído.','ok');
@@ -3659,12 +3845,12 @@ function editColab(c){
   state.ui.editId = c.id;
   openDrawer(`
     <div class="dtitle">Editar Colaboradora</div>
-    <div class="fg"><span class="lbl">Nome *</span><input id="co-nome" type="text" class="inp" value="${c.nome || ''}"/></div>
-    <div class="fg"><span class="lbl">Cargo</span><input id="co-cargo" type="text" class="inp" value="${c.cargo || ''}"/></div>
-    <div class="fg"><span class="lbl">Telefone</span><input id="co-tel" type="tel" class="inp" value="${c.telefone || ''}" maxlength="15"/></div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="co-nome" type="text" class="inp" value="${attr(c.nome || '')}"/></div>
+    <div class="fg"><span class="lbl">Cargo</span><input id="co-cargo" type="text" class="inp" value="${attr(c.cargo || '')}"/></div>
+    <div class="fg"><span class="lbl">Telefone</span><input id="co-tel" type="tel" class="inp" value="${attr(c.telefone || '')}" maxlength="15"/></div>
     <div class="form-row">
-      <div class="fg"><span class="lbl">Início</span><input id="co-hi" type="time" class="inp" value="${c.horaInicio || '08:00'}"/></div>
-      <div class="fg"><span class="lbl">Fim</span><input id="co-hf" type="time" class="inp" value="${c.horaFim || '18:00'}"/></div>
+      <div class="fg"><span class="lbl">Início</span><input id="co-hi" type="time" class="inp" value="${attr(c.horaInicio || '08:00')}"/></div>
+      <div class="fg"><span class="lbl">Fim</span><input id="co-hf" type="time" class="inp" value="${attr(c.horaFim || '18:00')}"/></div>
     </div>
     <div class="fg">
       <span class="lbl">Status</span>
@@ -3704,7 +3890,7 @@ async function saveColab(){
   try{
     const r = await post({ action:'saveColaborador', token:state.token, data });
     if(r.status !== 'ok'){
-      toast('Erro.','err');
+      toast(r.data?.message || 'Não foi possível salvar a colaboradora.','err');
       btnSv(btn, false);
       return;
     }
@@ -3729,10 +3915,11 @@ async function saveColab(){
 }
 
 async function delColab(id){
-  if(!confirm('Excluir?')) return;
+  const item = state.db.colaboradores.find(c => String(c.id) === String(id));
+  if(!confirm(`Excluir a colaboradora “${item?.nome || 'sem nome'}”?\n\nAgendamentos antigos serão mantidos.`)) return;
   try{
     const r = await post({ action:'deleteRow', token:state.token, sheet:'colaboradores', id });
-    if(r.status !== 'ok') return toast('Erro.','err');
+    if(r.status !== 'ok') return toast(r.data?.message || 'Não foi possível excluir a colaboradora.','err');
     state.db.colaboradores = state.db.colaboradores.filter(c => c.id !== id);
     renderColab();
     toast('Excluída.','ok');
@@ -3752,7 +3939,7 @@ function openDrawerPlan(){
     <div class="fg"><span class="lbl">Descrição *</span><input id="pn-desc" type="text" class="inp" placeholder="Ex: Equipamento parcelado…"/></div>
     <div class="form-row">
       <div class="fg"><span class="lbl">Valor total *</span><input id="pn-total" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
-      <div class="fg"><span class="lbl">Nº parcelas</span><input id="pn-parc" type="number" class="inp" min="1" max="60" value="1"/></div>
+      <div class="fg"><span class="lbl">Nº parcelas</span><input id="pn-parc" type="number" class="inp" min="1" max="120" value="1"/></div>
     </div>
     <div class="form-row">
       <div class="fg"><span class="lbl">Dia vencimento</span><input id="pn-dia" type="number" class="inp" min="1" max="31" value="10"/></div>
@@ -3796,17 +3983,18 @@ function editPlan(id){
       <button class="seg-btn ${plan.tipo === 'despesa' ? 'active' : ''}" id="plan-d">Despesa</button>
       <button class="seg-btn ${plan.tipo === 'receita' ? 'active' : ''}" id="plan-r">Receita</button>
     </div>
-    <div class="fg"><span class="lbl">Descrição *</span><input id="pn-desc" type="text" class="inp" placeholder="Ex: Equipamento parcelado…" value="${plan.descricao || ''}"/></div>
+    <div class="fg"><span class="lbl">Descrição *</span><input id="pn-desc" type="text" class="inp" placeholder="Ex: Equipamento parcelado…" value="${attr(plan.descricao || '')}"/></div>
     <div class="form-row">
       <div class="fg"><span class="lbl">Valor total *</span><input id="pn-total" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
-      <div class="fg"><span class="lbl">Nº parcelas</span><input id="pn-parc" type="number" class="inp" min="1" max="60" value="${plan.numParcelas || 1}"/></div>
+      <div class="fg"><span class="lbl">Nº parcelas</span><input id="pn-parc" type="number" class="inp" min="1" max="120" value="${attr(Number(plan.numParcelas) || 1)}"/></div>
     </div>
     <div class="form-row">
-      <div class="fg"><span class="lbl">Dia vencimento</span><input id="pn-dia" type="number" class="inp" min="1" max="31" value="${plan.diaVencimento || 10}"/></div>
-      <div class="fg"><span class="lbl">Data início</span><input id="pn-inicio" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${plan.dataInicio ? fmtBR(plan.dataInicio) : ''}"/></div>
+      <div class="fg"><span class="lbl">Dia vencimento</span><input id="pn-dia" type="number" class="inp" min="1" max="31" value="${attr(Number(plan.diaVencimento) || 10)}"/></div>
+      <div class="fg"><span class="lbl">Data início</span><input id="pn-inicio" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${attr(plan.dataInicio ? fmtBR(plan.dataInicio) : '')}"/></div>
     </div>
-    <div class="fg"><span class="lbl">Observações</span><input id="pn-obs" type="text" class="inp" placeholder="Opcional…" value="${plan.observacoes || ''}"/></div>
+    <div class="fg"><span class="lbl">Observações</span><input id="pn-obs" type="text" class="inp" placeholder="Opcional…" value="${attr(plan.observacoes || '')}"/></div>
     <div class="dfooter">
+      <button class="btn-sec" id="btn-del-plan" style="border-color:var(--err);color:var(--err)">Excluir</button>
       <button class="btn-sec" id="btn-cancel-plan">Cancelar</button>
       <button class="btn-save" id="btn-save-plan">Salvar</button>
     </div>
@@ -3827,8 +4015,25 @@ function editPlan(id){
 
   qs('#btn-cancel-plan').addEventListener('click', closeDrawer);
   qs('#btn-save-plan').addEventListener('click', savePlan);
+  qs('#btn-del-plan').addEventListener('click', () => delPlan(plan.id));
 }
 window.editPlan = editPlan;
+
+async function delPlan(id){
+  const plan = (state.db.planejamento || []).find(p => String(p.id) === String(id));
+  const descricao = plan?.descricao || 'este planejamento';
+  if(!confirm(`Excluir “${descricao}” e todas as parcelas ainda abertas?\n\nPlanejamentos com parcela já paga não podem ser excluídos.`)) return;
+  await comTrava(async () => {
+    try{
+      const r = await post({ action:'deletePlanejamento', token:state.token, id });
+      if(r.status !== 'ok') return toast(r.data?.message || 'Não foi possível excluir.','err');
+      closeDrawer();
+      toast('Planejamento excluído.','ok');
+      await Promise.all([loadPlanejamento(), loadVencHome(), updateStats()]);
+    }catch(_){ toast('Erro de conexão.','err'); }
+  });
+}
+window.delPlan = delPlan;
 
 function syncAgendamentoServicosInput(){
   const input = qs('#ag-svc');
@@ -3855,7 +4060,7 @@ function renderAgendamentoServicos(){
   wrap.innerHTML = state.ui.agServicos.map((item, idx) => `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;margin-top:6px">
       <div style="min-width:0">
-        <div style="font-size:15px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.nome}</div>
+        <div style="font-size:15px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${safe(item.nome)}</div>
         <div style="font-size:13px;color:var(--dim)">${item.duracaoMin || 0} min</div>
       </div>
       <button type="button" class="btn-remove-item" onclick="removeAgendamentoServico(${idx})">Remover</button>
@@ -3891,12 +4096,17 @@ function abrirSeletorServicoAgendamento(){
     html += '<div style="color:var(--dim);font-size:14px;padding:12px 0">Nenhum serviço cadastrado.</div>';
   }else{
     svcOpts.forEach(s => {
-      html += `<div onclick="addAgendamentoServicoById('${s.id}');closeModal()" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${s.nome}</span><span style="color:var(--dim);font-size:14px">${s.duracaoMin || 0} min</span></div>`;
+      html += `<button type="button" data-ag-service="${attr(s.id)}" style="width:100%;padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${safe(s.nome)}</span><span style="color:var(--dim);font-size:14px">${Number(s.duracaoMin) || 0} min</span></button>`;
     });
   }
 
-  html += '<button onclick="closeModal()" class="btn-sec" style="width:100%;margin-top:16px">Fechar</button>';
+  html += '<button id="btn-close-ag-service" class="btn-sec" style="width:100%;margin-top:16px">Fechar</button>';
   openModal(html);
+  qsa('[data-ag-service]', qs('#modal-content')).forEach(btn => btn.addEventListener('click', () => {
+    addAgendamentoServicoById(btn.dataset.agService);
+    closeModal();
+  }));
+  qs('#btn-close-ag-service')?.addEventListener('click', closeModal);
 }
 
 async function savePlan(){
@@ -3906,15 +4116,22 @@ async function savePlan(){
   const total = getValorRaw(qs('#pn-total'));
   if(!total) return toast('Informe o valor.','err');
 
+  const numParcelas = parseInt(qs('#pn-parc')?.value || '1', 10);
+  const diaVencimento = parseInt(qs('#pn-dia')?.value || '10', 10);
+  const dataInicio = parseISO(qs('#pn-inicio')?.value || '');
+  if(!Number.isInteger(numParcelas) || numParcelas < 1 || numParcelas > 120) return toast('Informe de 1 a 120 parcelas.','err');
+  if(!Number.isInteger(diaVencimento) || diaVencimento < 1 || diaVencimento > 31) return toast('Informe um dia de vencimento entre 1 e 31.','err');
+  if(!SoniaRules.isValidIsoDate(dataInicio)) return toast('Informe uma data inicial válida.','err');
+
   const tipo = qs('#plan-d')?.classList.contains('active') ? 'despesa' : 'receita';
   const data = {
     id: state.ui.editId || null,
     tipo,
     descricao: desc,
     valorTotal: total,
-    numParcelas: parseInt(qs('#pn-parc')?.value || '1', 10),
-    diaVencimento: parseInt(qs('#pn-dia')?.value || '10', 10),
-    dataInicio: parseISO(qs('#pn-inicio')?.value || fmtBR(today())),
+    numParcelas,
+    diaVencimento,
+    dataInicio,
     observacoes: qs('#pn-obs')?.value || ''
   };
 
@@ -3950,7 +4167,7 @@ function openDrawerAgend(){
   state.ui.editId = null;
   state.ui.agServicos = [];
   const cliOpts = buildClienteOptions();
-  const colOpts = state.db.colaboradores.filter(c => isAtivo(c.ativo)).map(c => `<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
+  const colOpts = state.db.colaboradores.filter(c => isAtivo(c.ativo)).map(c => `<option value="${attr(c.id)}|${attr(c.nome)}">${safe(c.nome)}</option>`).join('');
 
   openDrawer(`
     <div class="dtitle">Novo Agendamento</div>
@@ -4011,7 +4228,7 @@ function editAgend(ag){
       };
     });
   const cliOpts = buildClienteOptions(ag.clienteId);
-  const colOpts = state.db.colaboradores.filter(c => isAtivo(c.ativo)).map(c => `<option value="${c.id}|${c.nome}" ${c.id === ag.colaboradorId ? 'selected' : ''}>${c.nome}</option>`).join('');
+  const colOpts = state.db.colaboradores.filter(c => isAtivo(c.ativo)).map(c => `<option value="${attr(c.id)}|${attr(c.nome)}" ${c.id === ag.colaboradorId ? 'selected' : ''}>${safe(c.nome)}</option>`).join('');
 
   openDrawer(`
     <div class="dtitle">Editar Agendamento</div>
@@ -4028,16 +4245,16 @@ function editAgend(ag){
         <span class="lbl" style="margin:0">Serviços</span>
         <button type="button" id="btn-add-ag-svc" style="background:var(--gold-bg);border:1.5px solid var(--gold-dk);color:var(--gold-dk);border-radius:8px;padding:4px 10px;font-size:14px;font-weight:600;letter-spacing:.5px;cursor:pointer">＋ Adicionar</button>
       </div>
-      <input id="ag-svc" type="text" class="inp" value="${ag.servicos || ''}" readonly/>
+      <input id="ag-svc" type="text" class="inp" value="${attr(ag.servicos || '')}" readonly/>
       <div id="ag-svc-tags" style="margin-top:6px"></div>
     </div>
     <div class="fg"><span class="lbl">Colaboradora</span><select id="ag-col"><option value="">— Selecione —</option>${colOpts}</select></div>
     <div class="form-row">
       <div class="fg"><span class="lbl">Data</span><input id="ag-d" type="date" class="inp"/></div>
-      <div class="fg"><span class="lbl">Hora</span><input id="ag-h" type="time" class="inp" value="${ag.hora || '09:00'}"/></div>
+      <div class="fg"><span class="lbl">Hora</span><input id="ag-h" type="time" class="inp" value="${attr(ag.hora || '09:00')}"/></div>
     </div>
     <div class="form-row">
-      <div class="fg"><span class="lbl">Duração (min)</span><input id="ag-dur" type="number" class="inp" value="${ag.duracaoMin || 60}"/></div>
+      <div class="fg"><span class="lbl">Duração (min)</span><input id="ag-dur" type="number" class="inp" value="${attr(Number(ag.duracaoMin) || 60)}"/></div>
       <div class="fg"><span class="lbl">Valor</span><input id="ag-val" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
     </div>
     <div class="fg">
@@ -4048,7 +4265,7 @@ function editAgend(ag){
         <option value="cancelado" ${ag.status === 'cancelado' ? 'selected' : ''}>Cancelado</option>
       </select>
     </div>
-    <div class="fg"><span class="lbl">Observações</span><input id="ag-obs" type="text" class="inp" value="${ag.observacoes || ''}"/></div>
+    <div class="fg"><span class="lbl">Observações</span><input id="ag-obs" type="text" class="inp" value="${attr(ag.observacoes || '')}"/></div>
     <div class="dfooter">
       <button class="btn-sec" id="btn-cancel-ag">Cancelar</button>
       <button class="btn-d" id="btn-del-ag" title="Excluir">${svgDel}</button>
@@ -4063,7 +4280,7 @@ function editAgend(ag){
   renderAgendamentoServicos();
 
   qs('#btn-cancel-ag').addEventListener('click', closeDrawer);
-  qs('#btn-del-ag').addEventListener('click', () => { const id = ag.id; closeDrawer(); delAgend(id); });
+  qs('#btn-del-ag').addEventListener('click', () => { closeDrawer(); delAgend(ag); });
   qs('#btn-save-ag').addEventListener('click', saveAgend);
   bindClienteSearch('#ag-cli-search', '#ag-cli', ag.clienteId);
 }
@@ -4097,7 +4314,7 @@ async function saveAgend(){
   try{
     const r = await post({ action:'saveAgendamento', token:state.token, data });
     if(r.status !== 'ok'){
-      toast('Erro.','err');
+      toast(r.data?.message || 'Não foi possível salvar o agendamento.','err');
       btnSv(btn, false);
       return;
     }
@@ -4111,11 +4328,14 @@ async function saveAgend(){
   }
 }
 
-async function delAgend(id){
-  if(!confirm('Excluir agendamento?')) return;
+async function delAgend(appointment){
+  const item = typeof appointment === 'object' ? appointment : null;
+  const id = item?.id || appointment;
+  const detalhe = item ? `${item.clienteNome || 'Cliente'} em ${fmtBR(String(item.data || '').slice(0,10))} às ${item.hora || 'horário não informado'}` : 'este agendamento';
+  if(!confirm(`Excluir ${detalhe}?\n\nO lançamento financeiro existente, se houver, não será apagado.`)) return;
   try{
     const r = await post({ action:'deleteAgendamento', token:state.token, id });
-    if(r.status !== 'ok') return toast('Erro.','err');
+    if(r.status !== 'ok') return toast(r.data?.message || 'Não foi possível excluir o agendamento.','err');
     toast('Excluído.','ok');
     invalidarPendentes();
     loadAgenda(true);
@@ -4133,11 +4353,11 @@ function abrirAcaoAgendamento(ag){
       Em aberto desde ${fmtBR(String(ag.data).slice(0,10))} — conclua ou reagende
     </div>` : '';
   openDrawer(`
-    <div class="dtitle">${ag.clienteNome || '—'}</div>
+    <div class="dtitle">${safe(ag.clienteNome || '—')}</div>
     ${alertHtml}
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:20px;font-size:15px;color:var(--dim);line-height:1.8">
-      <div style="color:var(--dark);font-weight:500">${ag.servicos || '—'}</div>
-      <div>${fmtBR(String(ag.data).slice(0,10))}${ag.hora ? ' · ' + ag.hora : ''} · ${ag.duracaoMin || 0}min${ag.colaboradorNome ? ' · ' + ag.colaboradorNome : ''}</div>
+      <div style="color:var(--dark);font-weight:500">${safe(ag.servicos || '—')}</div>
+      <div>${fmtBR(String(ag.data).slice(0,10))}${ag.hora ? ' · ' + safe(ag.hora) : ''} · ${Number(ag.duracaoMin) || 0}min${ag.colaboradorNome ? ' · ' + safe(ag.colaboradorNome) : ''}</div>
       <div style="margin-top:4px"><span class="badge ${ag.status === 'concluido' ? 'b-on' : ag.status === 'cancelado' ? 'b-off' : 'b-info'}">${ag.status === 'concluido' ? 'Concluído' : ag.status === 'cancelado' ? 'Cancelado' : 'Agendado'}</span></div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
@@ -4185,14 +4405,14 @@ function concluirAgend(ag){
     ${dateSelectorHtml}
     <div class="fg">
       <span class="lbl">Cliente</span>
-      <div style="background:var(--bg4);border:1.5px solid var(--border);border-radius:var(--r);padding:11px 13px;color:var(--dim);font-size:16px">${ag.clienteNome || '—'}</div>
+      <div style="background:var(--bg4);border:1.5px solid var(--border);border-radius:var(--r);padding:11px 13px;color:var(--dim);font-size:16px">${safe(ag.clienteNome || '—')}</div>
     </div>
     <div class="fg">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <span class="lbl" style="margin:0">Serviços realizados</span>
         <button type="button" id="btn-add-item-cmd" style="background:var(--gold-bg);border:1.5px solid var(--gold-dk);color:var(--gold-dk);border-radius:8px;padding:4px 10px;font-size:14px;font-weight:600;letter-spacing:.5px;cursor:pointer">＋ Adicionar</button>
       </div>
-      <input id="cmd-svc" type="text" class="inp" value="${ag.servicos || ''}" placeholder="Nome dos serviços…"/>
+      <input id="cmd-svc" type="text" class="inp" value="${attr(ag.servicos || '')}" placeholder="Nome dos serviços…"/>
       <div id="cmd-itens-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
     </div>
     <div class="form-row">
@@ -4207,7 +4427,7 @@ function concluirAgend(ag){
         </select>
       </div>
     </div>
-    <div class="fg"><span class="lbl">Observações</span><input id="cmd-obs" type="text" class="inp" value="${ag.observacoes || ''}" placeholder="Opcional…"/></div>
+    <div class="fg"><span class="lbl">Observações</span><input id="cmd-obs" type="text" class="inp" value="${attr(ag.observacoes || '')}" placeholder="Opcional…"/></div>
     <div class="dfooter">
       <button class="btn-sec" id="btn-cancel-cmd">Cancelar</button>
       <button class="btn-save" id="btn-save-cmd">Confirmar e registrar</button>
@@ -4269,21 +4489,14 @@ async function salvarComanda(ag){
       data: lancDataISO
     };
 
-    // Sequencial para não duplicar: primeiro conclui o agendamento, depois lança no caixa
-    const r1 = await post({ action:'saveAgendamento', token:state.token, data: agData });
-    if(r1.status !== 'ok'){
-      toast(r1.data?.message || 'Erro ao concluir o atendimento. Tente de novo.','err');
-      btnSv(btn, false, 'Confirmar e registrar');
-      return;
-    }
-
-    let r2 = await post({ action:'saveLancamento', token:state.token, data: lancData }).catch(() => ({ status:'err' }));
-    if(r2.status !== 'ok'){
-      // tenta 1 vez de novo automaticamente
-      r2 = await post({ action:'saveLancamento', token:state.token, data: lancData }).catch(() => ({ status:'err' }));
-    }
-    if(r2.status !== 'ok'){
-      toast('Atendimento concluído, mas o caixa NÃO foi registrado. Lance a entrada manualmente no Caixa.','err');
+    const completion = await post({
+      action:'completeAppointment',
+      token:state.token,
+      appointment:agData,
+      cash:lancData
+    });
+    if(completion.status !== 'ok'){
+      toast(completion.data?.message || 'Não foi possível concluir e registrar o caixa. Nenhuma alteração foi mantida.','err');
       btnSv(btn, false, 'Confirmar e registrar');
       return;
     }
@@ -4291,11 +4504,11 @@ async function salvarComanda(ag){
     // Invalida caches afetados
     const agMes = agDataISO.slice(0,7);
     const lancMes = lancDataISO.slice(0,7);
-    store.del(`sc_ag_dia_${agDataISO}`);
-    store.del(`sc_ag_sem_${agDataISO}`);
-    store.del(`sc_ag_mes_${agDataISO.slice(0,4)}_${agDataISO.slice(5,7)}`);
-    store.del(`sc_cx_${agMes}`);
-    if(lancMes !== agMes) store.del(`sc_cx_${lancMes}`);
+    cacheStore().del(`sc_ag_dia_${agDataISO}`);
+    cacheStore().del(`sc_ag_sem_${agDataISO}`);
+    cacheStore().del(`sc_ag_mes_${agDataISO.slice(0,4)}_${agDataISO.slice(5,7)}`);
+    cacheStore().del(`sc_cx_${agMes}`);
+    if(lancMes !== agMes) cacheStore().del(`sc_cx_${lancMes}`);
 
     closeDrawer();
     toast('Atendimento concluído e registrado no caixa!','ok');
@@ -4317,14 +4530,14 @@ function abrirSeletorItem(){
 
   svcOpts.forEach(s => {
     const preco = parseFloat(s.preco) || 0;
-    html += `<div onclick="addItemDireto(this)" data-id="${s.id}" data-nome="${String(s.nome).replace(/"/g,'&quot;')}" data-tipo="servico" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${s.nome}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
+    html += `<div onclick="addItemDireto(this)" data-id="${attr(s.id)}" data-nome="${attr(s.nome)}" data-tipo="servico" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${safe(s.nome)}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
   });
   if(!svcOpts.length) html += '<div style="color:var(--dim);font-size:14px;padding:12px">Nenhum serviço cadastrado</div>';
 
   html += '<div style="font-size:13px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin:14px 0 8px">PRODUTOS</div>';
   prdOpts.forEach(p => {
     const preco = parseFloat(p.preco) || 0;
-    html += `<div onclick="addItemDireto(this)" data-id="${p.id}" data-nome="${String(p.nome).replace(/"/g,'&quot;')}" data-tipo="produto" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${p.nome}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
+    html += `<div onclick="addItemDireto(this)" data-id="${attr(p.id)}" data-nome="${attr(p.nome)}" data-tipo="produto" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${safe(p.nome)}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
   });
   if(!prdOpts.length) html += '<div style="color:var(--dim);font-size:14px;padding:12px">Nenhum produto cadastrado</div>';
 
@@ -4339,13 +4552,13 @@ function abrirSeletorItemComanda(){
   html += '<div style="font-size:13px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">SERVIÇOS</div>';
   svcOpts.forEach(s => {
     const preco = parseFloat(s.preco) || 0;
-    html += `<div onclick="addItemComanda(this)" data-nome="${String(s.nome).replace(/"/g,'&quot;')}" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${s.nome}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
+    html += `<div onclick="addItemComanda(this)" data-nome="${attr(s.nome)}" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${safe(s.nome)}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
   });
   if(!svcOpts.length) html += '<div style="color:var(--dim);font-size:14px;padding:12px">Nenhum serviço cadastrado</div>';
   html += '<div style="font-size:13px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin:14px 0 8px">PRODUTOS</div>';
   prdOpts.forEach(p => {
     const preco = parseFloat(p.preco) || 0;
-    html += `<div onclick="addItemComanda(this)" data-nome="${String(p.nome).replace(/"/g,'&quot;')}" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${p.nome}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
+    html += `<div onclick="addItemComanda(this)" data-nome="${attr(p.nome)}" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${safe(p.nome)}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
   });
   if(!prdOpts.length) html += '<div style="color:var(--dim);font-size:14px;padding:12px">Nenhum produto cadastrado</div>';
   html += '<button onclick="closeModal()" class="btn-sec" style="width:100%;margin-top:16px">Fechar</button>';
@@ -4435,7 +4648,7 @@ function renderItens(){
     rows += `
       <div class="item-row" style="border-color:${semPreco ? 'var(--warn)' : 'var(--border)'}">
         <div class="item-row-body">
-          <div class="item-row-nome">${item.nome}</div>
+          <div class="item-row-nome">${safe(item.nome)}</div>
           <div class="item-row-val" style="color:${semPreco ? 'var(--warn)' : 'var(--dim)'}">${item.tipo === 'servico' ? 'Serviço' : 'Produto'}${semPreco ? ' · informe o valor' : ''}</div>
         </div>
         <input class="item-val-input" type="text" inputmode="numeric" placeholder="R$ ?" style="border-color:${semPreco ? 'var(--warn)' : 'var(--border)'}" oninput="updateItemValor(${i},this)">
@@ -4502,7 +4715,9 @@ function calcFiadoInline(){
   const entrada = getValorRaw(qs('#ff-entrada'));
   const n = parseInt(qs('#ff-parcelas')?.value || '1', 10);
   const saldo = Math.max(0, total - entrada);
-  const parc = n > 0 ? saldo / n : 0;
+  let parcelasValores = [];
+  try{ parcelasValores = SoniaRules.splitMoney(Math.round(saldo * 100), n, 36).map(c => c / 100); }catch(_){ parcelasValores = []; }
+  const parc = parcelasValores[0] || 0;
   const el = qs('#ff-resumo');
 
   if(total > 0 && el){
@@ -4532,18 +4747,17 @@ function gerarVencimentosInline(){
   const total = getValorRaw(qs('#ff-total'));
   const entrada = getValorRaw(qs('#ff-entrada'));
   const saldo = Math.max(0, total - entrada);
-  const parc = n > 0 ? saldo / n : 0;
+  let parcelasValores = [];
+  try{ parcelasValores = SoniaRules.splitMoney(Math.round(saldo * 100), n, 36).map(c => c / 100); }catch(_){ parcelasValores = []; }
   const ct = qs('#parcelas-container');
-  if(!ct || n <= 0){ if(ct) ct.innerHTML = ''; return; }
+  if(!ct || n <= 0 || n > 36 || !SoniaRules.isValidIsoDate(venc1)){ if(ct) ct.innerHTML = ''; return; }
 
   const tdISO = today();
   let html = '<div class="slabel" style="margin-bottom:6px">Vencimentos</div>';
-  for(let i=0;i<Math.min(n,24);i++){
-    const d = new Date(venc1 + 'T00:00:00');
-    d.setMonth(d.getMonth() + i);
-    const iso = d.toISOString().slice(0,10);
+  for(let i=0;i<n;i++){
+    const iso = SoniaRules.addMonthsClamped(venc1, i);
     const retro = iso < tdISO;
-    html += `<div class='parc-row'><span style='color:${retro ? 'var(--gold)' : 'var(--dim)'}'>Parc.${i+1} · ${fmt(parc)}${retro ? ' 🕓' : ''}</span><input type='text' class='inp' id='venc-${i}' inputmode='numeric' placeholder='DD/MM/AAAA' maxlength='10' value='${fmtBR(iso)}' style='border-color:${retro ? 'var(--gold)' : 'var(--border)'}' oninput='applyDataMask(this);verificarDataRetro(this)'/></div>`;
+    html += `<div class='parc-row'><span style='color:${retro ? 'var(--gold)' : 'var(--dim)'}'>Parc.${i+1} · ${fmt(parcelasValores[i] || 0)}${retro ? ' 🕓' : ''}</span><input type='text' class='inp' id='venc-${i}' inputmode='numeric' placeholder='DD/MM/AAAA' maxlength='10' value='${fmtBR(iso)}' style='border-color:${retro ? 'var(--gold)' : 'var(--border)'}' oninput='applyDataMask(this);verificarDataRetro(this)'/></div>`;
   }
   ct.innerHTML = html;
 }
@@ -4557,7 +4771,7 @@ function getClientesSorted(){
 
 function buildClienteOptions(selectedId = ''){
   return getClientesSorted().map(c =>
-    `<option value="${c.id}|${c.nome}" ${c.id === selectedId ? 'selected' : ''}>${c.nome}</option>`
+    `<option value="${attr(c.id)}|${attr(c.nome)}" ${c.id === selectedId ? 'selected' : ''}>${safe(c.nome)}</option>`
   ).join('');
 }
 
@@ -4612,9 +4826,9 @@ function openQuickClienteModal(inputSel = '#f-cli-search', selectSel = '#f-cli',
   openModal(`
     <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:8px">Nova Cliente</div>
     <div style="font-size:14px;color:var(--dim);margin-bottom:16px">Informe apenas o essencial agora.</div>
-    <div class="fg"><span class="lbl">Nome *</span><input id="qcli-nome" type="text" class="inp" value="${d.nome || ''}"/></div>
-    <div class="fg"><span class="lbl">Telefone</span><input id="qcli-tel" type="tel" class="inp" placeholder="(00) 00000-0000" maxlength="15" value="${d.telefone || ''}"/></div>
-    <div class="fg"><span class="lbl">Data de nascimento</span><input id="qcli-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${d.aniversario || ''}"/></div>
+    <div class="fg"><span class="lbl">Nome *</span><input id="qcli-nome" type="text" class="inp" value="${attr(d.nome || '')}"/></div>
+    <div class="fg"><span class="lbl">Telefone</span><input id="qcli-tel" type="tel" class="inp" placeholder="(00) 00000-0000" maxlength="15" value="${attr(d.telefone || '')}"/></div>
+    <div class="fg"><span class="lbl">Data de nascimento</span><input id="qcli-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${attr(d.aniversario || '')}"/></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
       <button type="button" class="btn-sec" id="btn-qcli-import" style="flex:1">Importar da agenda</button>
       <button type="button" class="btn-sec" id="btn-qcli-full" style="flex:1">Cadastro completo</button>
@@ -4709,16 +4923,16 @@ function bindClienteSearch(inputSel = '#f-cli-search', selectSel = '#f-cli', sel
     if(!filtered.length && term){
       dropdown.innerHTML = `
         <div class="cli-empty">
-          <div>Nenhuma cliente encontrada para "<strong>${query}</strong>".</div>
+          <div>Nenhuma cliente encontrada para "<strong>${safe(query)}</strong>".</div>
           <button type="button" id="f-cli-create">Cadastrar cliente</button>
         </div>
       `;
       qs('#f-cli-create', dropdown)?.addEventListener('click', () => openQuickClienteModal(inputSel, selectSel));
     }else{
       dropdown.innerHTML = filtered.map((c, idx) => `
-        <button type="button" class="cli-option ${idx === activeIndex ? 'active' : ''}" data-cli-id="${c.id}">
-          <span class="cli-option-name">${c.nome}</span>
-          <span class="cli-option-meta">${c.telefone || 'Cliente cadastrada'}</span>
+        <button type="button" class="cli-option ${idx === activeIndex ? 'active' : ''}" data-cli-id="${attr(c.id)}">
+          <span class="cli-option-name">${safe(c.nome)}</span>
+          <span class="cli-option-meta">${safe(c.telefone || 'Cliente cadastrada')}</span>
         </button>
       `).join('');
       qsa('.cli-option', dropdown).forEach(btn => {
@@ -4770,6 +4984,7 @@ function bindClienteSearch(inputSel = '#f-cli-search', selectSel = '#f-cli', sel
 }
 
 function openDrawerLanc(){
+  state.ui.fiadoKey = SoniaRules.makeIdempotencyKey('fiado');
   state.ui.editId = null;
   state.ui.tipoLanc = 'entrada';
   state.ui.itensLanc = [];
@@ -4887,8 +5102,8 @@ function editLanc(l){
   }
 
   const cliOpts = buildClienteOptions(l.clienteId);
-  const svcOpts = state.db.servicos.filter(s => isAtivo(s.ativo)).map(s => `<option value="${s.id}|${s.nome}|servico" ${s.id === l.itemId ? 'selected' : ''}>${s.nome}</option>`).join('');
-  const prdOpts = state.db.produtos.filter(p => isAtivo(p.ativo)).map(p => `<option value="${p.id}|${p.nome}|produto" ${p.id === l.itemId ? 'selected' : ''}>${p.nome}</option>`).join('');
+  const svcOpts = state.db.servicos.filter(s => isAtivo(s.ativo)).map(s => `<option value="${attr(s.id)}|${attr(s.nome)}|servico" ${s.id === l.itemId ? 'selected' : ''}>${safe(s.nome)}</option>`).join('');
+  const prdOpts = state.db.produtos.filter(p => isAtivo(p.ativo)).map(p => `<option value="${attr(p.id)}|${attr(p.nome)}|produto" ${p.id === l.itemId ? 'selected' : ''}>${safe(p.nome)}</option>`).join('');
   const t = state.ui.tipoLanc;
 
   openDrawer(`
@@ -4980,11 +5195,14 @@ async function saveLanc(){
         const valorTotal = getValorRaw(qs('#ff-total')) || valor;
         const valorEntrada = getValorRaw(qs('#ff-entrada')) || 0;
         const numParcelas = parseInt(qs('#ff-parcelas')?.value || '1', 10);
+        if(valorEntrada > valorTotal) return toast('A entrada não pode ser maior que o valor total.','err');
+        if(!Number.isInteger(numParcelas) || numParcelas < 1 || numParcelas > 36) return toast('Informe de 1 a 36 parcelas.','err');
 
         const vencimentos = [];
         for(let i=0;i<numParcelas;i++){
           const el = qs(`#venc-${i}`);
           const iso = el ? parseISO(el.value) : '';
+          if(!SoniaRules.isValidIsoDate(iso)) return toast(`Data inválida na parcela ${i+1}.`,'err');
           vencimentos.push(iso);
         }
 
@@ -4998,6 +5216,7 @@ async function saveLanc(){
             data:{
               clienteId, clienteNome, itemId, itemNome, itemTipo,
               valorTotal, valorEntrada, numParcelas, vencimentos,
+              idempotencyKey: state.ui.fiadoKey,
               data: qs('#f-data')?.value || today(),
               formaEntrada: qs('#ff-forma-ent')?.value || 'dinheiro',
               observacoes: qs('#f-obs')?.value.trim() || ''
@@ -5075,6 +5294,7 @@ async function saveLanc(){
 
   try{
     const wasEdit = !!state.ui.editId;
+    const previousDate = state.ui.editOrig?.data ? String(state.ui.editOrig.data).slice(0,10) : '';
     const r = await post({ action:'saveLancamento', token:state.token, data });
     if(r.status !== 'ok'){
       toast(r.data?.message || 'Erro.','err');
@@ -5083,6 +5303,7 @@ async function saveLanc(){
     }
 
     closeDrawer();
+    if(previousDate) cacheStore().del(`sc_cx_${previousDate.slice(0,7)}`);
     toast(wasEdit ? 'Atualizado!' : 'Registrado!','ok');
     setCaixaMes((data.data || today()).slice(0,7));
     await Promise.all([loadCaixa(true), updateStats()]);
@@ -5093,11 +5314,15 @@ async function saveLanc(){
 }
 
 async function delLanc(id){
-  if(!confirm('Excluir este lançamento?')) return;
+  const item = (state.ui.caixaItems || []).find(row => String(row.id) === String(id));
+  const descricao = item?.clienteNome || item?.itemNome || item?.categoria || 'lançamento sem descrição';
+  const data = item?.data ? ` em ${fmtBR(String(item.data).slice(0,10))}` : '';
+  const avisoOrigem = item?.itemTipo ? '\n\nO registro de origem (agenda, fiado ou planejamento) não será alterado.' : '';
+  if(!confirm(`Excluir “${descricao}” no valor de ${fmt(item?.valor || 0)}${data}?${avisoOrigem}`)) return;
   await comTrava(async () => {
   try{
     const r = await post({ action:'deleteLancamento', token:state.token, id });
-    if(r.status !== 'ok') return toast('Erro.','err');
+    if(r.status !== 'ok') return toast(r.data?.message || 'Não foi possível excluir o lançamento.','err');
     toast('Excluído.','ok');
     await Promise.all([loadCaixa(true), updateStats()]);
   }catch(e){
@@ -5107,9 +5332,10 @@ async function delLanc(id){
 }
 
 function openDrawerFiadoLanc(){
-  const cliOpts = state.db.clientes.map(c => `<option value="${c.id}|${c.nome}">${c.nome}</option>`).join('');
-  const svcOpts = state.db.servicos.filter(s => isAtivo(s.ativo)).map(s => `<option value="${s.id}|${s.nome}|servico">${s.nome}</option>`).join('');
-  const prdOpts = state.db.produtos.filter(p => isAtivo(p.ativo)).map(p => `<option value="${p.id}|${p.nome}|produto|${p.preco || 0}">${p.nome}${p.preco > 0 ? ' (' + fmt(p.preco) + ')' : ''}</option>`).join('');
+  state.ui.fiadoKey = SoniaRules.makeIdempotencyKey('fiado');
+  const cliOpts = state.db.clientes.map(c => `<option value="${attr(c.id)}|${attr(c.nome)}">${safe(c.nome)}</option>`).join('');
+  const svcOpts = state.db.servicos.filter(s => isAtivo(s.ativo)).map(s => `<option value="${attr(s.id)}|${attr(s.nome)}|servico">${safe(s.nome)}</option>`).join('');
+  const prdOpts = state.db.produtos.filter(p => isAtivo(p.ativo)).map(p => `<option value="${attr(p.id)}|${attr(p.nome)}|produto|${Number(p.preco) || 0}">${safe(p.nome)}${p.preco > 0 ? ' (' + fmt(p.preco) + ')' : ''}</option>`).join('');
 
   openDrawer(`
     <div class="dtitle">Fiado / Parcelado</div>
@@ -5172,22 +5398,21 @@ function gerarVencimentos(){
   const total = getValorRaw(qs('#ff-total'));
   const entrada = getValorRaw(qs('#ff-entrada'));
   const saldo = Math.max(0, total - entrada);
-  const parc = n > 0 ? saldo / n : 0;
+  let parcelasValores = [];
+  try{ parcelasValores = SoniaRules.splitMoney(Math.round(saldo * 100), n, 36).map(c => c / 100); }catch(_){ parcelasValores = []; }
   const c = qs('#parcelas-container');
   if(!c) return;
-  if(n <= 0){ c.innerHTML = ''; return; }
+  if(n <= 0 || n > 36 || !SoniaRules.isValidIsoDate(venc1)){ c.innerHTML = ''; return; }
 
   let html = '<div class="slabel" style="margin-bottom:8px">Vencimentos das parcelas</div>';
   const tdISO = today();
 
-  for(let i=0;i<Math.min(n,24);i++){
-    const d = new Date(venc1 + 'T00:00:00');
-    d.setMonth(d.getMonth() + i);
-    const iso = d.toISOString().slice(0,10);
+  for(let i=0;i<n;i++){
+    const iso = SoniaRules.addMonthsClamped(venc1, i);
     const retroativo = iso < tdISO;
     html += `
       <div class="parc-row">
-        <span style="color:${retroativo ? 'var(--gold)' : 'var(--dim)'}">Parc. ${i+1} · ${fmt(parc)}${retroativo ? ' 🕓' : ''}</span>
+        <span style="color:${retroativo ? 'var(--gold)' : 'var(--dim)'}">Parc. ${i+1} · ${fmt(parcelasValores[i] || 0)}${retroativo ? ' 🕓' : ''}</span>
         <input type="text" class="inp" id="venc-${i}" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${fmtBR(iso)}" style="border-color:${retroativo ? 'var(--gold)' : 'var(--border)'}" oninput="applyDataMask(this);verificarDataRetro(this)"/>
       </div>
     `;
@@ -5215,11 +5440,14 @@ async function saveFiado(){
 
   const valorEntrada = getValorRaw(qs('#ff-entrada'));
   const numParcelas = parseInt(qs('#ff-parcelas')?.value || '1', 10);
+  if(valorEntrada > valorTotal) return toast('A entrada não pode ser maior que o valor total.','err');
+  if(!Number.isInteger(numParcelas) || numParcelas < 1 || numParcelas > 36) return toast('Informe de 1 a 36 parcelas.','err');
 
   const vencimentos = [];
   for(let i=0;i<numParcelas;i++){
     const el = qs(`#venc-${i}`);
     const iso = el ? parseISO(el.value) : '';
+    if(!SoniaRules.isValidIsoDate(iso)) return toast(`Data inválida na parcela ${i+1}.`,'err');
     vencimentos.push(iso);
   }
 
@@ -5240,6 +5468,7 @@ async function saveFiado(){
         valorEntrada,
         numParcelas,
         vencimentos,
+        idempotencyKey: state.ui.fiadoKey,
         data: qs('#ff-data')?.value || today(),
         formaEntrada: qs('#ff-forma-ent')?.value || 'dinheiro',
         observacoes: qs('#ff-obs')?.value.trim() || ''
@@ -5264,7 +5493,7 @@ async function saveFiado(){
 function abrirPgtoFiadoLegacy(id, nome, saldo, numParc){
   openModal(`
     <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:4px">Receber Pagamento</div>
-    <div style="font-size:14px;color:var(--dim);margin-bottom:4px">${nome}</div>
+    <div style="font-size:14px;color:var(--dim);margin-bottom:4px">${safe(nome)}</div>
     <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--err);font-weight:600;margin-bottom:20px">Saldo: ${fmt(saldo)}</div>
     <div class="fg"><span class="lbl">Valor recebido *</span><input id="pg-val" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
     <div class="fg"><span class="lbl">Nº da parcela</span><input id="pg-parc" type="number" class="inp" min="1" max="${numParc}" placeholder="Ex: 1"/></div>
@@ -5281,6 +5510,16 @@ window.abrirPgtoFiado = abrirPgtoFiado;
 async function registrarPgtoFiado(id){
   const valor = getValorRaw(qs('#pg-val'));
   if(!valor || valor <= 0) return toast('Informe o valor.','err');
+  const parcela = qs('#pg-parc')?.value || '';
+  const selected = qs('#pg-parc')?.selectedOptions?.[0];
+  const parcelaValor = parcela && selected?.dataset?.valor ? Number(selected.dataset.valor) : null;
+  const saldo = Number(state.ui.currentPayment?.saldo || 0);
+  const validation = SoniaRules.validatePayment({
+    paymentCents: Math.round(valor * 100),
+    balanceCents: Math.round(saldo * 100),
+    installmentCents: parcelaValor === null ? null : Math.round(parcelaValor * 100)
+  });
+  if(!validation.ok) return toast(validation.message,'err');
 
   const btn = qs('#modal-box .btn-save');
   btnSv(btn, true);
@@ -5292,19 +5531,22 @@ async function registrarPgtoFiado(id){
       token:state.token,
       crediarioId:id,
       valor,
-      parcela: qs('#pg-parc')?.value || '',
+      parcela,
+      idempotencyKey: state.ui.paymentKey,
       data: qs('#pg-data')?.value || today(),
       formaPagamento: qs('#pg-forma')?.value || 'dinheiro',
       observacoes: qs('#pg-obs')?.value || ''
     });
 
     if(r.status !== 'ok'){
-      toast('Erro.','err');
+      toast(r.data?.message || 'Erro.','err');
       btnSv(btn, false);
       return;
     }
 
     closeModal();
+    state.ui.paymentKey = '';
+    state.ui.currentPayment = null;
     toast('Pagamento registrado!','ok');
     await Promise.all([loadCred(), updateStats(), loadCaixa(true), loadVencHome()]);
   }catch(e){
@@ -5339,16 +5581,19 @@ async function abrirPgtoFiado(id, nome, saldo, numParc){
     if(r.status === 'ok') parcelas = (r.data || []).filter(p => p.status === 'aberto');
   }catch(_){}
 
+  state.ui.paymentKey = SoniaRules.makeIdempotencyKey('credpg');
+  state.ui.currentPayment = { id, saldo:Number(saldo) || 0, parcelas };
+
   const parcelaOptions = parcelas.length
     ? `<select id="pg-parc" class="inp">
         <option value="">Pagamento parcial / sem parcela</option>
-        ${parcelas.map(p => `<option value="${p.numParcela}" data-valor="${p.valor || 0}">Parcela ${p.numParcela} · ${fmt(p.valor)} · vence ${fmtBR(p.vencimento)}</option>`).join('')}
+        ${parcelas.map(p => `<option value="${attr(p.numParcela)}" data-valor="${Number(p.valor) || 0}">Parcela ${safe(p.numParcela)} · ${fmt(p.valor)} · vence ${fmtBR(p.vencimento)}</option>`).join('')}
       </select>`
     : `<input id="pg-parc" type="number" class="inp" min="1" max="${numParc}" placeholder="Ex: 1"/>`;
 
   openModal(`
     <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:4px">Receber Pagamento</div>
-    <div style="font-size:14px;color:var(--dim);margin-bottom:4px">${nome}</div>
+    <div style="font-size:14px;color:var(--dim);margin-bottom:4px">${safe(nome)}</div>
     <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--err);font-weight:600;margin-bottom:20px">Saldo: ${fmt(saldo)}</div>
     <div class="fg"><span class="lbl">Parcela</span>${parcelaOptions}</div>
     <div class="fg"><span class="lbl">Valor recebido *</span><input id="pg-val" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
@@ -5382,7 +5627,7 @@ async function saveConfig(){
 
   try{
     const r = await post({ action:'updateConfig', token:state.token, config:{ salonName:nome } });
-    if(r.status !== 'ok') return toast('Erro.','err');
+    if(r.status !== 'ok') return toast(r.data?.message || 'Não foi possível salvar a configuração.','err');
 
     state.db.config.salonName = nome;
     qs('#h-salonname').textContent = nome;
@@ -5404,7 +5649,7 @@ async function saveConfigHorario(){
         intervaloMin: qs('#cfg-int')?.value
       }
     });
-    if(r.status !== 'ok') return toast('Erro.','err');
+    if(r.status !== 'ok') return toast(r.data?.message || 'Não foi possível salvar os horários.','err');
     toast('Horário salvo!','ok');
   }catch(e){
     toast('Erro.','err');
@@ -5412,17 +5657,21 @@ async function saveConfigHorario(){
 }
 
 async function saveSenha(){
+  const currentPassword = qs('#cfg-s-atual')?.value || '';
   const s1 = qs('#cfg-s1')?.value;
   const s2 = qs('#cfg-s2')?.value;
-  if(!s1) return toast('Informe a nova senha.','err');
+  if(!currentPassword) return toast('Informe a senha atual.','err');
+  if(!s1 || s1.length < 8) return toast('A nova senha precisa ter ao menos 8 caracteres.','err');
   if(s1 !== s2) return toast('Senhas não coincidem.','err');
 
   try{
-    const r = await post({ action:'updateConfig', token:state.token, config:{ senha:s1 } });
-    if(r.status !== 'ok') return toast('Erro.','err');
+    const r = await post({ action:'updatePassword', token:state.token, currentPassword, newPassword:s1 });
+    if(r.status !== 'ok') return toast(r.data?.message || 'Erro.','err');
+    qs('#cfg-s-atual').value = '';
     qs('#cfg-s1').value = '';
     qs('#cfg-s2').value = '';
-    toast('Senha alterada!','ok');
+    limparSessao(true);
+    toast('Senha alterada. Entre novamente.','ok');
   }catch(e){
     toast('Erro.','err');
   }

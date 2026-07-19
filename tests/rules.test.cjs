@@ -40,6 +40,7 @@ test('splits cents exactly and distributes the remainder', () => {
 test('rejects invalid installment counts', () => {
   assert.throws(() => rules.splitMoney(10000, 0), /parcelas/i);
   assert.throws(() => rules.splitMoney(10000, 37), /parcelas/i);
+  assert.throws(() => rules.splitMoney(2, 3), /centavo/i);
 });
 
 test('rejects overpayment', () => {
@@ -64,6 +65,14 @@ test('partial payment without an installment remains valid', () => {
   assert.equal(rules.validatePayment({ paymentCents: 100, balanceCents: 10000 }).ok, true);
 });
 
+test('partial payments settle oldest installments and reduce the next one', () => {
+  assert.deepEqual(rules.allocatePayment([10000, 10000, 5000], 15000), [
+    { originalCents: 10000, appliedCents: 10000, remainingCents: 0, paid: true },
+    { originalCents: 10000, appliedCents: 5000, remainingCents: 5000, paid: false },
+    { originalCents: 5000, appliedCents: 0, remainingCents: 5000, paid: false }
+  ]);
+});
+
 test('escapes untrusted HTML and attributes', () => {
   assert.equal(
     rules.escapeHtml('<img src=x onerror="alert(1)">'),
@@ -83,6 +92,10 @@ test('backend pure rules match frontend behavior', () => {
   const backend = loadBackendRules();
   assert.equal(backend.dataMensalLimitada_('2026-01-31', 1, 31), '2026-02-28');
   assert.deepEqual(Array.from(backend.dividirCentavos_(10000, 3)), [3334, 3333, 3333]);
+  assert.throws(() => backend.dividirCentavos_(2, 3), /centavo/i);
   assert.equal(backend.validarDataISO_('2026-02-31'), false);
   assert.equal(backend.validarPagamento_(15000, 10000, null).code, 'overpayment');
+  const allocation = Array.from(backend.alocarPagamento_([10000, 10000], 15000));
+  assert.equal(allocation[0].pago, true);
+  assert.equal(allocation[1].restanteCentavos, 5000);
 });

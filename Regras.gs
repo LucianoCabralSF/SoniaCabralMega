@@ -58,6 +58,7 @@ function dividirCentavos_(totalCentavos, quantidade, maximo) {
   const limite = Number.isInteger(maximo) ? maximo : 36;
   if (!Number.isInteger(totalCentavos) || totalCentavos < 0) throw new Error('Total em centavos inválido.');
   if (!Number.isInteger(quantidade) || quantidade < 1 || quantidade > limite) throw new Error('Número de parcelas inválido.');
+  if (totalCentavos > 0 && quantidade > totalCentavos) throw new Error('Cada parcela precisa ter ao menos um centavo.');
   const base = Math.floor(totalCentavos / quantidade);
   const resto = totalCentavos % quantidade;
   return Array.from({ length: quantidade }, function (_, indice) {
@@ -79,4 +80,22 @@ function validarPagamento_(pagamentoCentavos, saldoCentavos, parcelaCentavos) {
     return { ok: false, code: 'installment_mismatch', message: 'Para baixar a parcela, receba exatamente o valor dela. Para pagamento parcial, selecione “sem parcela”.' };
   }
   return { ok: true, code: 'ok', message: '' };
+}
+
+function alocarPagamento_(parcelasAbertasCentavos, pagamentoCentavos) {
+  const valores = Array.from(parcelasAbertasCentavos || []);
+  const total = valores.reduce(function (sum, value) {
+    if (!Number.isInteger(value) || value < 0) throw new Error('Parcelas abertas inválidas.');
+    return sum + value;
+  }, 0);
+  if (!valores.length || !Number.isInteger(pagamentoCentavos) || pagamentoCentavos <= 0 || pagamentoCentavos > total) {
+    throw new Error('Pagamento inválido para as parcelas abertas.');
+  }
+  let pendente = pagamentoCentavos;
+  return valores.map(function (originalCentavos) {
+    const aplicadoCentavos = Math.min(originalCentavos, pendente);
+    pendente -= aplicadoCentavos;
+    const restanteCentavos = originalCentavos - aplicadoCentavos;
+    return { originalCentavos: originalCentavos, aplicadoCentavos: aplicadoCentavos, restanteCentavos: restanteCentavos, pago: restanteCentavos === 0 };
+  });
 }
