@@ -31,3 +31,16 @@ test('mapeamento aceita somente categoria conhecida e pode ser desativado', () =
   assert.match(backend, /function salvarMapeamentoDre_\(/);
   assert.match(backend, /normalizeBoolStr\(data\.ativo, 'true'\)/);
 });
+
+test('backend expõe relatório e detalhe como leituras autenticadas', () => {
+  assert.match(backend, /case 'getDreAnual':/);
+  assert.match(backend, /case 'getDreDetalhe':/);
+  assert.match(backend, /function getDreAnual_\(/);
+  assert.match(backend, /delete dre\.movimentosClassificados/);
+});
+
+test('relatório valida ano e detalhe valida mês', () => {
+  assert.match(backend, /Ano inválido\./);
+  assert.match(backend, /Mês inválido\./);
+  assert.match(backend, /detalharCelulaDre_\(dre\.movimentosClassificados/);
+});

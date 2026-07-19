@@ -105,3 +105,27 @@ function montarDreAnual_(movements, mappings, year) {
     }
   };
 }
+
+function detalharCelulaDre_(classified, line, monthOneBased) {
+  var composite = {
+    receita_liquida:['receita_servicos','receita_produtos','outras_receitas','deducoes'],
+    margem_contribuicao:['receita_servicos','receita_produtos','outras_receitas','deducoes','custos_variaveis'],
+    resultado_liquido:['receita_servicos','receita_produtos','outras_receitas','deducoes','custos_variaveis','despesas_pessoal','despesas_estrutura','despesas_operacionais','resultado_financeiro'],
+    resultado_apos_retiradas:['receita_servicos','receita_produtos','outras_receitas','deducoes','custos_variaveis','despesas_pessoal','despesas_estrutura','despesas_operacionais','resultado_financeiro','retirada']
+  };
+  var known = DRE_CATEGORIAS_.concat(['nao_classificado']).concat(Object.keys(composite));
+  if (known.indexOf(line) < 0 || line === 'fora_dre') return [];
+  var hasMonth = monthOneBased !== null && monthOneBased !== '' && typeof monthOneBased !== 'undefined';
+  var month = hasMonth ? Number(monthOneBased) - 1 : null;
+  if (month !== null && (!Number.isInteger(month) || month < 0 || month > 11)) return [];
+  var accepted = composite[line] || [line];
+  var isComposite = Object.prototype.hasOwnProperty.call(composite, line);
+  return (classified || []).filter(function (row) {
+    return accepted.indexOf(row.dreCategoriaResolvida) >= 0 && (month === null || row.mes === month);
+  }).map(function (row) {
+    var leafValue = valorLinhaDre_(row, row.dreCategoriaResolvida, row.valorCentavos);
+    var negativeInComposite = ['deducoes','custos_variaveis','despesas_pessoal','despesas_estrutura','despesas_operacionais','retirada'].indexOf(row.dreCategoriaResolvida) >= 0;
+    var contribution = isComposite && negativeInComposite ? -leafValue : leafValue;
+    return Object.assign({}, row, { valorContribuicaoCentavos:contribution });
+  });
+}

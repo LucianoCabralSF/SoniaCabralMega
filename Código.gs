@@ -2514,6 +2514,29 @@ function listarMapeamentosDre_() {
   return getCachedRows_('dre_mapeamento');
 }
 
+function getDreAnual_(params) {
+  params = params || {};
+  var year = parseInt(params.ano, 10);
+  if (!Number.isInteger(year) || year < 1900 || year > 2200) return { error:'Ano inválido.' };
+  var dre = montarDreAnual_(getCachedRows_('caixa'), listarMapeamentosDre_(), year);
+  delete dre.movimentosClassificados;
+  return dre;
+}
+
+function getDreDetalhe_(params) {
+  params = params || {};
+  var year = parseInt(params.ano, 10);
+  var hasMonth = params.mes !== null && params.mes !== '' && typeof params.mes !== 'undefined';
+  var month = hasMonth ? parseInt(params.mes, 10) : null;
+  if (!Number.isInteger(year) || year < 1900 || year > 2200) return { error:'Ano inválido.' };
+  if (month !== null && (!Number.isInteger(month) || month < 1 || month > 12)) return { error:'Mês inválido.' };
+  var line = String(params.linha || '');
+  var allowed = DRE_CATEGORIAS_.concat(['nao_classificado','receita_liquida','margem_contribuicao','resultado_liquido','resultado_apos_retiradas']);
+  if (allowed.indexOf(line) < 0 || line === 'fora_dre') return { error:'Linha da DRE inválida.' };
+  var dre = montarDreAnual_(getCachedRows_('caixa'), listarMapeamentosDre_(), year);
+  return detalharCelulaDre_(dre.movimentosClassificados, line, month);
+}
+
 function salvarClassificacaoDre_(body) {
   body = body || {};
   return withDocumentLock_(function () {
@@ -2587,6 +2610,8 @@ function readAction_(a, e) {
     case 'getRelacionamentoEventos': return ok(listarEventosRelacionamento_(e.parameter));
     case 'getCampanhas':        return ok(getCachedRows_('campanhas'));
     case 'getDreMapeamentos':   return ok(listarMapeamentosDre_());
+    case 'getDreAnual':         return result(getDreAnual_(e.parameter));
+    case 'getDreDetalhe':       return result(getDreDetalhe_(e.parameter));
     default: return err('Ação desconhecida: ' + a);
   }
 }

@@ -48,3 +48,24 @@ test('ano vazio não inventa melhor ou pior mês', () => {
   assert.equal(dre.indicadores.piorMes, null);
   assert.equal(dre.indicadores.margem, 0);
 });
+
+test('detalhe soma a célula simples selecionada', () => {
+  const dre = context.montarDreAnual_(movements, [], 2026);
+  const detail = context.detalharCelulaDre_(dre.movimentosClassificados, 'receita_servicos', 1);
+  assert.equal(detail.reduce((sum, row) => sum + row.valorContribuicaoCentavos, 0), 100000);
+  assert.deepEqual(Array.from(detail, row => row.id), ['s1']);
+});
+
+test('detalhe composto respeita sinais e fecha com o subtotal', () => {
+  const dre = context.montarDreAnual_(movements, [], 2026);
+  const detail = context.detalharCelulaDre_(dre.movimentosClassificados, 'resultado_liquido', 1);
+  assert.equal(
+    detail.reduce((sum, row) => sum + row.valorContribuicaoCentavos, 0),
+    dre.linhas.resultado_liquido.meses[0]
+  );
+});
+
+test('mês inválido no detalhe não vaza movimentos', () => {
+  const dre = context.montarDreAnual_(movements, [], 2026);
+  assert.deepEqual(Array.from(context.detalharCelulaDre_(dre.movimentosClassificados, 'receita_servicos', 13)), []);
+});
