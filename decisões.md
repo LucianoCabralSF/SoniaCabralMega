@@ -93,3 +93,18 @@ Luciano autorizou a correção integral dos problemas encontrados, pediu que dec
 - Falhas do serviço de cache não transformam uma gravação financeira já concluída em erro, evitando que um rollback deixe um lançamento órfão.
 - Seletores de visualização e tipo ganharam estado acessível; senha tem rótulo associado e eventos/itens clicáveis foram convertidos em botões operáveis pelo teclado.
 - A publicação deve ocorrer na ordem Apps Script → verificação → Vercel, mantendo as versões anteriores disponíveis para reversão.
+
+## Ponto de retomada — Central de Relacionamento e DRE anual
+
+Registro feito em 19/07/2026 após a janela de trabalho solicitada:
+
+- As especificações foram aprovadas e estão nos commits `8e7621c` e `0230578` da `main`.
+- A execução está isolada na branch `feature/relacionamento-dre`.
+- Worktree: `C:\Users\LENOVO\Documents\SISTEMAS VIBECODE\SALÃO SONIA\SoniaCabralMega\.worktrees\relacionamento-dre`.
+- O primeiro bloco da Central foi concluído no commit `d1baff8`: regras puras de telefone, filas de 7/15 dias, prioridade de vínculo e indicadores com tempos médios.
+- A suíte passou de 36 para 42 testes; `npm test` está com 42 aprovações e zero falhas.
+- Nenhuma rota, tela, planilha, implantação do Apps Script ou publicação da Vercel foi alterada nesta branch até este ponto.
+- Próxima tarefa: **Task 2 — Schemas, eventos e contratos autenticados**, no plano `docs/superpowers/plans/2026-07-19-central-relacionamento-implementation.md`.
+- Depois de concluir as seis tarefas da Central, executar o plano `docs/superpowers/plans/2026-07-19-dre-gerencial-anual-implementation.md`.
+- Antes de retomar: entrar na worktree, executar `git status --short` e `npm test`; a base esperada é limpa e com 42 testes aprovados.
+- Não fazer `clasp push`, nova implantação do Apps Script, merge na `main` ou deploy da Vercel antes de concluir e verificar os dois módulos.
