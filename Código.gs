@@ -1017,6 +1017,163 @@ function salvarEtapaRelacionamento_(body) {
 }
 
 // ── Caixa ─────────────────────────────────────────────────────
+function validarRecomendacaoRetorno_(appointment, recommendation) {
+  appointment = appointment || {};
+  if (typeof recommendation === 'undefined') {
+    return { semRetorno:true, legacy:true };
+  }
+  recommendation = recommendation || {};
+  if (recommendation.semRetorno === true) {
+    return { semRetorno:true, legacy:false };
+  }
+  if (!recommendation.data) {
+    return { error:'Informe o próximo retorno ou escolha “sem retorno recomendado”.' };
+  }
+  let dataAlvo;
+  try {
+    dataAlvo = toISO(recommendation.data);
+  } catch (error) {
+    return { error:error.message };
+  }
+  const dataAtendimento = normDate(appointment.data);
+  if (dataAtendimento && dataAlvo < dataAtendimento) {
+    return { error:'O retorno não pode ser anterior ao atendimento.' };
+  }
+  return {
+    data:dataAlvo,
+    motivo:cleanText_(recommendation.motivo || appointment.servicos, 1000),
+    semRetorno:false,
+    legacy:false
+  };
+}
+
+function garantirOportunidadeRetornoUnlocked_(appointment, recommendation) {
+  appointment = appointment || {};
+  recommendation = recommendation || {};
+  if (recommendation.semRetorno === true) return { skipped:true };
+  if (!appointment.id || !appointment.clienteId || !recommendation.data) {
+    return { error:'Dados insuficientes para criar o próximo retorno.' };
+  }
+  const reference = 'retorno:' + appointment.id;
+  const existing = getCachedRows_('relacionamento').find(function (item) {
+    return item.origem === 'retorno' && item.referenciaId === reference;
+  });
+  if (existing) return { id:existing.id, item:existing, duplicate:true };
+
+  const saved = upsertByIdUnlocked_('relacionamento', {
+    clienteId:appointment.clienteId,
+    clienteNome:cleanText_(appointment.clienteNome, 120),
+    origem:'retorno',
+    referenciaId:reference,
+    dataAlvo:recommendation.data,
+    etapa:'pendente',
+    observacoes:cleanText_(recommendation.motivo, 1000)
+  });
+  if (saved.error) return saved;
+  const event = registrarEventoRelacionamentoUnlocked_({
+    idempotencyKey:'auto:retorno:' + appointment.id,
+    oportunidadeId:saved.id,
+    clienteId:appointment.clienteId,
+    tipo:'criacao',
+    etapaAnterior:'',
+    etapaNova:'pendente',
+    origemAlteracao:'automatica',
+    observacoes:'Retorno recomendado ao concluir o atendimento.'
+  });
+  if (event.error) {
+    softDeleteUnlocked_('relacionamento', saved.id);
+    return event;
+  }
+  return saved;
+}
+
+function vincularOportunidadeAoAgendamentoUnlocked_(appointment) {
+  appointment = appointment || {};
+  const storedAppointment = getCachedRows_('agendamentos').find(function (item) {
+    return String(item.id) === String(appointment.id);
+  });
+  const currentAppointment = Object.assign({}, storedAppointment || {}, appointment);
+  if (!currentAppointment.id || !currentAppointment.clienteId) return null;
+
+  if (currentAppointment.oportunidadeId) {
+    const linked = oportunidadeRelacionamentoPorId_(currentAppointment.oportunidadeId);
+    if (linked && (linked.etapa === 'agendou' || linked.etapa === 'retornou')) {
+      return { id:linked.id, item:linked, duplicate:true };
+    }
+  }
+
+  const selected = selecionarOportunidadeParaAgendamento_(getCachedRows_('relacionamento'), {
+    clienteId:currentAppointment.clienteId,
+    oportunidadeId:currentAppointment.oportunidadeId,
+    criadoEm:currentAppointment.criadoEm || nowIso()
+  });
+  if (!selected) return null;
+
+  const appointmentSnapshot = Object.assign({}, currentAppointment);
+  const linkedAppointment = upsertByIdUnlocked_('agendamentos', Object.assign(
+    {}, currentAppointment, { oportunidadeId:selected.id }
+  ));
+  if (linkedAppointment.error) return linkedAppointment;
+  const saved = atualizarEtapaRelacionamentoUnlocked_(selected, 'agendou', {
+    idempotencyKey:'auto:agendou:' + currentAppointment.id,
+    origemAlteracao:'automatica',
+    tipo:'agendamento',
+    patch:{ agendamentoId:currentAppointment.id }
+  });
+  if (saved.error) {
+    upsertByIdUnlocked_('agendamentos', appointmentSnapshot);
+    return saved;
+  }
+  return saved;
+}
+
+function marcarRetornoDoAgendamentoUnlocked_(appointment) {
+  appointment = appointment || {};
+  if (!appointment.oportunidadeId) return null;
+  const item = oportunidadeRelacionamentoPorId_(appointment.oportunidadeId);
+  if (!item) return null;
+  if (item.etapa === 'retornou') return { id:item.id, item:item, duplicate:true };
+  return atualizarEtapaRelacionamentoUnlocked_(item, 'retornou', {
+    idempotencyKey:'auto:retornou:' + appointment.id,
+    origemAlteracao:'automatica',
+    tipo:'retorno'
+  });
+}
+
+function encerrarPendentesPorAgendamentoEspontaneoUnlocked_(appointment) {
+  appointment = appointment || {};
+  let total = 0;
+  getCachedRows_('relacionamento').filter(function (item) {
+    return String(item.clienteId) === String(appointment.clienteId) &&
+      item.etapa === 'pendente' &&
+      !item.encerramentoMotivo &&
+      String(item.criadoEm || '') <= String(appointment.criadoEm || nowIso()) &&
+      String(item.dataAlvo || '') <= String(normDate(appointment.data) || '');
+  }).forEach(function (item) {
+    const snapshot = Object.assign({}, item);
+    const saved = upsertByIdUnlocked_('relacionamento', Object.assign({}, item, {
+      encerramentoMotivo:'retorno_espontaneo'
+    }));
+    if (saved.error) return;
+    const event = registrarEventoRelacionamentoUnlocked_({
+      idempotencyKey:'auto:espontaneo:' + appointment.id + ':' + item.id,
+      oportunidadeId:item.id,
+      clienteId:item.clienteId,
+      tipo:'encerramento',
+      etapaAnterior:'pendente',
+      etapaNova:'pendente',
+      origemAlteracao:'automatica',
+      observacoes:'Cliente já possuía agendamento futuro antes do contato.'
+    });
+    if (event.error) {
+      upsertByIdUnlocked_('relacionamento', snapshot);
+      return;
+    }
+    total += 1;
+  });
+  return { total:total };
+}
+
 function caixaDiaList_(data) {
   const cacheKey = 'caixa_dia_' + data;
   const cached = CACHE.get(cacheKey);
@@ -1642,7 +1799,27 @@ function saveAgendamento(d) {
       }
     }
 
-    return saveAgendamentoUnlocked_(d);
+    const saved = saveAgendamentoUnlocked_(d);
+    if (saved.error || requestedStatus !== 'agendado') return saved;
+
+    let relationship = { ok:true };
+    try {
+      const linked = vincularOportunidadeAoAgendamentoUnlocked_(saved.item || d);
+      if (linked && linked.error) throw new Error(linked.error);
+      const spontaneous = linked ? null : encerrarPendentesPorAgendamentoEspontaneoUnlocked_(saved.item || d);
+      relationship = {
+        ok:true,
+        opportunityId:linked && (linked.id || linked.item && linked.item.id) || '',
+        spontaneousClosures:spontaneous ? spontaneous.total : 0
+      };
+    } catch (relationshipError) {
+      relationship = {
+        ok:false,
+        warning:'Agendamento salvo; relacionamento pendente: ' + relationshipError.message
+      };
+    }
+    saved.relationship = relationship;
+    return saved;
   });
 }
 
@@ -1650,19 +1827,43 @@ function concluirAgendamentoComCaixa_(b) {
   const lock = LockService.getDocumentLock();
   lock.waitLock(30000);
   try {
+    b = b || {};
     const appointment = b.appointment || {};
     const cash = b.cash || {};
     const appointmentId = String(appointment.id || '');
     if (!appointmentId) return { error: 'Agendamento inválido.' };
+    const returnRecommendation = validarRecomendacaoRetorno_(
+      appointment,
+      Object.prototype.hasOwnProperty.call(b, 'returnRecommendation') ? b.returnRecommendation : undefined
+    );
+    if (returnRecommendation.error) return returnRecommendation;
     const rowNum = rowNumForId_('agendamentos', appointmentId);
     if (!rowNum) return { error: 'Agendamento não encontrado.' };
     const sheet = getSheet('agendamentos');
     const snapshot = sheet.getRange(rowNum, 1, 1, SCHEMAS.agendamentos.length).getValues()[0];
+    const currentAppointment = {};
+    SCHEMAS.agendamentos.forEach(function (header, index) {
+      currentAppointment[header] = snapshot[index];
+    });
     const currentStatus = String(snapshot[SCHEMAS.agendamentos.indexOf('status')] || 'agendado');
     const cashItemId = 'agcash:' + appointmentId;
     const existingCash = findCashByItemId_(cashItemId);
     if (existingCash && currentStatus === 'concluido') {
-      return { completed: true, duplicate: true, cashId: existingCash.id };
+      let relationship = { ok:true };
+      try {
+        const prior = marcarRetornoDoAgendamentoUnlocked_(currentAppointment);
+        const next = garantirOportunidadeRetornoUnlocked_(currentAppointment, returnRecommendation);
+        if (prior && prior.error) throw new Error(prior.error);
+        if (next && next.error) throw new Error(next.error);
+        relationship.priorOpportunityId = prior && (prior.id || prior.item && prior.item.id) || '';
+        relationship.opportunityId = next && (next.id || next.item && next.item.id) || '';
+      } catch (relationshipError) {
+        relationship = {
+          ok:false,
+          warning:'Atendimento e caixa concluídos; relacionamento pendente: ' + relationshipError.message
+        };
+      }
+      return { completed:true, duplicate:true, cashId:existingCash.id, relationship:relationship };
     }
     if (existingCash) {
       return { error: 'Já existe uma entrada no caixa para este atendimento, mas o status está inconsistente.' };
@@ -1671,10 +1872,17 @@ function concluirAgendamentoComCaixa_(b) {
       return { error: 'Somente um atendimento agendado pode ser concluído.' };
     }
 
+    let savedAppointment;
+    let savedCash;
     try {
-      const savedAppointment = saveAgendamentoUnlocked_({ ...appointment, status: 'concluido' });
+      const appointmentToSave = Object.assign({}, currentAppointment, appointment, { status:'concluido' });
+      if (!returnRecommendation.legacy) {
+        appointmentToSave.retornoRecomendado = returnRecommendation.semRetorno ? '' : returnRecommendation.data;
+        appointmentToSave.retornoMotivo = returnRecommendation.semRetorno ? '' : returnRecommendation.motivo;
+      }
+      savedAppointment = saveAgendamentoUnlocked_(appointmentToSave);
       if (savedAppointment.error) return savedAppointment;
-      const savedCash = saveLancamentoUnlocked_({
+      savedCash = saveLancamentoUnlocked_({
         ...cash,
         id: '',
         tipo: 'entrada',
@@ -1683,12 +1891,28 @@ function concluirAgendamentoComCaixa_(b) {
         data: toISO(cash.data || today())
       });
       if (savedCash.error) throw new Error(savedCash.error);
-      return { completed: true, cashId: savedCash.id };
     } catch (writeError) {
       sheet.getRange(rowNum, 1, 1, snapshot.length).setValues([snapshot]);
       invalidateSheetCache_('agendamentos');
       throw writeError;
     }
+
+    let relationship = { ok:true };
+    try {
+      const completedAppointment = savedAppointment.item || appointment;
+      const prior = marcarRetornoDoAgendamentoUnlocked_(completedAppointment);
+      const next = garantirOportunidadeRetornoUnlocked_(completedAppointment, returnRecommendation);
+      if (prior && prior.error) throw new Error(prior.error);
+      if (next && next.error) throw new Error(next.error);
+      relationship.priorOpportunityId = prior && (prior.id || prior.item && prior.item.id) || '';
+      relationship.opportunityId = next && (next.id || next.item && next.item.id) || '';
+    } catch (relationshipError) {
+      relationship = {
+        ok:false,
+        warning:'Atendimento e caixa concluídos; relacionamento pendente: ' + relationshipError.message
+      };
+    }
+    return { completed:true, cashId:savedCash.id, relationship:relationship };
   } finally {
     lock.releaseLock();
   }

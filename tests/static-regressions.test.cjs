@@ -83,7 +83,7 @@ test('appointment completion and cash entry share one locked backend operation',
   assert.match(backend, /const lock = LockService\.getDocumentLock\(\)/);
   assert.match(html, /action:'completeAppointment'/);
   assert.match(backend, /function saveAgendamento\(d\)[\s\S]{0,900}currentStatus/);
-  assert.match(backend, /function concluirAgendamentoComCaixa_\(b\)[\s\S]{0,1500}currentStatus !== 'agendado'/);
+  assert.match(backend, /function concluirAgendamentoComCaixa_\(b\)[\s\S]{0,3500}currentStatus !== 'agendado'/);
   assert.match(html, /ag\.status === 'concluido' \? 'disabled'/);
 });
 

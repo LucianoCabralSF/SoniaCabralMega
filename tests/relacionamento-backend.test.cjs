@@ -7,13 +7,15 @@ const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const backend = fs.readFileSync(path.join(root, 'Código.gs'), 'utf8');
 const relationshipRules = fs.readFileSync(path.join(root, 'RelacionamentoRegras.gs'), 'utf8');
+const sharedRules = fs.readFileSync(path.join(root, 'Regras.gs'), 'utf8');
 
 function relationshipFixture(seed = {}) {
   const stores = {
     clientes: structuredClone(seed.clientes || []),
     relacionamento: structuredClone(seed.relacionamento || []),
     relacionamento_eventos: structuredClone(seed.relacionamento_eventos || []),
-    campanhas: structuredClone(seed.campanhas || [])
+    campanhas: structuredClone(seed.campanhas || []),
+    agendamentos: structuredClone(seed.agendamentos || [])
   };
   const noopCache = { get:() => null, put() {}, remove() {} };
   const noopProperties = {
@@ -44,6 +46,7 @@ function relationshipFixture(seed = {}) {
     }
   });
   vm.runInContext(relationshipRules, context, { filename:'RelacionamentoRegras.gs' });
+  vm.runInContext(sharedRules, context, { filename:'Regras.gs' });
   vm.runInContext(backend, context, { filename:'Código.gs' });
   vm.runInContext(`
     nowIso = function () { return '2026-07-19T12:00:00'; };
@@ -157,4 +160,96 @@ test('mudança manual registra histórico e pode corrigir etapa', () => {
   assert.equal(result.item.etapa, 'contatada');
   assert.equal(fixture.stores.relacionamento_eventos[0].etapaAnterior, 'respondeu');
   assert.equal(fixture.stores.relacionamento_eventos[0].origemAlteracao, 'manual');
+});
+
+test('valida retorno antes de qualquer gravação', () => {
+  const fixture = relationshipFixture();
+  const missing = fixture.call(
+    "validarRecomendacaoRetorno_({ data:'2026-07-19', servicos:'Corte' }, {})"
+  );
+  assert.match(missing.error, /próximo retorno/i);
+  const before = fixture.call(
+    "validarRecomendacaoRetorno_({ data:'2026-07-19', servicos:'Corte' }, { data:'2026-07-18' })"
+  );
+  assert.match(before.error, /anterior/i);
+  assert.deepEqual(
+    fixture.call("validarRecomendacaoRetorno_({ data:'2026-07-19', servicos:'Corte' }, { data:'2026-08-19', motivo:'' })"),
+    { data:'2026-08-19', motivo:'Corte', semRetorno:false, legacy:false }
+  );
+  assert.deepEqual(
+    fixture.call("validarRecomendacaoRetorno_({ data:'2026-07-19' }, { semRetorno:true })"),
+    { semRetorno:true, legacy:false }
+  );
+});
+
+test('cria uma única oportunidade para o retorno recomendado', () => {
+  const fixture = relationshipFixture();
+  const appointment = {
+    id:'ag_1', clienteId:'cli_1', clienteNome:'Ana', data:'2026-07-19',
+    servicos:'Corte', criadoEm:'2026-07-19T10:00:00'
+  };
+  const expression =
+    "garantirOportunidadeRetornoUnlocked_(" + JSON.stringify(appointment) +
+    ", { data:'2026-08-19', motivo:'Manutenção', semRetorno:false })";
+  const first = fixture.call(expression);
+  const repeated = fixture.call(expression);
+  assert.equal(first.item.referenciaId, 'retorno:ag_1');
+  assert.equal(repeated.duplicate, true);
+  assert.equal(fixture.stores.relacionamento.length, 1);
+  assert.equal(fixture.stores.relacionamento_eventos.length, 1);
+});
+
+test('vincula agendamento à oportunidade contatada e marca agendou', () => {
+  const fixture = relationshipFixture({
+    relacionamento:[{
+      id:'rel_1', clienteId:'cli_1', origem:'retorno', dataAlvo:'2026-07-20',
+      etapa:'respondeu', criadoEm:'2026-07-18T10:00:00'
+    }],
+    agendamentos:[{
+      id:'ag_1', clienteId:'cli_1', data:'2026-07-25', etapa:'agendado',
+      criadoEm:'2026-07-19T10:00:00'
+    }]
+  });
+  const result = fixture.call(
+    "vincularOportunidadeAoAgendamentoUnlocked_({ id:'ag_1', clienteId:'cli_1', data:'2026-07-25', criadoEm:'2026-07-19T10:00:00' })"
+  );
+  assert.equal(result.item.etapa, 'agendou');
+  assert.equal(result.item.agendamentoId, 'ag_1');
+  assert.equal(fixture.stores.agendamentos[0].oportunidadeId, 'rel_1');
+});
+
+test('conclusão do agendamento vinculado marca retornou', () => {
+  const fixture = relationshipFixture({
+    relacionamento:[{
+      id:'rel_1', clienteId:'cli_1', origem:'retorno', dataAlvo:'2026-07-20',
+      etapa:'agendou', agendamentoId:'ag_1'
+    }]
+  });
+  const result = fixture.call(
+    "marcarRetornoDoAgendamentoUnlocked_({ id:'ag_1', clienteId:'cli_1', oportunidadeId:'rel_1' })"
+  );
+  assert.equal(result.item.etapa, 'retornou');
+  assert.equal(fixture.stores.relacionamento_eventos[0].tipo, 'retorno');
+});
+
+test('agendamento espontâneo encerra pendência sem conversão', () => {
+  const fixture = relationshipFixture({
+    relacionamento:[{
+      id:'rel_1', clienteId:'cli_1', origem:'retorno', dataAlvo:'2026-07-20',
+      etapa:'pendente', criadoEm:'2026-07-10T10:00:00'
+    }]
+  });
+  const result = fixture.call(
+    "encerrarPendentesPorAgendamentoEspontaneoUnlocked_({ id:'ag_1', clienteId:'cli_1', data:'2026-07-25', criadoEm:'2026-07-19T10:00:00' })"
+  );
+  assert.equal(result.total, 1);
+  assert.equal(fixture.stores.relacionamento[0].encerramentoMotivo, 'retorno_espontaneo');
+  assert.equal(fixture.stores.relacionamento_eventos[0].tipo, 'encerramento');
+});
+
+test('contrato de conclusão separa núcleo financeiro do CRM', () => {
+  assert.match(backend, /function validarRecomendacaoRetorno_/);
+  assert.match(backend, /returnRecommendation/);
+  assert.match(backend, /relationship:\s*relationship/);
+  assert.match(backend, /Atendimento e caixa concluídos/);
 });
