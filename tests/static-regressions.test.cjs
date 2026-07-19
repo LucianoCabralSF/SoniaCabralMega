@@ -161,8 +161,39 @@ test('security headers include a content security policy', () => {
 
 test('Apps Script deployment includes the shared backend rules', () => {
   assert.match(claspIgnore, /^!Regras\.gs$/m);
+  assert.match(claspIgnore, /^!LembreteRegras\.gs$/m);
   assert.match(readme, /Sempre publique o backend antes do frontend/);
   assert.match(readme, /reverta primeiro a Vercel[\s\S]*versão anterior do Web App/);
+});
+
+test('configuração permite revisar e operar lembretes automáticos', () => {
+  for (const id of [
+    'cfg-lembrete-ativo','cfg-lembrete-horas','cfg-lembrete-modelo',
+    'cfg-lembrete-preview','cfg-whatsapp-token','cfg-lembrete-envios',
+    'cfg-telefones-pendentes'
+  ]) assert.match(html, new RegExp('id="' + id + '"'));
+  assert.match(html, /function loadLembretesConfig\(/);
+  assert.match(html, /function saveLembretesConfig\(/);
+  assert.match(html, /action:'testWhatsAppConfig'/);
+  assert.match(html, /action:'runLembretesNow'/);
+  assert.match(html, /#page-config > \.ph,#page-config > \.cfg-sec\{max-width:820px/);
+});
+
+test('importação remove o 55 duplicado antes de salvar e comparar', () => {
+  assert.match(html, /function normalizarTelefoneImportado\(/);
+  assert.match(html, /const telefone = normalizarTelefoneImportado\(telRaw\)/);
+  assert.match(html, /normalizarTelefoneImportado\(c\.telefone \|\| ''\)/);
+  assert.doesNotMatch(html, /const telDigitos = telRaw\.replace\(\/\\D\/g, ''\)/);
+  assert.match(html, /fillClienteFieldsFromContact[\s\S]{0,500}normalizarTelefoneImportado\(telRaw\)/);
+});
+
+test('telas refletem a cascata entre agenda, caixa e relacionamento', () => {
+  assert.match(html, /delAgend[\s\S]{0,900}loadCaixa\(true\)/);
+  assert.match(html, /delAgend[\s\S]{0,900}loadRelacionamento\(\)/);
+  assert.match(html, /delLanc[\s\S]{0,1200}loadAgenda\(true\)/);
+  assert.match(html, /delLanc[\s\S]{0,1200}loadRelacionamento\(\)/);
+  assert.doesNotMatch(html, /O lançamento financeiro existente, se houver, não será apagado/);
+  assert.doesNotMatch(html, /O registro de origem \(agenda, fiado ou planejamento\) não será alterado/);
 });
 
 test('Central de Relacionamento tem navegação, filtros e resumo', () => {

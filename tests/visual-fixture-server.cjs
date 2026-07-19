@@ -147,6 +147,22 @@ const fixture = {
   getCampanhas: [
     { id: 'cam_1', nome: 'Clientes de julho', mensagemModelo: 'Olá, {nome}! Temos uma novidade.', dataInicio: today, dataFim: shiftDate(30), status: 'ativa' }
   ],
+  getLembretesConfig: {
+    ativo: false, antecedenciaHoras: 4,
+    mensagemModelo: 'Olá, {nome}! Lembramos que seu atendimento de {servico} na {salao} está marcado para hoje, {data}, às {hora}. Responda para confirmar.',
+    templateName: 'lembrete_agendamento', templateLanguage: 'pt_BR', apiVersion: 'v23.0',
+    phoneNumberId: '', tokenConfigurado: false, pronto: false, triggerAtivo: false
+  },
+  getLembretesEnvios: [
+    { id:'lem_1', telefone:'5592999991111', mensagem:'Olá, Maria! Seu atendimento está marcado para hoje.', status:'enviado', enviadoEm:`${today}T08:15:00`, providerMessageId:'wamid.fixture.1' },
+    { id:'lem_2', telefone:'5592988882222', mensagem:'Olá, Ana! Seu atendimento está marcado para hoje.', status:'pendente', programadoPara:`${today}T10:00:00` },
+    { id:'lem_3', telefone:'5592977773333', status:'erro', programadoPara:`${today}T08:00:00`, ultimoErro:'Modelo ainda não aprovado.' }
+  ],
+  getClientesTelefonePendente: [
+    { id:'cli_4', nome:'Carla Souza', telefone:'123' }
+  ],
+  testWhatsAppConfig: { ok:true, phoneNumberId:'123456789', numero:'+55 92 99999-0000', nomeVerificado:'Sonia Cabral' },
+  runLembretesNow: { reconciliados:2, enviados:1, erros:0, expirados:0, cancelados:0 },
   getDreAnual: {
     ano: 2026, linhas: dreFixtureLines, provisoria: true,
     naoClassificados: { entradas:10000, saidas:25000, saldo:-15000 },
@@ -187,6 +203,10 @@ const server = http.createServer((request, response) => {
       }
       if (body.action === 'saveDreMapeamento') {
         data = { id:'map_fixture', item:body.data || {} };
+      }
+      if (body.action === 'saveLembretesConfig') {
+        data = { ...fixture.getLembretesConfig, ...body.data, pronto:!!(body.data?.phoneNumberId && body.data?.accessToken), triggerAtivo:!!body.data?.ativo };
+        delete data.accessToken;
       }
       if (body.action === 'getAgendamentos') {
         data = data.filter(item => {

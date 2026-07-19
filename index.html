@@ -770,6 +770,24 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   font-size:13px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;
   margin-bottom:14px
 }
+#page-config > .ph,#page-config > .cfg-sec{max-width:820px;margin-left:auto;margin-right:auto}
+.cfg-status{padding:11px 13px;border-radius:var(--r);font-size:14px;margin-bottom:14px;background:var(--bg3);border:1px solid var(--border)}
+.cfg-status.ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.cfg-status.warn{background:var(--warn-bg);border-color:var(--gold);color:var(--warn)}
+.cfg-toggle{display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;font-size:15px;line-height:1.4;cursor:pointer}
+.cfg-toggle input{width:20px;height:20px;margin-top:1px;accent-color:var(--gold);flex:0 0 auto}
+.cfg-preview{background:var(--dark);color:#fff;border-radius:var(--r);padding:14px;font-size:14px;line-height:1.55;white-space:pre-wrap;margin-bottom:14px}
+.cfg-note{background:var(--info-bg);border:1px solid var(--info);color:var(--info);border-radius:var(--r);padding:11px 13px;font-size:13px;line-height:1.45;margin-bottom:14px}
+.cfg-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.cfg-actions .btn-gold{grid-column:1/-1}
+.cfg-subtitle{font-size:14px;font-weight:650;color:var(--dark);margin:20px 0 8px}
+.cfg-list{display:flex;flex-direction:column;gap:8px}
+.cfg-list-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;font-size:13px}
+.cfg-list-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.cfg-list-meta{color:var(--dim);margin-top:3px;overflow-wrap:anywhere}
+.cfg-list-empty{color:var(--dim);font-size:14px;padding:10px 0}
+.cfg-list-item .btn-sec{padding:7px 10px;font-size:13px;min-width:76px}
+@media (max-width:520px){.cfg-actions{grid-template-columns:1fr}.cfg-actions .btn-gold{grid-column:auto}}
 
 #parcelas-container .parc-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 #parcelas-container .parc-row span{font-size:14px;color:var(--dim);min-width:80px}
@@ -1295,6 +1313,48 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
         <div class="fg"><span class="lbl">Intervalo (min)</span><input class="inp" id="cfg-int" type="number" min="15" max="120"/></div>
         <button class="btn-gold" id="btn-save-horario">Salvar horário</button>
       </div>
+      <div class="cfg-sec" id="cfg-lembretes-section">
+        <div class="cfg-title">Mensagens automáticas</div>
+        <div class="cfg-status" id="cfg-lembrete-status" role="status">Carregando configuração…</div>
+        <label class="cfg-toggle" for="cfg-lembrete-ativo">
+          <input id="cfg-lembrete-ativo" type="checkbox"/>
+          <span>Enviar automaticamente o lembrete no dia do atendimento</span>
+        </label>
+        <div class="fg">
+          <label class="lbl" for="cfg-lembrete-horas">Antecedência</label>
+          <select id="cfg-lembrete-horas">
+            <option value="4">4 horas antes</option>
+            <option value="3">3 horas antes</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="lbl" for="cfg-lembrete-modelo">Mensagem padrão</label>
+          <textarea id="cfg-lembrete-modelo" rows="6" maxlength="2000"></textarea>
+          <small style="color:var(--dim)">Use: {nome}, {servico}, {salao}, {data} e {hora}.</small>
+        </div>
+        <div class="lbl">Prévia para revisão</div>
+        <div class="cfg-preview" id="cfg-lembrete-preview"></div>
+        <div class="cfg-note">O WhatsApp exige que mensagens iniciadas pelo salão usem um modelo aprovado. Se mudar o texto acima, publique o mesmo texto na Meta e informe abaixo o nome do novo modelo aprovado.</div>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;margin-bottom:14px">Conexão oficial do WhatsApp</summary>
+          <div class="fg"><label class="lbl" for="cfg-whatsapp-numero-id">ID do número</label><input id="cfg-whatsapp-numero-id" type="text" inputmode="numeric" autocomplete="off"/></div>
+          <div class="fg"><label class="lbl" for="cfg-whatsapp-template">Nome do modelo aprovado</label><input id="cfg-whatsapp-template" type="text" autocomplete="off"/></div>
+          <div class="form-row">
+            <div class="fg"><label class="lbl" for="cfg-whatsapp-idioma">Idioma</label><input id="cfg-whatsapp-idioma" type="text" value="pt_BR" autocomplete="off"/></div>
+            <div class="fg"><label class="lbl" for="cfg-whatsapp-versao">Versão da API</label><input id="cfg-whatsapp-versao" type="text" value="v23.0" autocomplete="off"/></div>
+          </div>
+          <div class="fg"><label class="lbl" for="cfg-whatsapp-token">Token de acesso</label><input id="cfg-whatsapp-token" type="password" autocomplete="new-password" placeholder="Deixe vazio para manter o atual"/></div>
+        </details>
+        <div class="cfg-actions">
+          <button class="btn-gold" id="btn-save-lembretes">Salvar mensagens</button>
+          <button class="btn-sec" id="btn-test-whatsapp">Testar conexão</button>
+          <button class="btn-sec" id="btn-run-lembretes">Verificar lembretes agora</button>
+        </div>
+        <div class="cfg-subtitle">Últimos envios</div>
+        <div class="cfg-list" id="cfg-lembrete-envios"><div class="cfg-list-empty">Nenhum envio registrado.</div></div>
+        <div class="cfg-subtitle">Telefones para revisar</div>
+        <div class="cfg-list" id="cfg-telefones-pendentes"><div class="cfg-list-empty">Nenhuma pendência encontrada.</div></div>
+      </div>
       <div class="cfg-sec">
         <div class="cfg-title">Segurança</div>
         <div class="fg"><label class="lbl" for="cfg-s-atual">Senha atual</label><input class="inp" id="cfg-s-atual" type="password" autocomplete="current-password"/></div>
@@ -1519,6 +1579,9 @@ const state = {
     campanhas: [],
     dreAnual: null,
     dreMapeamentos: [],
+    lembretesConfig: {},
+    lembreteEnvios: [],
+    telefonesPendentes: [],
     config: {}
   },
   ui: {
@@ -1638,6 +1701,13 @@ function applyTelMask(el){
   else if(v.length > 6) v = v.replace(/(\d{2})(\d{4})(\d*)/, '($1) $2-$3');
   else if(v.length > 2) v = v.replace(/(\d{2})(\d*)/, '($1) $2');
   el.value = v;
+}
+
+function normalizarTelefoneImportado(value){
+  let digits = String(value || '').replace(/\D/g,'').replace(/^00/,'');
+  while(/^5555/.test(digits) && (digits.length === 14 || digits.length === 15)) digits = digits.slice(2);
+  if(/^55/.test(digits) && (digits.length === 12 || digits.length === 13)) digits = digits.slice(2);
+  return digits.length === 10 || digits.length === 11 ? digits : '';
 }
 
 function applyValorMask(el){
@@ -2627,6 +2697,7 @@ function navTo(page){
   if(page === 'extrato') checkExtLock();
   if(page === 'relacionamento') loadRelacionamento();
   if(page === 'dre-anual') loadDreAnual();
+  if(page === 'config') loadLembretesConfig();
 }
 
 function initExtSelectors(){
@@ -2762,6 +2833,10 @@ function bindGlobalEvents(){
   qs('#btn-save-config').addEventListener('click', saveConfig);
   qs('#btn-save-horario').addEventListener('click', saveConfigHorario);
   qs('#btn-save-senha').addEventListener('click', saveSenha);
+  qs('#btn-save-lembretes')?.addEventListener('click', saveLembretesConfig);
+  qs('#btn-test-whatsapp')?.addEventListener('click', testarWhatsAppConfig);
+  qs('#btn-run-lembretes')?.addEventListener('click', executarLembretesAgora);
+  qs('#cfg-lembrete-modelo')?.addEventListener('input', atualizarPreviewLembrete);
 
   qsa('.btn-back-mais').forEach(btn => btn.addEventListener('click', () => navTo('mais')));
 
@@ -4175,6 +4250,7 @@ async function saveCli(){
     }
     closeDrawer();
     toast(state.ui.editId ? 'Atualizada!' : 'Cadastrada!','ok');
+    if(state.ui.currentPage === 'config') loadLembretesConfig();
   }catch(e){
     toast('Erro.','err');
     btnSv(btn, false);
@@ -4214,7 +4290,7 @@ async function importarDaAgenda() {
 
   // Monta set de telefones já cadastrados para evitar duplicatas
   const telefonesExistentes = new Set(
-    state.db.clientes.map(c => (c.telefone || '').replace(/\D/g, '')).filter(Boolean)
+    state.db.clientes.map(c => normalizarTelefoneImportado(c.telefone || '')).filter(Boolean)
   );
 
   let importados = 0;
@@ -4226,20 +4302,20 @@ async function importarDaAgenda() {
     if (!nome) continue;
 
     const telRaw = (c.tel && c.tel[0]) ? c.tel[0].trim() : '';
-    const telDigitos = telRaw.replace(/\D/g, '');
+    const telefone = normalizarTelefoneImportado(telRaw);
     const email = (c.email && c.email[0]) ? c.email[0].trim() : '';
 
     // Pula se já existe cliente com o mesmo telefone
-    if (telDigitos && telefonesExistentes.has(telDigitos)) {
+    if (telefone && telefonesExistentes.has(telefone)) {
       pulados++;
       continue;
     }
 
     try {
-      const r = await post({ action: 'saveCliente', token: state.token, data: { nome, telefone: telRaw, email } });
+      const r = await post({ action: 'saveCliente', token: state.token, data: { nome, telefone, email } });
       if (r.status === 'ok' && r.data?.item) {
         state.db.clientes.push(r.data.item);
-        if (telDigitos) telefonesExistentes.add(telDigitos);
+        if (telefone) telefonesExistentes.add(telefone);
         importados++;
       } else {
         erros.push(nome);
@@ -5023,12 +5099,10 @@ async function saveAgend(){
       btnSv(btn, false);
       return;
     }
-    const fromRelationship = !!state.ui.agOportunidadeId;
     closeDrawer();
     toast(state.ui.editId ? 'Atualizado!' : 'Agendado!','ok');
     invalidarPendentes();
-    loadAgenda(true);
-    if(fromRelationship) loadRelacionamento();
+    await Promise.all([loadAgenda(true), loadCaixa(true), loadRelacionamento()]);
   }catch(e){
     toast('Erro.','err');
     btnSv(btn, false);
@@ -5039,13 +5113,13 @@ async function delAgend(appointment){
   const item = typeof appointment === 'object' ? appointment : null;
   const id = item?.id || appointment;
   const detalhe = item ? `${item.clienteNome || 'Cliente'} em ${fmtBR(String(item.data || '').slice(0,10))} às ${item.hora || 'horário não informado'}` : 'este agendamento';
-  if(!confirm(`Excluir ${detalhe}?\n\nO lançamento financeiro existente, se houver, não será apagado.`)) return;
+  if(!confirm(`Excluir ${detalhe}?\n\nSe houver lançamento vinculado, ele e o retorno futuro também serão excluídos.`)) return;
   try{
     const r = await post({ action:'deleteAgendamento', token:state.token, id });
     if(r.status !== 'ok') return toast(r.data?.message || 'Não foi possível excluir o agendamento.','err');
     toast('Excluído.','ok');
     invalidarPendentes();
-    loadAgenda(true);
+    await Promise.all([loadAgenda(true), loadCaixa(true), loadRelacionamento(), updateStats()]);
   }catch(e){
     toast('Erro.','err');
   }
@@ -5532,7 +5606,8 @@ function getQuickClienteDraft(inputSel = '#f-cli-search'){
 
 function fillClienteFieldsFromContact(contact, prefix = 'qcli'){
   const nome = (contact?.name && contact.name[0]) ? contact.name[0].trim() : '';
-  const tel = (contact?.tel && contact.tel[0]) ? contact.tel[0].trim() : '';
+  const telRaw = (contact?.tel && contact.tel[0]) ? contact.tel[0].trim() : '';
+  const tel = normalizarTelefoneImportado(telRaw);
   const email = (contact?.email && contact.email[0]) ? contact.email[0].trim() : '';
 
   if(nome && qs(`#${prefix}-nome`)) qs(`#${prefix}-nome`).value = nome;
@@ -6038,7 +6113,8 @@ async function saveLanc(){
     if(previousDate) cacheStore().del(`sc_cx_${previousDate.slice(0,7)}`);
     toast(wasEdit ? 'Atualizado!' : 'Registrado!','ok');
     setCaixaMes((data.data || today()).slice(0,7));
-    await Promise.all([loadCaixa(true), updateStats()]);
+    invalidarPendentes();
+    await Promise.all([loadCaixa(true), loadAgenda(true), loadRelacionamento(), updateStats()]);
   }catch(e){
     toast('Erro de conexão.','err');
     btnSv(btn, false);
@@ -6049,14 +6125,17 @@ async function delLanc(id){
   const item = (state.ui.caixaItems || []).find(row => String(row.id) === String(id));
   const descricao = item?.clienteNome || item?.itemNome || item?.categoria || 'lançamento sem descrição';
   const data = item?.data ? ` em ${fmtBR(String(item.data).slice(0,10))}` : '';
-  const avisoOrigem = item?.itemTipo ? '\n\nO registro de origem (agenda, fiado ou planejamento) não será alterado.' : '';
+  const avisoOrigem = item?.itemTipo === 'agendamento'
+    ? '\n\nO agendamento vinculado e seu retorno futuro também serão excluídos.'
+    : '\n\nEsta ação exclui somente este lançamento.';
   if(!confirm(`Excluir “${descricao}” no valor de ${fmt(item?.valor || 0)}${data}?${avisoOrigem}`)) return;
   await comTrava(async () => {
   try{
     const r = await post({ action:'deleteLancamento', token:state.token, id });
     if(r.status !== 'ok') return toast(r.data?.message || 'Não foi possível excluir o lançamento.','err');
     toast('Excluído.','ok');
-    await Promise.all([loadCaixa(true), updateStats()]);
+    invalidarPendentes();
+    await Promise.all([loadCaixa(true), loadAgenda(true), loadRelacionamento(), updateStats()]);
   }catch(e){
     toast('Erro.','err');
   }
@@ -6352,6 +6431,169 @@ async function abrirPgtoFiado(id, nome, saldo, numParc){
   qs('#btn-confirm-pg').addEventListener('click', () => registrarPgtoFiado(id));
 }
 window.abrirPgtoFiado = abrirPgtoFiado;
+
+function atualizarPreviewLembrete(){
+  const model = qs('#cfg-lembrete-modelo')?.value || '';
+  const values = {
+    nome:'Ana',
+    servico:'Escova',
+    salao:state.db.config.salonName || 'Sonia Cabral',
+    data:fmtBR(today()),
+    hora:'14:00'
+  };
+  const preview = Object.entries(values).reduce((text, [key, value]) =>
+    text.replace(new RegExp(`\\{${key}\\}`, 'g'), value), model);
+  if(qs('#cfg-lembrete-preview')) qs('#cfg-lembrete-preview').textContent = preview || 'A prévia aparecerá aqui.';
+}
+
+function renderLembretesConfig(){
+  const config = state.db.lembretesConfig || {};
+  if(qs('#cfg-lembrete-ativo')) qs('#cfg-lembrete-ativo').checked = !!config.ativo;
+  if(qs('#cfg-lembrete-horas')) qs('#cfg-lembrete-horas').value = String(config.antecedenciaHoras || 4);
+  if(qs('#cfg-lembrete-modelo')) qs('#cfg-lembrete-modelo').value = config.mensagemModelo || '';
+  if(qs('#cfg-whatsapp-numero-id')) qs('#cfg-whatsapp-numero-id').value = config.phoneNumberId || '';
+  if(qs('#cfg-whatsapp-template')) qs('#cfg-whatsapp-template').value = config.templateName || '';
+  if(qs('#cfg-whatsapp-idioma')) qs('#cfg-whatsapp-idioma').value = config.templateLanguage || 'pt_BR';
+  if(qs('#cfg-whatsapp-versao')) qs('#cfg-whatsapp-versao').value = config.apiVersion || 'v23.0';
+  if(qs('#cfg-whatsapp-token')){
+    qs('#cfg-whatsapp-token').value = '';
+    qs('#cfg-whatsapp-token').placeholder = config.tokenConfigurado ? 'Token protegido e já configurado' : 'Cole o token de acesso';
+  }
+
+  const status = qs('#cfg-lembrete-status');
+  if(status){
+    status.className = 'cfg-status';
+    if(config.ativo && config.pronto && config.triggerAtivo){
+      status.classList.add('ok');
+      status.textContent = `Ativo: lembretes serão verificados a cada 15 minutos, ${config.antecedenciaHoras || 4} horas antes.`;
+    }else if(config.ativo && config.pronto){
+      status.classList.add('warn');
+      status.textContent = 'A conexão está pronta, mas o agendador precisa ser reativado ao salvar.';
+    }else if(config.pronto){
+      status.textContent = 'Conexão pronta. Ative o envio automático quando desejar.';
+    }else{
+      status.classList.add('warn');
+      status.textContent = 'Envio desativado: conclua a conexão oficial do WhatsApp para ativar.';
+    }
+  }
+  atualizarPreviewLembrete();
+}
+
+function renderLembreteEnvios(){
+  const root = qs('#cfg-lembrete-envios');
+  if(!root) return;
+  const items = state.db.lembreteEnvios || [];
+  if(!items.length){
+    root.innerHTML = '<div class="cfg-list-empty">Nenhum envio registrado.</div>';
+    return;
+  }
+  const labels = { pendente:'Pendente', enviando:'Enviando', enviado:'Enviado', erro:'Erro', expirado:'Expirado', cancelado:'Cancelado' };
+  root.innerHTML = items.slice(0,20).map(item => `
+    <div class="cfg-list-item">
+      <div class="cfg-list-head"><strong>${safe(labels[item.status] || item.status || 'Sem status')}</strong><span>${safe(String(item.enviadoEm || item.programadoPara || '').replace('T',' '))}</span></div>
+      <div class="cfg-list-meta">${safe(item.telefone || 'Telefone não informado')}${item.providerMessageId ? ' · protocolo ' + safe(item.providerMessageId) : ''}</div>
+      ${item.ultimoErro ? `<div class="cfg-list-meta" style="color:var(--err)">${safe(item.ultimoErro)}</div>` : ''}
+      ${item.mensagem ? `<div class="cfg-list-meta">${safe(item.mensagem)}</div>` : ''}
+    </div>`).join('');
+}
+
+function renderTelefonesPendentes(){
+  const root = qs('#cfg-telefones-pendentes');
+  if(!root) return;
+  const items = state.db.telefonesPendentes || [];
+  if(!items.length){
+    root.innerHTML = '<div class="cfg-list-empty">Nenhuma pendência encontrada.</div>';
+    return;
+  }
+  root.innerHTML = items.map(item => `
+    <div class="cfg-list-item cfg-list-head">
+      <div><strong>${safe(item.nome || 'Cliente sem nome')}</strong><div class="cfg-list-meta">${safe(item.telefone || 'Sem telefone')}</div></div>
+      <button class="btn-sec" type="button" data-edit-phone="${attr(item.id)}">Editar</button>
+    </div>`).join('');
+  qsa('[data-edit-phone]', root).forEach(button => button.addEventListener('click', () => {
+    const client = state.db.clientes.find(item => String(item.id) === String(button.dataset.editPhone));
+    if(client) editCli(client);
+  }));
+}
+
+async function loadLembretesConfig(){
+  const status = qs('#cfg-lembrete-status');
+  if(status){ status.className = 'cfg-status'; status.textContent = 'Carregando configuração…'; }
+  try{
+    const [config, sends, phones] = await Promise.all([
+      apiTimeout({ action:'getLembretesConfig', token:state.token }),
+      apiTimeout({ action:'getLembretesEnvios', token:state.token, limite:50 }),
+      apiTimeout({ action:'getClientesTelefonePendente', token:state.token })
+    ]);
+    if(config.status !== 'ok') throw new Error(config.data?.message || 'Configuração indisponível.');
+    state.db.lembretesConfig = config.data || {};
+    state.db.lembreteEnvios = sends.status === 'ok' ? (sends.data || []) : [];
+    state.db.telefonesPendentes = phones.status === 'ok' ? (phones.data || []) : [];
+    renderLembretesConfig();
+    renderLembreteEnvios();
+    renderTelefonesPendentes();
+  }catch(error){
+    if(status){ status.className = 'cfg-status warn'; status.textContent = error.message || 'Não foi possível carregar os lembretes.'; }
+  }
+}
+
+async function saveLembretesConfig(){
+  const button = qs('#btn-save-lembretes');
+  const data = {
+    ativo:!!qs('#cfg-lembrete-ativo')?.checked,
+    antecedenciaHoras:Number(qs('#cfg-lembrete-horas')?.value || 4),
+    mensagemModelo:qs('#cfg-lembrete-modelo')?.value || '',
+    phoneNumberId:qs('#cfg-whatsapp-numero-id')?.value.trim() || '',
+    templateName:qs('#cfg-whatsapp-template')?.value.trim() || '',
+    templateLanguage:qs('#cfg-whatsapp-idioma')?.value.trim() || 'pt_BR',
+    apiVersion:qs('#cfg-whatsapp-versao')?.value.trim() || 'v23.0',
+    accessToken:qs('#cfg-whatsapp-token')?.value.trim() || ''
+  };
+  btnSv(button, true, 'Salvar mensagens');
+  try{
+    const response = await post({ action:'saveLembretesConfig', token:state.token, data });
+    if(response.status !== 'ok') throw new Error(response.data?.message || 'Não foi possível salvar.');
+    state.db.lembretesConfig = response.data || {};
+    renderLembretesConfig();
+    toast('Mensagens e horário salvos.','ok');
+  }catch(error){
+    toast(error.message || 'Não foi possível salvar.','err');
+  }finally{
+    btnSv(button, false, 'Salvar mensagens');
+  }
+}
+
+async function testarWhatsAppConfig(){
+  const button = qs('#btn-test-whatsapp');
+  const original = button?.textContent || 'Testar conexão';
+  if(button){ button.disabled = true; button.textContent = 'Testando…'; }
+  try{
+    const response = await post({ action:'testWhatsAppConfig', token:state.token });
+    if(response.status !== 'ok') throw new Error(response.data?.message || 'Conexão não validada.');
+    toast(response.data?.numero ? `Conexão validada: ${response.data.numero}` : 'Conexão validada.','ok');
+  }catch(error){
+    toast(error.message || 'Conexão não validada.','err');
+  }finally{
+    if(button){ button.disabled = false; button.textContent = original; }
+  }
+}
+
+async function executarLembretesAgora(){
+  const button = qs('#btn-run-lembretes');
+  const original = button?.textContent || 'Verificar lembretes agora';
+  if(button){ button.disabled = true; button.textContent = 'Verificando…'; }
+  try{
+    const response = await post({ action:'runLembretesNow', token:state.token });
+    if(response.status !== 'ok') throw new Error(response.data?.message || 'Verificação não concluída.');
+    const result = response.data || {};
+    toast(result.skipped ? 'O envio automático ainda está desativado.' : `${result.enviados || 0} enviado(s), ${result.erros || 0} erro(s).`, result.erros ? 'warn' : 'ok');
+    await loadLembretesConfig();
+  }catch(error){
+    toast(error.message || 'Verificação não concluída.','err');
+  }finally{
+    if(button){ button.disabled = false; button.textContent = original; }
+  }
+}
 
 async function saveConfig(){
   const nome = qs('#cfg-nome')?.value.trim();
