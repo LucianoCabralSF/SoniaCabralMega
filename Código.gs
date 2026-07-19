@@ -145,6 +145,18 @@ function ensureSheets() {
   ensureConfigDefaults_();
 }
 
+// Roda a verificação de abas no máximo 1x por período — antes rodava em TODA chamada e deixava tudo lento
+function ensureSheetsOnce_() {
+  if (CACHE.get('sheets_ok')) return;
+  if (SCRIPT_PROPS.getProperty('sheets_ok') === '1') {
+    CACHE.put('sheets_ok', '1', 21600);
+    return;
+  }
+  ensureSheets();
+  SCRIPT_PROPS.setProperty('sheets_ok', '1');
+  CACHE.put('sheets_ok', '1', 21600);
+}
+
 function ensureConfigDefaults_() {
   const cfg = getSheet('config');
   const defaults = {
@@ -251,8 +263,27 @@ function getCachedRows_(sheetName, seconds) {
   if (cached) return JSON.parse(cached);
 
   const data = readRows_(sheetName);
-  CACHE.put(cacheKey, JSON.stringify(data), seconds || 120);
+  try {
+    CACHE.put(cacheKey, JSON.stringify(data), seconds || 120);
+  } catch (_) {
+    // aba grande demais para o cache (limite 100KB) — segue sem cache
+  }
   return data;
+}
+
+// Localiza a linha de um id com verificação: se o índice estiver desatualizado
+// (ex.: linhas movidas/apagadas manualmente na planilha), reconstrói antes de gravar.
+function rowNumForId_(sheetName, id) {
+  const s = getSheet(sheetName);
+  let idx = buildIdIndex_(sheetName);
+  let rowNum = idx[String(id)];
+  if (rowNum && String(s.getRange(rowNum, 1).getValue()) === String(id)) return rowNum;
+
+  CACHE.remove('idx_' + sheetName);
+  idx = buildIdIndex_(sheetName);
+  rowNum = idx[String(id)];
+  if (rowNum && String(s.getRange(rowNum, 1).getValue()) === String(id)) return rowNum;
+  return null;
 }
 
 // ── Config ────────────────────────────────────────────────────
@@ -313,9 +344,27 @@ function updateConfig(cfg) {
 }
 
 // ── Auth ──────────────────────────────────────────────────────
+function limparTokensExpirados_() {
+  try {
+    const all = SCRIPT_PROPS.getProperties();
+    const agora = nowIso();
+    Object.keys(all).forEach(k => {
+      if (k.indexOf('ltok_') !== 0) return;
+      try {
+        const o = JSON.parse(all[k]);
+        if (!o.expiresAt || o.expiresAt < agora) SCRIPT_PROPS.deleteProperty(k);
+      } catch (_) {
+        SCRIPT_PROPS.deleteProperty(k);
+      }
+    });
+  } catch (_) {}
+}
+
 function authLogic(senha) {
   const cfg = getConfigObj();
   if (String(cfg.senha || '') !== String(senha || '')) return err('Senha incorreta.');
+
+  limparTokensExpirados_();
 
   const token = Utilities.getUuid();
   CACHE.put('tok_' + token, '1', 3600);
@@ -367,66 +416,19 @@ function insertRowsBatch_(sheetName, rowsToInsert) {
 }
 
 function upsertById_(sheetName, record) {
-  const lock = LockService.getDocumentLock();
-  lock.waitLock(30000);
-  try {
-    const schema = SCHEMAS[sheetName];
-    const s = getSheet(sheetName);
-    const idx = buildIdIndex_(sheetName);
-    const id = record.id || uid(sheetName.slice(0, 3));
-    const existingRow = idx[id];
-    const timestamp = nowIso();
-
-    const currentList = existingRow ? sheetData_(sheetName).rows[existingRow - 2] : null;
-    const headers = SCHEMAS[sheetName];
-
-    const rowObj = {};
-    headers.forEach(h => rowObj[h] = '');
-
-    headers.forEach(h => {
-      if (Object.prototype.hasOwnProperty.call(record, h)) rowObj[h] = record[h];
-    });
-
-    rowObj.id = id;
-
-    if (headers.indexOf('criadoEm') >= 0) {
-      rowObj.criadoEm = existingRow && currentList
-        ? currentList[headers.indexOf('criadoEm')]
-        : (rowObj.criadoEm || timestamp);
-    }
-    if (headers.indexOf('atualizadoEm') >= 0) {
-      rowObj.atualizadoEm = timestamp;
-    }
-    if (headers.indexOf('deletadoEm') >= 0 && !rowObj.deletadoEm) {
-      rowObj.deletadoEm = existingRow && currentList
-        ? currentList[headers.indexOf('deletadoEm')]
-        : '';
-    }
-
-    const row = headers.map(h => rowObj[h]);
-
-    if (existingRow) {
-      s.getRange(existingRow, 1, 1, row.length).setValues([row]);
-    } else {
-      s.getRange(s.getLastRow() + 1, 1, 1, row.length).setValues([row]);
-    }
-
-    invalidateSheetCache_(sheetName);
-    return { id: id, item: rowObj };
-  } finally {
-    lock.releaseLock();
-  }
+  return withDocumentLock_(() => upsertByIdUnlocked_(sheetName, record));
 }
 
 function upsertByIdUnlocked_(sheetName, record) {
   const s = getSheet(sheetName);
-  const idx = buildIdIndex_(sheetName);
+  const headers = SCHEMAS[sheetName];
   const id = record.id || uid(sheetName.slice(0, 3));
-  const existingRow = idx[id];
+  // rowNumForId_ confere se o id realmente está naquela linha (protege contra planilha mexida à mão)
+  const existingRow = record.id ? rowNumForId_(sheetName, id) : null;
   const timestamp = nowIso();
 
-  const currentList = existingRow ? sheetData_(sheetName).rows[existingRow - 2] : null;
-  const headers = SCHEMAS[sheetName];
+  // lê só a linha alvo, não a aba inteira
+  const currentList = existingRow ? s.getRange(existingRow, 1, 1, headers.length).getValues()[0] : null;
 
   const rowObj = {};
   headers.forEach(h => rowObj[h] = '');
@@ -468,8 +470,7 @@ function softDelete_(sheetName, id) {
   lock.waitLock(30000);
   try {
     const s = getSheet(sheetName);
-    const idx = buildIdIndex_(sheetName);
-    const rowNum = idx[id];
+    const rowNum = rowNumForId_(sheetName, id);
     if (!rowNum) return { error: 'Não encontrado' };
 
     const headers = SCHEMAS[sheetName];
@@ -553,7 +554,7 @@ function caixaDiaList_(data) {
   const cached = CACHE.get(cacheKey);
   if (cached) return JSON.parse(cached);
 
-  const list = readRows_('caixa').filter(r => normDate(r.data) === data);
+  const list = getCachedRows_('caixa').filter(r => normDate(r.data) === data);
   CACHE.put(cacheKey, JSON.stringify(list), 120);
   return list;
 }
@@ -624,7 +625,7 @@ function saveLancamento(d) {
 
 function getHistoricoCliente(e) {
   const clienteId = String(e.parameter.clienteId || '');
-  return readRows_('caixa').filter(r =>
+  return getCachedRows_('caixa').filter(r =>
     String(r.clienteId) === clienteId &&
     r.tipo === 'entrada'
   );
@@ -632,7 +633,7 @@ function getHistoricoCliente(e) {
 
 // ── Extrato ───────────────────────────────────────────────────
 function getExtrato(e) {
-  let list = readRows_('caixa');
+  let list = getCachedRows_('caixa');
   let label = '';
 
   if (e.parameter.dataInicio && e.parameter.dataFim) {
@@ -709,7 +710,7 @@ function getExtrato(e) {
 
 // ── Crediário ─────────────────────────────────────────────────
 function getCrediario(e) {
-  let list = readRows_('crediario');
+  let list = getCachedRows_('crediario');
   if (e.parameter.clienteId) {
     const clienteId = String(e.parameter.clienteId);
     list = list.filter(c => String(c.clienteId) === clienteId);
@@ -718,7 +719,7 @@ function getCrediario(e) {
 }
 
 function getCrediarioMovs(e) {
-  let list = readRows_('crediario_mov');
+  let list = getCachedRows_('crediario_mov');
   if (e.parameter.crediarioId) {
     const crediarioId = String(e.parameter.crediarioId);
     list = list.filter(m => String(m.crediarioId) === crediarioId);
@@ -807,8 +808,7 @@ function pagarCrediario(b) {
     const parcela = String(b.parcela || '');
     const observacoes = b.observacoes || '';
 
-    const idx = buildIdIndex_('crediario');
-    const rowNum = idx[crediarioId];
+    const rowNum = rowNumForId_('crediario', crediarioId);
     if (!rowNum) return { error: 'Crediário não encontrado' };
 
     const s = getSheet('crediario');
@@ -864,8 +864,7 @@ function deleteCrediario(id) {
   const lock = LockService.getDocumentLock();
   lock.waitLock(30000);
   try {
-    const idx = buildIdIndex_('crediario');
-    const rowNum = idx[id];
+    const rowNum = rowNumForId_('crediario', id);
     if (!rowNum) return { error: 'Fiado não encontrado' };
 
     const ts = nowIso();
@@ -895,7 +894,7 @@ function deleteCrediario(id) {
 
 // ── Agendamentos ──────────────────────────────────────────────
 function getAgendamentos(e) {
-  let list = readRows_('agendamentos');
+  let list = getCachedRows_('agendamentos');
 
   if (e.parameter.data) {
     list = list.filter(a => normDate(a.data) === e.parameter.data);
@@ -938,7 +937,7 @@ function saveAgendamento(d) {
 
 // ── Planejamento ──────────────────────────────────────────────
 function getPlanejamento(e) {
-  let list = readRows_('planejamento');
+  let list = getCachedRows_('planejamento');
   if (e.parameter.tipo) {
     list = list.filter(p => p.tipo === e.parameter.tipo);
   }
@@ -955,7 +954,7 @@ function savePlanejamento(d) {
     const valorParcela = numParcelas > 0 ? valorTotal / numParcelas : 0;
     const timestamp = nowIso();
 
-    const existing = d.id ? buildIdIndex_('planejamento')[d.id] : null;
+    const existing = d.id ? rowNumForId_('planejamento', d.id) : null;
     if (existing) {
       return { error: 'Edição de planejamento existente não suportada nesta versão. Exclua e recrie.' };
     }
@@ -1012,8 +1011,7 @@ function pagarParcela(b) {
   lock.waitLock(30000);
   try {
     const parcelaId = String(b.parcelaId || '');
-    const idx = buildIdIndex_('plan_parcelas');
-    const rowNum = idx[parcelaId];
+    const rowNum = rowNumForId_('plan_parcelas', parcelaId);
     if (!rowNum) return { error: 'Parcela não encontrada' };
 
     const s = getSheet('plan_parcelas');
@@ -1047,7 +1045,7 @@ function pagarParcela(b) {
 }
 
 function getPlanejamentoParcelas(e) {
-  let list = readRows_('plan_parcelas');
+  let list = getCachedRows_('plan_parcelas');
   if (e.parameter.planejamentoId) {
     const planejamentoId = String(e.parameter.planejamentoId);
     list = list.filter(p => String(p.planejamentoId) === planejamentoId);
@@ -1065,11 +1063,11 @@ function getVencimentos(e) {
     return Utilities.formatDate(d, tz(), 'yyyy-MM-dd');
   })();
 
-  const parcelas = readRows_('plan_parcelas')
+  const parcelas = getCachedRows_('plan_parcelas')
     .filter(p => p.pago !== 'true' && p.vencimento >= di && p.vencimento <= df)
     .map(p => ({ ...p, _tipo: 'despesa' }));
 
-  const fiado = readRows_('crediario_mov')
+  const fiado = getCachedRows_('crediario_mov')
     .filter(m => m.status === 'aberto' && m.vencimento >= di && m.vencimento <= df)
     .map(m => ({ ...m, _tipo: 'recebimento' }));
 
@@ -1081,11 +1079,11 @@ function getVencimentos(e) {
 function getAtrasados() {
   const td = today();
 
-  const parcAtrasadas = readRows_('plan_parcelas')
+  const parcAtrasadas = getCachedRows_('plan_parcelas')
     .filter(p => p.pago !== 'true' && p.vencimento < td)
     .map(p => ({ ...p, _tipo: 'despesa' }));
 
-  const fiadoAtrasado = readRows_('crediario_mov')
+  const fiadoAtrasado = getCachedRows_('crediario_mov')
     .filter(m => m.status === 'aberto' && m.vencimento && m.vencimento < td)
     .map(m => ({ ...m, _tipo: 'recebimento' }));
 
@@ -1102,11 +1100,11 @@ function getHomeResumo(e) {
   const dataFim = `${ano}-${String(mm).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
 
   const extrato = getExtrato({ parameter: { dataInicio: dataInicio, dataFim: dataFim } });
-  const fiadosAbertos = readRows_('crediario')
+  const fiadosAbertos = getCachedRows_('crediario')
     .filter(c => c.status === 'aberto')
     .reduce((s, c) => s + normalizeNumber(c.saldoDevedor), 0);
 
-  const obrigacoesAbertas = readRows_('plan_parcelas')
+  const obrigacoesAbertas = getCachedRows_('plan_parcelas')
     .filter(p =>
       p.tipo === 'despesa' &&
       p.pago !== 'true' &&
@@ -1121,8 +1119,8 @@ function getHomeResumo(e) {
 
   return {
     mes: mes,
-    clientes: readRows_('clientes').length,
-    servicos: readRows_('servicos').length,
+    clientes: getCachedRows_('clientes').length,
+    servicos: getCachedRows_('servicos').length,
     fiadosAbertos: fiadosAbertos,
     obrigacoesAbertas: obrigacoesAbertas,
     metaNegocio: metaNegocio,
@@ -1139,9 +1137,9 @@ function deleteRow(sheetName, id) {
 // ── Routers ───────────────────────────────────────────────────
 function doGet(e) {
   try {
-    ensureSheets();
+    ensureSheetsOnce_();
 
-    const a = e.parameter.action;
+    const a =e.parameter.action;
     const t = e.parameter.token;
 
     if (a === 'login') return authLogic(e.parameter.senha);
@@ -1149,9 +1147,9 @@ function doGet(e) {
 
     switch (a) {
       case 'getConfig':           return ok(getConfigObj());
-      case 'getColaboradores':    return ok(readRows_('colaboradores'));
-      case 'getServicos':         return ok(readRows_('servicos'));
-      case 'getProdutos':         return ok(readRows_('produtos'));
+      case 'getColaboradores':    return ok(getCachedRows_('colaboradores'));
+      case 'getServicos':         return ok(getCachedRows_('servicos'));
+      case 'getProdutos':         return ok(getCachedRows_('produtos'));
       case 'getClientes':         return ok(getClientes(e));
       case 'getCaixa':            return ok(getCaixa(e));
       case 'getCaixaResumo':      return ok(getCaixaResumo(e));
