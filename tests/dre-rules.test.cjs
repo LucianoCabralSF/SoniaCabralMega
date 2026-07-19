@@ -69,3 +69,23 @@ test('mês inválido no detalhe não vaza movimentos', () => {
   const dre = context.montarDreAnual_(movements, [], 2026);
   assert.deepEqual(Array.from(context.detalharCelulaDre_(dre.movimentosClassificados, 'receita_servicos', 13)), []);
 });
+
+test('mapeamento desativado como booleano ou texto nunca classifica', () => {
+  const movement = { id:'map_1', data:'2026-01-05', tipo:'entrada', categoria:'Outros', valor:10 };
+  const falseBoolean = [{ tipo:'entrada', categoriaCaixa:'Outros', dreCategoria:'outras_receitas', ativo:false }];
+  const falseText = [{ tipo:'entrada', categoriaCaixa:'Outros', dreCategoria:'outras_receitas', ativo:'false' }];
+  assert.equal(context.classificarMovimentoDre_(movement, falseBoolean), 'nao_classificado');
+  assert.equal(context.classificarMovimentoDre_(movement, falseText), 'nao_classificado');
+});
+
+test('fora da DRE, outro ano e lançamento excluído não afetam o relatório', () => {
+  const ignored = [
+    { id:'outside', data:'2026-01-05', tipo:'entrada', valor:100, dreCategoria:'fora_dre' },
+    { id:'deleted', data:'2026-01-06', tipo:'entrada', itemTipo:'servico', valor:200, deletadoEm:'2026-01-07T10:00:00' },
+    { id:'other_year', data:'2025-01-05', tipo:'entrada', itemTipo:'servico', valor:300 }
+  ];
+  const dre = context.montarDreAnual_(ignored, [], 2026);
+  assert.equal(dre.linhas.receita_servicos.total, 0);
+  assert.equal(dre.conciliacao.variacaoBrutaElegivel, 0);
+  assert.deepEqual(Array.from(dre.movimentosClassificados, row => row.id), ['outside']);
+});

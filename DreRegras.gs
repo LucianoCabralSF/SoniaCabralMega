@@ -14,7 +14,7 @@ function classificarMovimentoDre_(movement, mappings) {
   if (movement.isRetirada === true || movement.isRetirada === 'true' || movement.categoria === 'Retirada Pessoal') return 'retirada';
   if (DRE_CATEGORIAS_.indexOf(movement.dreCategoria) >= 0) return movement.dreCategoria;
   var mapping = (mappings || []).find(function (rule) {
-    return rule.ativo !== 'false' &&
+    return String(rule.ativo).toLowerCase() !== 'false' &&
       (!rule.tipo || rule.tipo === movement.tipo) &&
       (!rule.categoriaCaixa || rule.categoriaCaixa === movement.categoria) &&
       (!rule.itemTipo || rule.itemTipo === movement.itemTipo);
@@ -51,6 +51,7 @@ function montarDreAnual_(movements, mappings, year) {
   var unclassifiedOut = 0;
   var monthsWithMovement = {};
   (movements || []).forEach(function (movement) {
+    if (movement.deletadoEm) return;
     var iso = String(movement.data || '').slice(0, 10);
     if (Number(iso.slice(0, 4)) !== Number(year)) return;
     var month = Number(iso.slice(5, 7)) - 1;
