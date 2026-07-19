@@ -242,9 +242,16 @@ function buildIdIndex_(sheetName) {
 
   if (lastRow >= 2) {
     const ids = s.getRange(2, 1, lastRow - 1, 1).getValues().flat();
+    const duplicados = {};
     ids.forEach((id, i) => {
-      if (id) idx[String(id)] = i + 2;
+      if (!id) return;
+      const k = String(id);
+      if (idx[k] !== undefined) duplicados[k] = true;
+      idx[k] = i + 2;
     });
+    // id repetido em mais de uma linha: recusar a operação em vez de
+    // gravar/pagar silenciosamente na linha errada
+    Object.keys(duplicados).forEach(k => { delete idx[k]; });
   }
 
   CACHE.put(cacheKey, JSON.stringify(idx), 300);
@@ -983,7 +990,7 @@ function savePlanejamento(d) {
       venc.setDate(parseInt(d.diaVencimento || venc.getDate(), 10));
 
       rowsToInsert.push([
-        uid('pp'),
+        uid('pp') + '-' + (i + 1),
         id,
         d.descricao || '',
         d.tipo || 'despesa',
@@ -1016,6 +1023,9 @@ function pagarParcela(b) {
 
     const s = getSheet('plan_parcelas');
     const row = s.getRange(rowNum, 1, 1, SCHEMAS.plan_parcelas.length).getValues()[0];
+    if (row[7] === true || String(row[7]) === 'true') {
+      return { error: 'Esta parcela já está paga.' };
+    }
     s.getRange(rowNum, 8).setValue('true');     // pago
     s.getRange(rowNum, 7).setValue('pago');     // status
     s.getRange(rowNum, 9).setValue(b.dataPagamento || today());    // dataPagamento

@@ -2046,17 +2046,11 @@ function onClientesListClick(e){
   const btn = e.target.closest('button[data-action]');
   if(!btn) return;
   const action = btn.dataset.action;
-  const index = Number(btn.dataset.index);
   const id = btn.dataset.id;
+  const c = state.db.clientes.find(x => String(x.id) === String(id));
 
-  if(action === 'hist') {
-    const c = state.db.clientes[index];
-    if(c) verHist(c.id, c.nome || '');
-  }
-  if(action === 'edit') {
-    const c = state.db.clientes[index];
-    if(c) editCli(c);
-  }
+  if(action === 'hist' && c) verHist(c.id, c.nome || '');
+  if(action === 'edit' && c) editCli(c);
   if(action === 'del') delCli(id);
 }
 
@@ -2150,8 +2144,8 @@ function renderCli(list){
         </div>
       </div>
       <div class="card-bottom">
-        <button class="btn-s" data-action="hist" data-index="${i}">${svgHist}</button>
-        <button class="btn-e" data-action="edit" data-index="${i}">${svgEdit}</button>
+        <button class="btn-s" data-action="hist" data-id="${c.id}">${svgHist}</button>
+        <button class="btn-e" data-action="edit" data-id="${c.id}">${svgEdit}</button>
         <button class="btn-d" data-action="del" data-id="${c.id}">${svgDel}</button>
       </div>
     `;
