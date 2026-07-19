@@ -129,7 +129,7 @@ git commit -m "feat: adicionar regras de lembretes e telefone"
 - Produces: `sincronizarCaixaComAgendamentoUnlocked_(caixa) -> object`
 - Produces: `sincronizarAgendamentoComCaixaUnlocked_(agendamento) -> object`
 - Produces: `deleteAgendamentoVinculado_(id) -> object`
-- Consumes: `cancelarLembretesAgendamentoUnlocked_(id, motivo)` from Task 3; until Task 3 it is a no-op returning `{ total:0 }`.
+- Produces a cascade hook that Task 3 connects to `cancelarLembretesAgendamentoUnlocked_(id, motivo)` after the outbox schema exists.
 
 - [ ] **Step 1: Write failing cascade tests**
 
@@ -142,14 +142,13 @@ test('excluir caixa da agenda arquiva o conjunto vinculado', () => {
       { id:'rel_novo', referenciaId:'retorno:ag_1', origem:'retorno', etapa:'pendente' },
       { id:'rel_anterior', agendamentoId:'ag_1', etapa:'retornou' }
     ],
-    lembretes_envios:[{ id:'lem_1', agendamentoId:'ag_1', status:'pendente' }]
+    lembretes_envios:[]
   });
   const result = f.call("deleteLancamento_('cx_1')");
   assert.equal(result.deletedAppointmentId, 'ag_1');
   assert.ok(f.deleted('agendamentos', 'ag_1'));
   assert.ok(f.deleted('caixa', 'cx_1'));
   assert.ok(f.deleted('relacionamento', 'rel_novo'));
-  assert.equal(f.row('lembretes_envios', 'lem_1').status, 'cancelado');
   assert.equal(f.row('relacionamento', 'rel_anterior').agendamentoId, '');
 });
 ```
@@ -236,6 +235,8 @@ Store non-secret fields in `config`; store access token in `SCRIPT_PROPS` under 
 - [ ] **Step 4: Add idempotent outbox reconciliation**
 
 For each eligible appointment, calculate schedule and key. Cancel pending/error rows for older keys of the same appointment, reuse an existing identical key and create one `pendente` row otherwise.
+
+Add a regression test that seeds a pending row, calls the linked appointment deletion and asserts `status === 'cancelado'`; this is where the cascade hook from Task 2 becomes active.
 
 - [ ] **Step 5: Verify GREEN and commit**
 
@@ -423,4 +424,3 @@ Push `main`, wait for Vercel production to become Ready and verify the public al
 - [ ] **Step 8: Final evidence**
 
 Report test count, commit hash, Apps Script version, trigger state, Vercel deployment, access link and any external Meta credential/template dependency that remains inactive.
-
