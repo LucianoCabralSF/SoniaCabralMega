@@ -1384,6 +1384,25 @@ function renderItensMini(itemNome, obs){
   return parts.join(' · ');
 }
 
+function escAttr(s){
+  return String(s ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/"/g,'&quot;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+}
+
+function parseObsItens(obs){
+  const s = String(obs || '');
+  if(!s.startsWith('[ITENS]')) return { itensJson:'', obsBase:s };
+  const rest = s.slice(7);
+  const pipeIdx = rest.indexOf('|');
+  return {
+    itensJson: pipeIdx >= 0 ? rest.slice(0, pipeIdx) : rest,
+    obsBase: pipeIdx >= 0 ? rest.slice(pipeIdx + 1) : ''
+  };
+}
+
 async function api(params){
   const url = new URL(API);
   Object.entries(params || {}).forEach(([k,v]) => {
@@ -1450,6 +1469,8 @@ function closeDrawer(){
   qs('#doverlay').classList.remove('open');
   state.ui.editId = null;
   state.ui.agServicos = [];
+  state.ui.itensLanc = [];
+  state.ui.editOrig = null;
 }
 
 function openModal(html){
@@ -2324,7 +2345,10 @@ function renderCred(){
     <div class="cred-card">
       <div class="cred-hdr">
         <div style="font-size:14px;font-weight:500">${c.clienteNome}</div>
-        <span class="badge ${c.status === 'aberto' ? 'b-off' : 'b-on'}">${c.status}</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="badge ${c.status === 'aberto' ? 'b-off' : 'b-on'}">${c.status}</span>
+          <button class="btn-d" onclick="delFiado('${c.id}')" title="Excluir fiado">${svgDel}</button>
+        </div>
       </div>
       <div class="cred-vals">
         <div class="cv-item"><div class="cv-label">Total</div><div class="cv-num">${fmt(c.valorTotal)}</div></div>
@@ -4372,8 +4396,8 @@ window.calcFiadoInline = calcFiadoInline;
 function verificarDataRetro(el){
   const iso = parseISO(el.value);
   if(iso && iso < today()){
-    el.style.borderColor = 'var(--err)';
-    el.title = '⚠️ Data no passado';
+    el.style.borderColor = 'var(--gold)';
+    el.title = '🕓 Lançamento retroativo — será salvo nesta data, sem problema.';
   }else{
     el.style.borderColor = 'var(--border)';
     el.title = '';
@@ -4400,7 +4424,7 @@ function gerarVencimentosInline(){
     d.setMonth(d.getMonth() + i);
     const iso = d.toISOString().slice(0,10);
     const retro = iso < tdISO;
-    html += `<div class='parc-row'><span style='color:${retro ? 'var(--err)' : 'var(--dim)'}'>Parc.${i+1} · ${fmt(parc)}${retro ? ' ⚠️' : ''}</span><input type='text' class='inp' id='venc-${i}' inputmode='numeric' placeholder='DD/MM/AAAA' maxlength='10' value='${fmtBR(iso)}' style='border-color:${retro ? 'var(--err)' : 'var(--border)'}' oninput='applyDataMask(this);verificarDataRetro(this)'/></div>`;
+    html += `<div class='parc-row'><span style='color:${retro ? 'var(--gold)' : 'var(--dim)'}'>Parc.${i+1} · ${fmt(parc)}${retro ? ' 🕓' : ''}</span><input type='text' class='inp' id='venc-${i}' inputmode='numeric' placeholder='DD/MM/AAAA' maxlength='10' value='${fmtBR(iso)}' style='border-color:${retro ? 'var(--gold)' : 'var(--border)'}' oninput='applyDataMask(this);verificarDataRetro(this)'/></div>`;
   }
   ct.innerHTML = html;
 }
@@ -4674,6 +4698,7 @@ function openDrawerLanc(){
           <div class="fg"><span class="lbl">Nº parcelas</span><input id="ff-parcelas" type="number" class="inp" min="1" max="36" value="1"/></div>
           <div class="fg"><span class="lbl">1ª venc.</span><input id="ff-venc1" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/></div>
         </div>
+        <div class="fg"><span class="lbl">Forma da entrada</span><select id="ff-forma-ent"><option value="dinheiro">Dinheiro</option><option value="pix">PIX</option><option value="debito">Débito</option><option value="credito">Crédito</option></select></div>
         <div id="ff-resumo" style="display:none;font-size:12px;margin-bottom:10px"></div>
         <div id="parcelas-container"></div>
       </div>
@@ -4708,6 +4733,7 @@ function openDrawerLanc(){
   `);
 
   qs('#f-data').value = today();
+  qs('#f-data').addEventListener('change', e => verificarDataRetro(e.target));
   qs('#f-valor').addEventListener('input', e => applyValorMask(e.target));
   qs('#f-forma').addEventListener('change', e => onFormaChange(e.target.value));
 
@@ -4728,7 +4754,18 @@ function openDrawerLanc(){
 
 function editLanc(l){
   state.ui.editId = l.id;
+  state.ui.editOrig = l;
+  state.ui.itensLanc = [];
   state.ui.tipoLanc = l.isRetirada === 'true' ? 'retirada' : l.tipo;
+
+  const { itensJson: editItensJson, obsBase: editObsBase } = parseObsItens(l.observacoes);
+  let itensInfo = '';
+  if(editItensJson){
+    try{
+      const its = JSON.parse(editItensJson);
+      itensInfo = `<div class="info-box" style="font-size:12px">🧾 <strong>Itens deste lançamento:</strong> ${escAttr(its.map(i => i.nome).join(', '))}<br><span style="color:var(--dim)">Eles serão mantidos ao salvar. Para trocar os itens, exclua e lance novamente.</span></div>`;
+    }catch(_){}
+  }
 
   const cliOpts = buildClienteOptions(l.clienteId);
   const svcOpts = state.db.servicos.filter(s => isAtivo(s.ativo)).map(s => `<option value="${s.id}|${s.nome}|servico" ${s.id === l.itemId ? 'selected' : ''}>${s.nome}</option>`).join('');
@@ -4751,7 +4788,8 @@ function editLanc(l){
           <div id="f-cli-dropdown" class="cli-dropdown"></div>
         </div>
       </div>
-      <div class="fg"><span class="lbl">Serviço / Produto</span><select id="f-item"><option value="">— Selecione —</option><optgroup label="Serviços">${svcOpts}</optgroup><optgroup label="Produtos">${prdOpts}</optgroup></select></div>
+      ${itensInfo}
+      <div class="fg"><span class="lbl">Serviço / Produto</span><select id="f-item"><option value="">${editItensJson ? '— Manter itens atuais —' : '— Selecione —'}</option><optgroup label="Serviços">${svcOpts}</optgroup><optgroup label="Produtos">${prdOpts}</optgroup></select></div>
       <div class="fg">
         <span class="lbl">Forma</span>
         <select id="f-forma">
@@ -4766,13 +4804,13 @@ function editLanc(l){
       <div class="fg"><span class="lbl">Categoria</span><select id="f-cat">${['Aluguel','Material','Compra de produto','Manutenção','Salário','Outros'].map(c => `<option ${l.categoria === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
     </div>
     <div id="f-retirada" style="display:${t === 'retirada' ? 'block' : 'none'}">
-      <div class="fg"><span class="lbl">Descrição</span><input id="f-ret-desc" type="text" class="inp" value="${l.itemNome || ''}"/></div>
+      <div class="fg"><span class="lbl">Descrição</span><input id="f-ret-desc" type="text" class="inp" value="${escAttr(l.itemNome || '')}"/></div>
     </div>
     <div class="form-row">
       <div class="fg"><span class="lbl">Valor *</span><input id="f-valor" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
       <div class="fg"><span class="lbl">Data</span><input id="f-data" type="date" class="inp"/></div>
     </div>
-    <div class="fg"><span class="lbl">Observações</span><input id="f-obs" type="text" class="inp" value="${l.observacoes || ''}"/></div>
+    <div class="fg"><span class="lbl">Observações</span><input id="f-obs" type="text" class="inp" value="${escAttr(editObsBase)}"/></div>
     <div class="dfooter">
       <button class="btn-sec" id="btn-cancel-lanc">Cancelar</button>
       <button class="btn-save" id="btn-save-lanc">Salvar</button>
@@ -4781,6 +4819,7 @@ function editLanc(l){
 
   qs('#f-valor').addEventListener('input', e => applyValorMask(e.target));
   qs('#f-data').value = String(l.data).slice(0,10);
+  qs('#f-data').addEventListener('change', e => verificarDataRetro(e.target));
   setTimeout(() => setValorMask(qs('#f-valor'), l.valor), 30);
 
   qs('#btn-cancel-lanc').addEventListener('click', closeDrawer);
@@ -4824,15 +4863,11 @@ async function saveLanc(){
         const numParcelas = parseInt(qs('#ff-parcelas')?.value || '1', 10);
 
         const vencimentos = [];
-        let temRetro = false;
         for(let i=0;i<numParcelas;i++){
           const el = qs(`#venc-${i}`);
           const iso = el ? parseISO(el.value) : '';
           vencimentos.push(iso);
-          if(iso && iso < today()) temRetro = true;
         }
-
-        if(temRetro && !confirm('⚠️ Uma ou mais parcelas têm datas no passado. Continuar mesmo assim?')) return;
 
         const btn2 = qs('#drawer .btn-save');
         btnSv(btn2, true);
@@ -4844,6 +4879,8 @@ async function saveLanc(){
             data:{
               clienteId, clienteNome, itemId, itemNome, itemTipo,
               valorTotal, valorEntrada, numParcelas, vencimentos,
+              data: qs('#f-data')?.value || today(),
+              formaEntrada: qs('#ff-forma-ent')?.value || 'dinheiro',
               observacoes: qs('#f-obs')?.value.trim() || ''
             }
           });
@@ -4874,6 +4911,10 @@ async function saveLanc(){
         itemId = p[0];
         itemNome = p[1];
         itemTipo = p[2] || '';
+      }else if(state.ui.editOrig){
+        itemId = state.ui.editOrig.itemId || '';
+        itemNome = state.ui.editOrig.itemNome || '';
+        itemTipo = state.ui.editOrig.itemTipo || '';
       }
       formaPagamento = qs('#f-forma')?.value || 'dinheiro';
     }
@@ -4885,7 +4926,14 @@ async function saveLanc(){
     categoria = qs('#f-cat')?.value || 'Outros';
   }
 
-  const itensJson = tipoCheck === 'entrada' && state.ui.itensLanc?.length > 1 ? JSON.stringify(state.ui.itensLanc) : '';
+  let itensJson = '';
+  if(tipoCheck === 'entrada'){
+    if(state.ui.editId){
+      itensJson = state.ui.editOrig ? parseObsItens(state.ui.editOrig.observacoes).itensJson : '';
+    }else if(state.ui.itensLanc?.length > 1){
+      itensJson = JSON.stringify(state.ui.itensLanc);
+    }
+  }
   const obsBase = qs('#f-obs')?.value.trim() || '';
 
   const data = {
@@ -4908,6 +4956,7 @@ async function saveLanc(){
   btnSv(btn, true);
 
   try{
+    const wasEdit = !!state.ui.editId;
     const r = await post({ action:'saveLancamento', token:state.token, data });
     if(r.status !== 'ok'){
       toast(r.data?.message || 'Erro.','err');
@@ -4916,7 +4965,7 @@ async function saveLanc(){
     }
 
     closeDrawer();
-    toast(state.ui.editId ? 'Atualizado!' : 'Registrado!','ok');
+    toast(wasEdit ? 'Atualizado!' : 'Registrado!','ok');
     const dataInp = qs('#cx-data');
     if(dataInp) dataInp.value = (data.data || today()).slice(0,7);
     await Promise.all([loadCaixa(true), updateStats()]);
@@ -4955,6 +5004,10 @@ function openDrawerFiadoLanc(){
       <div class="fg"><span class="lbl">Nº parcelas *</span><input id="ff-parcelas" type="number" class="inp" min="1" max="36" value="1"/></div>
       <div class="fg"><span class="lbl">1ª venc.</span><input id="ff-venc1" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/></div>
     </div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Data do fiado</span><input id="ff-data" type="date" class="inp"/></div>
+      <div class="fg"><span class="lbl">Forma da entrada</span><select id="ff-forma-ent"><option value="dinheiro">Dinheiro</option><option value="pix">PIX</option><option value="debito">Débito</option><option value="credito">Crédito</option></select></div>
+    </div>
     <div id="ff-resumo" style="background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:14px;font-size:12px;display:none"></div>
     <div id="parcelas-container"></div>
     <div class="fg"><span class="lbl">Observações</span><input id="ff-obs" type="text" class="inp" placeholder="Opcional…"/></div>
@@ -4969,6 +5022,8 @@ function openDrawerFiadoLanc(){
   qs('#ff-parcelas').addEventListener('input', gerarVencimentos);
   qs('#ff-venc1').addEventListener('input', e => { applyDataMask(e.target); gerarVencimentos(); });
   qs('#ff-venc1').value = fmtBR(today());
+  qs('#ff-data').value = today();
+  qs('#ff-data').addEventListener('change', e => verificarDataRetro(e.target));
 
   qs('#btn-cancel-fiado').addEventListener('click', closeDrawer);
   qs('#btn-save-fiado').addEventListener('click', saveFiado);
@@ -5013,8 +5068,8 @@ function gerarVencimentos(){
     const retroativo = iso < tdISO;
     html += `
       <div class="parc-row">
-        <span style="color:${retroativo ? 'var(--err)' : 'var(--dim)'}">Parc. ${i+1} · ${fmt(parc)}${retroativo ? ' ⚠️' : ''}</span>
-        <input type="text" class="inp" id="venc-${i}" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${fmtBR(iso)}" style="border-color:${retroativo ? 'var(--err)' : 'var(--border)'}" oninput="applyDataMask(this);verificarDataRetro(this)"/>
+        <span style="color:${retroativo ? 'var(--gold)' : 'var(--dim)'}">Parc. ${i+1} · ${fmt(parc)}${retroativo ? ' 🕓' : ''}</span>
+        <input type="text" class="inp" id="venc-${i}" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${fmtBR(iso)}" style="border-color:${retroativo ? 'var(--gold)' : 'var(--border)'}" oninput="applyDataMask(this);verificarDataRetro(this)"/>
       </div>
     `;
   }
@@ -5043,15 +5098,11 @@ async function saveFiado(){
   const numParcelas = parseInt(qs('#ff-parcelas')?.value || '1', 10);
 
   const vencimentos = [];
-  let temRetroativo = false;
   for(let i=0;i<numParcelas;i++){
     const el = qs(`#venc-${i}`);
     const iso = el ? parseISO(el.value) : '';
     vencimentos.push(iso);
-    if(iso && iso < today()) temRetroativo = true;
   }
-
-  if(temRetroativo && !confirm('⚠️ Atenção! Uma ou mais parcelas têm datas de vencimento no passado. Deseja continuar mesmo assim?')) return;
 
   const btn = qs('#drawer .btn-save');
   btnSv(btn, true);
@@ -5070,6 +5121,8 @@ async function saveFiado(){
         valorEntrada,
         numParcelas,
         vencimentos,
+        data: qs('#ff-data')?.value || today(),
+        formaEntrada: qs('#ff-forma-ent')?.value || 'dinheiro',
         observacoes: qs('#ff-obs')?.value.trim() || ''
       }
     });
@@ -5120,6 +5173,8 @@ async function registrarPgtoFiado(id){
       crediarioId:id,
       valor,
       parcela: qs('#pg-parc')?.value || '',
+      data: qs('#pg-data')?.value || today(),
+      formaPagamento: qs('#pg-forma')?.value || 'dinheiro',
       observacoes: qs('#pg-obs')?.value || ''
     });
 
@@ -5137,6 +5192,22 @@ async function registrarPgtoFiado(id){
     btnSv(btn, false);
   }
 }
+
+async function delFiado(id){
+  const c = (state.db.crediario || []).find(x => String(x.id) === String(id));
+  const nome = c?.clienteNome ? ` de ${c.clienteNome}` : '';
+  if(!confirm(`Excluir o fiado${nome}? As parcelas dele também serão excluídas.\n\nAtenção: pagamentos já lançados no Caixa NÃO são apagados — se precisar, exclua-os pela tela do Caixa.`)) return;
+
+  try{
+    const r = await post({ action:'deleteCrediario', token:state.token, id });
+    if(r.status !== 'ok') return toast(r.data?.message || 'Erro.','err');
+    toast('Fiado excluído.','ok');
+    await Promise.all([loadCred(), updateStats(), loadVencHome()]);
+  }catch(e){
+    toast('Erro.','err');
+  }
+}
+window.delFiado = delFiado;
 
 async function abrirPgtoFiado(id, nome, saldo, numParc){
   let parcelas = [];
@@ -5158,10 +5229,16 @@ async function abrirPgtoFiado(id, nome, saldo, numParc){
     <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--err);font-weight:600;margin-bottom:20px">Saldo: ${fmt(saldo)}</div>
     <div class="fg"><span class="lbl">Parcela</span>${parcelaOptions}</div>
     <div class="fg"><span class="lbl">Valor recebido *</span><input id="pg-val" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
+    <div class="form-row">
+      <div class="fg"><span class="lbl">Data do recebimento</span><input id="pg-data" type="date" class="inp"/></div>
+      <div class="fg"><span class="lbl">Forma</span><select id="pg-forma"><option value="dinheiro">Dinheiro</option><option value="pix">PIX</option><option value="debito">Débito</option><option value="credito">Crédito</option></select></div>
+    </div>
     <div class="fg"><span class="lbl">Observações</span><input id="pg-obs" type="text" class="inp" placeholder="Opcional..."/></div>
     <div class="dfooter"><button class="btn-sec" id="btn-cancel-pg">Cancelar</button><button class="btn-save" id="btn-confirm-pg">Confirmar</button></div>
   `);
 
+  qs('#pg-data').value = today();
+  qs('#pg-data').addEventListener('change', e => verificarDataRetro(e.target));
   qs('#pg-val').addEventListener('input', e => applyValorMask(e.target));
   qs('#pg-parc')?.addEventListener('change', e => {
     const opt = e.target.selectedOptions?.[0];
