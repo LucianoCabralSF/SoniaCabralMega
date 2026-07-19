@@ -80,6 +80,18 @@ Luciano autorizou a correção integral dos problemas encontrados, pediu que dec
 - A inspeção visual foi feita em 1280×720 e 390×844. Não houve erro de navegador nem rolagem lateral da página; o calendário usa rolagem própria, diálogos têm nome acessível, o foco começa no primeiro campo e permanece dentro do diálogo ao usar Tab.
 - O código será integrado ao branch principal local depois da verificação final. Não será publicado automaticamente em produção, porque a solicitação não definiu um alvo de deploy e publicar mudaria o sistema ao vivo; a versão ficará pronta para esse passo após a revisão do Luciano.
 
+## Central de Relacionamento
+
+- A fila de retorno próximo começa 7 dias antes da data recomendada. A recuperação começa no 15º dia de atraso; antes desses limites a oportunidade permanece fora da fila operacional correspondente.
+- As únicas etapas operacionais expostas são `contatada`, `respondeu`, `agendou` e `retornou`. `pendente` é o estado inicial técnico e encerramentos automáticos preservam histórico sem criar uma quinta ação manual.
+- O WhatsApp não é automatizado. A operadora revisa a mensagem, abre o WhatsApp e confirma o envio; somente essa confirmação registra `contatada`.
+- O vínculo automático de um novo agendamento prioriza: oportunidade explícita escolhida pela operadora, retorno previamente contatado e, por último, outras origens elegíveis. Um agendamento espontâneo encerra pendências concorrentes sem contar conversão indevida.
+- Concluir agenda e caixa continua sendo o núcleo transacional. Se a atualização do relacionamento falhar depois do núcleo concluído, o sistema mantém atendimento e lançamento financeiro e mostra um aviso não destrutivo para correção posterior.
+- Uma recomendação de retorno é obrigatória ao concluir o atendimento, salvo quando a operadora marcar explicitamente “sem retorno recomendado”. Repetir a mesma conclusão não duplica a oportunidade.
+- Clientes com opt-out ou WhatsApp inválido permanecem consultáveis como histórico/inaptos, mas não podem ser acionados e foram excluídos do público selecionável de campanhas.
+- Aniversários em 29 de fevereiro usam 28 de fevereiro em anos não bissextos para manter uma oportunidade anual previsível.
+- Em telas grandes, gavetas operacionais ficam centralizadas e limitadas a 720 px; no celular ocupam a largura disponível sem rolagem horizontal.
+
 ## Riscos residuais aceitos
 
 - Apps Script + senha compartilhada continua sendo menos robusto que autenticação individual com provedor de identidade.
@@ -108,3 +120,11 @@ Registro feito em 19/07/2026 após a janela de trabalho solicitada:
 - Depois de concluir as seis tarefas da Central, executar o plano `docs/superpowers/plans/2026-07-19-dre-gerencial-anual-implementation.md`.
 - Antes de retomar: entrar na worktree, executar `git status --short` e `npm test`; a base esperada é limpa e com 42 testes aprovados.
 - Não fazer `clasp push`, nova implantação do Apps Script, merge na `main` ou deploy da Vercel antes de concluir e verificar os dois módulos.
+
+## Atualização de retomada — Central concluída
+
+- As seis tarefas da Central de Relacionamento foram implementadas nos commits `d1baff8`, `a3eb49d`, `4e9244e`, `b9409f5` e `beeda9d` da branch `feature/relacionamento-dre`.
+- A suíte está com 64 testes aprovados e zero falhas após a interface completa.
+- A inspeção real foi repetida em 390×844 e 1280×900: sem rolagem lateral, público de campanha restrito a clientes elegíveis e gaveta de desktop com 720 px.
+- Próxima tarefa: executar `docs/superpowers/plans/2026-07-19-dre-gerencial-anual-implementation.md`.
+- Apps Script, implantação, Vercel, merge e GitHub continuam pendentes até a DRE anual e a verificação conjunta ficarem concluídas.

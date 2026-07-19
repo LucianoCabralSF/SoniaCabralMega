@@ -22,6 +22,19 @@ Sempre publique o backend antes do frontend. A nova interface depende das regras
 
 Se a validação falhar, reverta primeiro a Vercel para o deploy anterior e depois selecione a versão anterior do Web App no Apps Script. Não apague as versões anteriores até a nova versão passar pela revisão operacional.
 
+## Central de Relacionamento
+
+A Central reúne retornos próximos, clientes atrasados, aniversariantes e campanhas. A operação usa quatro etapas: `contatada`, `respondeu`, `agendou` e `retornou`. O histórico de cada oportunidade registra as mudanças para facilitar acompanhamento e auditoria.
+
+- Retornos entram na fila de atenção 7 dias antes da data recomendada e passam para recuperação depois de 15 dias de atraso.
+- Ao concluir um atendimento, informe a próxima data recomendada ou marque explicitamente que não há retorno.
+- O WhatsApp é assistido: a mensagem pode ser revisada antes de abrir o aplicativo e a etapa só muda para `contatada` depois da confirmação humana de envio.
+- Clientes com bloqueio de contato ou telefone inválido continuam visíveis no histórico, mas não podem receber mensagens nem integrar públicos de campanha.
+- Campanhas usam um público explicitamente selecionado e não duplicam oportunidades quando a geração é repetida.
+- Os indicadores mostram oportunidades elegíveis, contatos, respostas, agendamentos e retornos. Valores vazios são apresentados como zero.
+
+Para revisar localmente sem acessar dados reais, rode `npm run preview:fixture` e entre com a senha `fixture`.
+
 ## Backend
 
 A URL do backend Apps Script está configurada em `window.__API_URL__`, no `index.html`. Os arquivos `Código.gs` e `Regras.gs` devem estar no mesmo projeto Apps Script; publicar somente um deles deixa o backend incompleto.

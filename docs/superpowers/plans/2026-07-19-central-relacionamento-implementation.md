@@ -50,7 +50,7 @@
 - Produces: `calcularIndicadoresRelacionamento_(oportunidades) -> object`, incluindo tempos médios em horas.
 - Consumes: datas ISO estritas e objetos sem dependência de Apps Script.
 
-- [ ] **Step 1: Write the failing pure-rule tests**
+- [x] **Step 1: Write the failing pure-rule tests**
 
 ```js
 const test = require('node:test');
@@ -92,13 +92,13 @@ test('métricas nunca retornam NaN', () => {
 });
 ```
 
-- [ ] **Step 2: Run the focused test and verify RED**
+- [x] **Step 2: Run the focused test and verify RED**
 
 Run: `node --test tests/relacionamento-rules.test.cjs`
 
 Expected: FAIL with `ENOENT` for `RelacionamentoRegras.gs`.
 
-- [ ] **Step 3: Implement the pure rules**
+- [x] **Step 3: Implement the pure rules**
 
 ```js
 var REL_ETAPAS_ = ['pendente','contatada','respondeu','agendou','retornou'];
@@ -174,13 +174,13 @@ function calcularIndicadoresRelacionamento_(oportunidades) {
 }
 ```
 
-- [ ] **Step 4: Run the focused test and verify GREEN**
+- [x] **Step 4: Run the focused test and verify GREEN**
 
 Run: `node --test tests/relacionamento-rules.test.cjs`
 
 Expected: 4 tests PASS.
 
-- [ ] **Step 5: Include the new Apps Script file**
+- [x] **Step 5: Include the new Apps Script file**
 
 Add `!RelacionamentoRegras.gs` to `.claspignore`, keeping the existing `!Código.gs`, `!Regras.gs` and `!appsscript.json` entries.
 
@@ -188,7 +188,7 @@ Run: `node --test tests/static-regressions.test.cjs`
 
 Expected: existing static tests PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add RelacionamentoRegras.gs tests/relacionamento-rules.test.cjs .claspignore
@@ -208,7 +208,7 @@ git commit -m "test: adicionar regras do relacionamento"
 - Produces read actions `getRelacionamento`, `getRelacionamentoResumo`, `getRelacionamentoEventos`, `getCampanhas`.
 - Produces write actions `confirmarContato`, `saveRelacionamentoEtapa`.
 
-- [ ] **Step 1: Add failing schema and route tests**
+- [x] **Step 1: Add failing schema and route tests**
 
 ```js
 test('backend declara estruturas auditáveis de relacionamento', () => {
@@ -227,13 +227,13 @@ test('rotas de relacionamento são autenticadas', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 Run: `node --test tests/static-regressions.test.cjs tests/relacionamento-backend.test.cjs`
 
 Expected: FAIL because schemas and routes are absent.
 
-- [ ] **Step 3: Extend schemas without reordering existing columns**
+- [x] **Step 3: Extend schemas without reordering existing columns**
 
 ```js
 relacionamento: [
@@ -256,7 +256,7 @@ Append `naoContatar` to `clientes`; append `retornoRecomendado`, `retornoMotivo`
 
 Also persist `naoContatar` in `saveCliente` and the three new appointment fields in `saveAgendamentoUnlocked_`; normalize the boolean with `normalizeBoolStr`.
 
-- [ ] **Step 4: Implement audited state changes**
+- [x] **Step 4: Implement audited state changes**
 
 ```js
 function registrarEventoRelacionamentoUnlocked_(data) {
@@ -292,7 +292,7 @@ function atualizarEtapaRelacionamentoUnlocked_(item, etapaNova, meta) {
 }
 ```
 
-- [ ] **Step 5: Add route dispatch**
+- [x] **Step 5: Add route dispatch**
 
 ```js
 case 'getRelacionamento':       return ok(listarRelacionamento_(e.parameter));
@@ -305,13 +305,13 @@ case 'confirmarContato':         return result(confirmarContato_(b));
 case 'saveRelacionamentoEtapa':  return result(salvarEtapaRelacionamento_(b));
 ```
 
-- [ ] **Step 6: Run tests and verify GREEN**
+- [x] **Step 6: Run tests and verify GREEN**
 
 Run: `npm test`
 
 Expected: schema, route, syntax and existing regression tests PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add Código.gs tests/relacionamento-backend.test.cjs tests/static-regressions.test.cjs
@@ -332,7 +332,7 @@ git commit -m "feat: persistir funil de relacionamento"
 - Produces: `encerrarPendentesPorAgendamentoEspontaneoUnlocked_(appointment)`.
 - Extends: `completeAppointment` with `returnRecommendation` and response `relationship`.
 
-- [ ] **Step 1: Add failing integration contract tests**
+- [x] **Step 1: Add failing integration contract tests**
 
 ```js
 test('conclusão aceita retorno ou escolha sem retorno', () => {
@@ -350,13 +350,13 @@ test('agenda vincula oportunidade e conclusão marca retorno', () => {
 });
 ```
 
-- [ ] **Step 2: Run focused tests and verify RED**
+- [x] **Step 2: Run focused tests and verify RED**
 
 Run: `node --test tests/relacionamento-backend.test.cjs tests/static-regressions.test.cjs`
 
 Expected: FAIL for missing recommendation and agenda integration.
 
-- [ ] **Step 3: Validate the recommendation before writing agenda or cash**
+- [x] **Step 3: Validate the recommendation before writing agenda or cash**
 
 ```js
 function validarRecomendacaoRetorno_(appointment, recommendation) {
@@ -370,7 +370,7 @@ function validarRecomendacaoRetorno_(appointment, recommendation) {
 
 Call this function at the beginning of `concluirAgendamentoComCaixa_` and return its error before the first sheet write.
 
-- [ ] **Step 4: Implement idempotent return creation**
+- [x] **Step 4: Implement idempotent return creation**
 
 ```js
 function garantirOportunidadeRetornoUnlocked_(appointment, recommendation) {
@@ -388,7 +388,7 @@ function garantirOportunidadeRetornoUnlocked_(appointment, recommendation) {
 }
 ```
 
-- [ ] **Step 5: Keep CRM failure non-destructive after core completion**
+- [x] **Step 5: Keep CRM failure non-destructive after core completion**
 
 ```js
 var relationship = { ok:true };
@@ -403,7 +403,7 @@ try {
 return { completed:true, cashId:savedCash.id, relationship:relationship };
 ```
 
-- [ ] **Step 6: Implement automatic linking and spontaneous closure**
+- [x] **Step 6: Implement automatic linking and spontaneous closure**
 
 ```js
 function vincularOportunidadeAoAgendamentoUnlocked_(appointment) {
@@ -446,7 +446,7 @@ function encerrarPendentesPorAgendamentoEspontaneoUnlocked_(appointment) {
 
 Call `vincularOportunidadeAoAgendamentoUnlocked_` for contacted/responded opportunities. If it returns null, call `encerrarPendentesPorAgendamentoEspontaneoUnlocked_`.
 
-- [ ] **Step 7: Run full suite and commit**
+- [x] **Step 7: Run full suite and commit**
 
 Run: `npm test`
 
@@ -468,7 +468,7 @@ git commit -m "feat: integrar retornos com a agenda"
 - Produces write actions `saveCampanha` and `generateCampanha`.
 - Extends `listarRelacionamento_(params)` with `fila`, `telefoneWhatsApp`, `telefoneValido` and `ultimoAtendimento`.
 
-- [ ] **Step 1: Add failing campaign tests**
+- [x] **Step 1: Add failing campaign tests**
 
 ```js
 test('aniversário e campanha usam referências idempotentes', () => {
@@ -483,13 +483,13 @@ test('bloqueio e telefone inválido saem da fila', () => {
 });
 ```
 
-- [ ] **Step 2: Run test and verify RED**
+- [x] **Step 2: Run test and verify RED**
 
 Run: `node --test tests/relacionamento-backend.test.cjs`
 
 Expected: FAIL for missing birthday and campaign generation.
 
-- [ ] **Step 3: Implement idempotent birthday materialization**
+- [x] **Step 3: Implement idempotent birthday materialization**
 
 ```js
 function materializarAniversarios_(ano) {
@@ -509,7 +509,7 @@ function materializarAniversarios_(ano) {
 }
 ```
 
-- [ ] **Step 4: Implement explicit campaign audience**
+- [x] **Step 4: Implement explicit campaign audience**
 
 ```js
 function gerarOportunidadesCampanha_(body) {
@@ -536,7 +536,7 @@ function gerarOportunidadesCampanha_(body) {
 }
 ```
 
-- [ ] **Step 5: Add routes, run tests and commit**
+- [x] **Step 5: Add routes, run tests and commit**
 
 ```js
 case 'saveCampanha':     return result(salvarCampanha_(b));
@@ -564,7 +564,7 @@ git commit -m "feat: adicionar filas e campanhas"
 - Produces view `relacionamento`, `loadRelacionamento()`, `renderRelacionamento()` and `abrirWhatsAppRelacionamento(id)`.
 - Extends `concluirAgend(ag)` with `returnRecommendation`.
 
-- [ ] **Step 1: Add failing UI contracts**
+- [x] **Step 1: Add failing UI contracts**
 
 ```js
 test('navegação e tela de relacionamento existem', () => {
@@ -582,13 +582,13 @@ test('conclusão envia retorno ou sem retorno', () => {
 });
 ```
 
-- [ ] **Step 2: Run static tests and verify RED**
+- [x] **Step 2: Run static tests and verify RED**
 
 Run: `node --test tests/static-regressions.test.cjs`
 
 Expected: FAIL for missing navigation, view and WhatsApp flow.
 
-- [ ] **Step 3: Add completion controls and payload**
+- [x] **Step 3: Add completion controls and payload**
 
 ```html
 <div class="fg">
@@ -610,7 +610,7 @@ returnRecommendation: {
 }
 ```
 
-- [ ] **Step 4: Add loading and escaped rendering**
+- [x] **Step 4: Add loading and escaped rendering**
 
 ```js
 async function loadRelacionamento() {
@@ -655,7 +655,7 @@ async function abrirHistoricoRelacionamento(id) {
 
 Render the same fields as a compact table above the mobile breakpoint; pass every API string through `safe()` or `attr()`. Provide filters for queue, stage, origin, campaign, delay and period, and apply campaign audience filters before sending explicit `clienteIds` to `generateCampanha`.
 
-- [ ] **Step 5: Implement assisted WhatsApp**
+- [x] **Step 5: Implement assisted WhatsApp**
 
 ```js
 async function abrirWhatsAppRelacionamento(id) {
@@ -671,7 +671,7 @@ async function abrirWhatsAppRelacionamento(id) {
 }
 ```
 
-- [ ] **Step 6: Extend the fixture and inspect layouts**
+- [x] **Step 6: Extend the fixture and inspect layouts**
 
 Add synthetic responses for all relationship actions: valid phone, invalid phone, blocked client, upcoming return, recovery, birthday and campaign.
 
@@ -679,7 +679,7 @@ Run: `npm run preview:fixture`
 
 Expected: no horizontal overflow at 390×844 or desktop; keyboard focus, filters, stage controls and disabled contacts work.
 
-- [ ] **Step 7: Run tests and commit**
+- [x] **Step 7: Run tests and commit**
 
 Run: `npm test`
 
@@ -701,25 +701,25 @@ git commit -m "feat: criar central de relacionamento"
 - `npm test` remains the full local regression command.
 - Deployment order remains Apps Script before Vercel.
 
-- [ ] **Step 1: Run the complete automated suite**
+- [x] **Step 1: Run the complete automated suite**
 
 Run: `npm test`
 
 Expected: zero failures.
 
-- [ ] **Step 2: Run local end-to-end fixture checks**
+- [x] **Step 2: Run local end-to-end fixture checks**
 
 Validate completion with date and without return, 7-day upcoming boundary, 15-day recovery boundary, birthday, campaign deduplication, blocked/invalid phone, WhatsApp without automatic confirmation, manual response, automatic schedule, automatic return, spontaneous booking closure, history and empty metrics.
 
 Expected: all scenarios succeed without a real backend call.
 
-- [ ] **Step 3: Update documentation**
+- [x] **Step 3: Update documentation**
 
 Document in `README.md` the Central workflow, contact confirmation, metrics, opt-out and backend-before-frontend deployment.
 
 Record in `decisões.md` the 7/15-day windows, assisted WhatsApp, operational states, automatic attribution priority and non-destructive CRM warning.
 
-- [ ] **Step 4: Verify final diff**
+- [x] **Step 4: Verify final diff**
 
 Run: `git diff --check`
 
@@ -727,7 +727,7 @@ Run: `git status --short`
 
 Expected: only CRM implementation, tests and documentation are changed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add README.md decisões.md docs/superpowers/plans/2026-07-19-central-relacionamento-implementation.md
