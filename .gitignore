@@ -2,3 +2,4 @@
 Thumbs.db
 # conexão local com o Apps Script (contém o ID do script — repo é público)
 .clasp.json
+.worktrees/
