@@ -18,9 +18,12 @@ function relDateMs_(iso) {
 }
 
 function normalizarTelefoneWhatsApp_(telefone) {
-  var digits = String(telefone || '').replace(/\D/g, '');
+  var digits = String(telefone || '').replace(/\D/g, '').replace(/^00/, '');
+  while (/^5555/.test(digits) && (digits.length - 2 === 12 || digits.length - 2 === 13)) {
+    digits = digits.slice(2);
+  }
   if (digits.length === 10 || digits.length === 11) digits = '55' + digits;
-  return /^55\d{10,11}$/.test(digits) ? digits : '';
+  return /^55[1-9]\d(?:\d{8}|\d{9})$/.test(digits) ? digits : '';
 }
 
 function filaRelacionamento_(oportunidade, hojeIso) {
