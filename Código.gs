@@ -10,7 +10,10 @@ const LOGIN_FAILURE_KEY = 'auth_login_failures';
 const PASSWORD_HASH_KEY = 'auth_password_hash';
 const PASSWORD_SALT_KEY = 'auth_password_salt';
 const AUTH_VERSION_KEY = 'auth_version';
-const SHEETS_SCHEMA_VERSION = '4';
+const WHATSAPP_ACCESS_TOKEN_KEY = 'whatsapp_access_token';
+const REMINDER_HANDLER = 'processarLembretesAutomaticos_';
+const DEFAULT_REMINDER_MESSAGE = 'Olá, {nome}! Lembramos que seu atendimento de {servico} na {salao} está marcado para hoje, {data}, às {hora}. Responda a esta mensagem para confirmar seu horário. Até breve!';
+const SHEETS_SCHEMA_VERSION = '5';
 const SHEETS_SCHEMA_VERSION_KEY = 'sheets_schema_version';
 
 const SCHEMAS = {
@@ -71,6 +74,11 @@ const SCHEMAS = {
   campanhas: [
     'id','nome','mensagemModelo','dataInicio','dataFim','criteriosJson','status',
     'criadoEm','atualizadoEm','deletadoEm'
+  ],
+  lembretes_envios: [
+    'id','idempotencyKey','agendamentoId','clienteId','tipo','agendamentoData',
+    'agendamentoHora','programadoPara','telefone','mensagem','status','tentativas',
+    'providerMessageId','ultimoErro','enviadoEm','criadoEm','atualizadoEm','deletadoEm'
   ],
   dre_mapeamento: [
     'id','tipo','categoriaCaixa','itemTipo','dreCategoria','ativo',
@@ -212,7 +220,14 @@ function ensureConfigDefaults_() {
     horaInicio: '08:00',
     horaFim: '18:00',
     intervaloMin: '30',
-    tokenTTL: '2592000'
+    tokenTTL: '2592000',
+    lembreteAutomaticoAtivo: 'false',
+    lembreteAntecedenciaHoras: '4',
+    lembreteMensagemModelo: DEFAULT_REMINDER_MESSAGE,
+    whatsappTemplateName: 'lembrete_agendamento',
+    whatsappTemplateLanguage: 'pt_BR',
+    whatsappApiVersion: 'v23.0',
+    whatsappPhoneNumberId: ''
   };
 
   const d = sheetData_('config');
@@ -397,6 +412,165 @@ function updateConfigValues_(cfg) {
   } finally {
     lock.releaseLock();
   }
+}
+
+function triggerLembretesAtivo_() {
+  try {
+    return ScriptApp.getProjectTriggers().some(function (trigger) {
+      return trigger.getHandlerFunction() === REMINDER_HANDLER;
+    });
+  } catch (_) {
+    return false;
+  }
+}
+
+function getLembretesConfig_() {
+  const cfg = getConfigObj();
+  const tokenConfigured = !!SCRIPT_PROPS.getProperty(WHATSAPP_ACCESS_TOKEN_KEY);
+  const active = String(cfg.lembreteAutomaticoAtivo || 'false') === 'true';
+  const templateName = String(cfg.whatsappTemplateName || 'lembrete_agendamento');
+  const phoneNumberId = String(cfg.whatsappPhoneNumberId || '');
+  return {
+    ativo:active,
+    antecedenciaHoras:parseInt(cfg.lembreteAntecedenciaHoras || '4', 10) === 3 ? 3 : 4,
+    mensagemModelo:String(cfg.lembreteMensagemModelo || DEFAULT_REMINDER_MESSAGE).slice(0, 2000),
+    templateName:templateName,
+    templateLanguage:String(cfg.whatsappTemplateLanguage || 'pt_BR'),
+    apiVersion:String(cfg.whatsappApiVersion || 'v23.0'),
+    phoneNumberId:phoneNumberId,
+    tokenConfigurado:tokenConfigured,
+    pronto:!!(tokenConfigured && templateName && phoneNumberId),
+    triggerAtivo:triggerLembretesAtivo_(),
+    horaInicio:String(cfg.horaInicio || '08:00'),
+    salao:String(cfg.salonName || 'Sonia Cabral')
+  };
+}
+
+function salvarLembretesConfig_(body) {
+  const data = body && body.data ? body.data : (body || {});
+  const advance = parseInt(data.antecedenciaHoras, 10);
+  if ([3,4].indexOf(advance) < 0) return { error:'Escolha 3 ou 4 horas de antecedência.' };
+  const message = cleanText_(data.mensagemModelo || DEFAULT_REMINDER_MESSAGE, 2000);
+  if (!message) return { error:'Informe a mensagem padrão.' };
+  const allowedVariables = { '{nome}':true, '{servico}':true, '{salao}':true, '{data}':true, '{hora}':true };
+  const invalidVariable = (message.match(/\{[^{}]+\}/g) || []).find(function (variable) {
+    return !allowedVariables[variable];
+  });
+  if (invalidVariable) return { error:'Variável não permitida na mensagem: ' + invalidVariable };
+  const templateName = cleanText_(data.templateName, 120);
+  const templateLanguage = cleanText_(data.templateLanguage || 'pt_BR', 20);
+  const apiVersion = cleanText_(data.apiVersion || 'v23.0', 20);
+  const phoneNumberId = String(data.phoneNumberId || '').replace(/\D/g, '').slice(0, 40);
+  if (templateName && !/^[a-z0-9_]+$/.test(templateName)) return { error:'Nome do modelo inválido.' };
+  if (!/^[a-z]{2}_[A-Z]{2}$/.test(templateLanguage)) return { error:'Idioma do modelo inválido.' };
+  if (!/^v\d+\.\d+$/.test(apiVersion)) return { error:'Versão da API inválida.' };
+  const token = String(data.accessToken || '').trim();
+  if (token) SCRIPT_PROPS.setProperty(WHATSAPP_ACCESS_TOKEN_KEY, token);
+  if (data.removerToken === true) SCRIPT_PROPS.deleteProperty(WHATSAPP_ACCESS_TOKEN_KEY);
+  const active = data.ativo === true || String(data.ativo).toLowerCase() === 'true';
+  if (active && (!templateName || !phoneNumberId || !SCRIPT_PROPS.getProperty(WHATSAPP_ACCESS_TOKEN_KEY))) {
+    return { error:'Configure o ID do número, o modelo aprovado e o token antes de ativar.' };
+  }
+  updateConfigValues_({
+    lembreteAutomaticoAtivo:active ? 'true' : 'false',
+    lembreteAntecedenciaHoras:String(advance),
+    lembreteMensagemModelo:message,
+    whatsappTemplateName:templateName,
+    whatsappTemplateLanguage:templateLanguage,
+    whatsappApiVersion:apiVersion,
+    whatsappPhoneNumberId:phoneNumberId
+  });
+  if (typeof configurarTriggerLembretes_ === 'function') configurarTriggerLembretes_(active);
+  return getLembretesConfig_();
+}
+
+function listarLembretesEnvios_(params) {
+  params = params || {};
+  const limit = Math.min(200, Math.max(1, parseInt(params.limite || 50, 10) || 50));
+  return getCachedRows_('lembretes_envios')
+    .sort(function (a, b) { return String(b.atualizadoEm || '').localeCompare(String(a.atualizadoEm || '')); })
+    .slice(0, limit);
+}
+
+function listarClientesTelefonePendente_() {
+  return getCachedRows_('clientes').filter(function (client) {
+    return client.naoContatar !== 'true' && !normalizarTelefoneWhatsApp_(client.telefone);
+  }).map(function (client) {
+    return { id:client.id, nome:client.nome, telefone:client.telefone || '' };
+  });
+}
+
+function cancelarLembretesAgendamentoUnlocked_(appointmentId, reason) {
+  let total = 0;
+  getCachedRows_('lembretes_envios').filter(function (item) {
+    return String(item.agendamentoId) === String(appointmentId) &&
+      ['pendente','erro','enviando'].indexOf(String(item.status)) >= 0;
+  }).forEach(function (item) {
+    const saved = upsertByIdUnlocked_('lembretes_envios', Object.assign({}, item, {
+      status:'cancelado',
+      ultimoErro:cleanText_(reason || 'agendamento_inativo', 500)
+    }));
+    if (!saved.error) total += 1;
+  });
+  return { total:total };
+}
+
+function garantirLembreteAgendamentoUnlocked_(appointment) {
+  appointment = appointment || {};
+  const config = getLembretesConfig_();
+  if (!config.ativo || !config.pronto || appointment.status !== 'agendado') {
+    return { skipped:true, motivo:'automacao_inativa' };
+  }
+  const client = getCachedRows_('clientes').find(function (item) {
+    return String(item.id) === String(appointment.clienteId);
+  });
+  if (!client || client.naoContatar === 'true') return { skipped:true, motivo:'cliente_bloqueada' };
+  const phone = normalizarTelefoneWhatsApp_(client.telefone);
+  if (!phone) return { skipped:true, motivo:'telefone_invalido' };
+  const scheduledFor = calcularProgramacaoLembrete_(appointment, {
+    horaInicio:config.horaInicio,
+    antecedenciaHoras:config.antecedenciaHoras
+  });
+  const idempotencyKey = chaveLembreteAgendamento_(appointment);
+  if (!scheduledFor || !idempotencyKey) return { skipped:true, motivo:'horario_inelegivel' };
+
+  getCachedRows_('lembretes_envios').filter(function (item) {
+    return String(item.agendamentoId) === String(appointment.id) &&
+      String(item.idempotencyKey) !== idempotencyKey &&
+      ['pendente','erro','enviando'].indexOf(String(item.status)) >= 0;
+  }).forEach(function (item) {
+    upsertByIdUnlocked_('lembretes_envios', Object.assign({}, item, {
+      status:'cancelado', ultimoErro:'agendamento_reprogramado'
+    }));
+  });
+
+  const existing = getCachedRows_('lembretes_envios').find(function (item) {
+    return String(item.idempotencyKey) === idempotencyKey;
+  });
+  if (existing) return { id:existing.id, item:existing, duplicate:true };
+  const message = renderizarMensagemLembrete_(config.mensagemModelo, {
+    nome:client.nome || appointment.clienteNome,
+    servico:appointment.servicos || 'seu atendimento',
+    salao:config.salao,
+    data:fmtBR(normDate(appointment.data)),
+    hora:String(appointment.hora || '').slice(0, 5)
+  });
+  return upsertByIdUnlocked_('lembretes_envios', {
+    idempotencyKey:idempotencyKey,
+    agendamentoId:appointment.id,
+    clienteId:appointment.clienteId,
+    tipo:'lembrete_agendamento',
+    agendamentoData:normDate(appointment.data),
+    agendamentoHora:String(appointment.hora || '').slice(0, 5),
+    programadoPara:scheduledFor,
+    telefone:phone,
+    mensagem:cleanText_(message, 2000),
+    status:'pendente',
+    tentativas:0,
+    providerMessageId:'',
+    ultimoErro:'',
+    enviadoEm:''
+  });
 }
 
 function isPaid_(value) {
@@ -2232,10 +2406,14 @@ function saveAgendamento(d) {
         if (currentAppointment) restoreRowObjectUnlocked_('agendamentos', currentAppointment);
         return synchronized;
       }
+      cancelarLembretesAgendamentoUnlocked_((saved.item || payload).id, 'agendamento_concluido');
       saved.linkedCashId = synchronized && synchronized.id || '';
       return saved;
     }
-    if (requestedStatus !== 'agendado') return saved;
+    if (requestedStatus !== 'agendado') {
+      cancelarLembretesAgendamentoUnlocked_((saved.item || payload).id, 'agendamento_inativo');
+      return saved;
+    }
 
     let relationship = { ok:true };
     try {
@@ -2254,6 +2432,14 @@ function saveAgendamento(d) {
       };
     }
     saved.relationship = relationship;
+    try {
+      saved.reminder = garantirLembreteAgendamentoUnlocked_(saved.item || payload);
+    } catch (reminderError) {
+      saved.reminder = {
+        ok:false,
+        warning:'Agendamento salvo; lembrete pendente: ' + reminderError.message
+      };
+    }
     return saved;
   });
 }
@@ -2298,6 +2484,7 @@ function concluirAgendamentoComCaixa_(b) {
           warning:'Atendimento e caixa concluídos; relacionamento pendente: ' + relationshipError.message
         };
       }
+      cancelarLembretesAgendamentoUnlocked_(appointmentId, 'agendamento_concluido');
       return { completed:true, duplicate:true, cashId:existingCash.id, relationship:relationship };
     }
     if (existingCash) {
@@ -2347,6 +2534,7 @@ function concluirAgendamentoComCaixa_(b) {
         warning:'Atendimento e caixa concluídos; relacionamento pendente: ' + relationshipError.message
       };
     }
+    cancelarLembretesAgendamentoUnlocked_(appointmentId, 'agendamento_concluido');
     return { completed:true, cashId:savedCash.id, relationship:relationship };
   } finally {
     lock.releaseLock();
@@ -2783,6 +2971,9 @@ function readAction_(a, e) {
       return ok(calcularIndicadoresRelacionamento_(listarRelacionamento_(e.parameter)));
     case 'getRelacionamentoEventos': return ok(listarEventosRelacionamento_(e.parameter));
     case 'getCampanhas':        return ok(getCachedRows_('campanhas'));
+    case 'getLembretesConfig':  return ok(getLembretesConfig_());
+    case 'getLembretesEnvios':  return ok(listarLembretesEnvios_(e.parameter));
+    case 'getClientesTelefonePendente': return ok(listarClientesTelefonePendente_());
     case 'getDreMapeamentos':   return ok(listarMapeamentosDre_());
     case 'getDreAnual':         return result(getDreAnual_(e.parameter));
     case 'getDreDetalhe':       return result(getDreDetalhe_(e.parameter));
@@ -2845,6 +3036,9 @@ function doPost(e) {
       case 'saveRelacionamentoEtapa': return result(salvarEtapaRelacionamento_(b));
       case 'saveCampanha':       return result(salvarCampanha_(b));
       case 'generateCampanha':   return result(gerarOportunidadesCampanha_(b));
+      case 'saveLembretesConfig': return result(salvarLembretesConfig_(b));
+      case 'testWhatsAppConfig': return result(testarWhatsAppConfig_());
+      case 'runLembretesNow':    return result(processarLembretesAutomaticos_());
       case 'saveDreClassificacao': return result(salvarClassificacaoDre_(b));
       case 'saveDreMapeamento':  return result(salvarMapeamentoDre_(b));
       default: return err('Ação desconhecida: ' + a);

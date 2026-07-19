@@ -64,6 +64,19 @@ function fixture(seed = {}) {
     withDocumentLock_ = function (fn) { return fn(); };
     invalidateSheetCache_ = function () {};
     invalidateCaixaCaches_ = function () {};
+    getConfigObj = function () {
+      var out = {};
+      (__stores.config || []).forEach(function (item) { out[item.chave] = item.valor; });
+      return out;
+    };
+    updateConfigValues_ = function (values) {
+      Object.keys(values || {}).forEach(function (key) {
+        var row = (__stores.config || []).find(function (item) { return item.chave === key; });
+        if (row) row.valor = values[key];
+        else (__stores.config || (__stores.config = [])).push({ chave:key, valor:values[key] });
+      });
+      return { updated:true };
+    };
     getCachedRows_ = function (name) {
       return (__stores[name] || []).filter(function (item) { return !item.deletadoEm; });
     };
@@ -218,4 +231,106 @@ test('edição da agenda concluída atualiza caixa sem alterar data financeira',
 test('rotas de exclusão delegam ao serviço vinculado', () => {
   assert.match(backend, /case 'deleteAgendamento':\s+return result\(deleteAgendamentoVinculado_\(b\.id\)\)/);
   assert.match(backend, /function deleteLancamento_\(id\)[\s\S]{0,1200}deleteAgendamentoVinculadoUnlocked_/);
+});
+
+test('schema e rotas de lembretes são autenticados', () => {
+  assert.match(backend, /const SHEETS_SCHEMA_VERSION = '5'/);
+  assert.match(backend, /lembretes_envios:\s*\[[\s\S]{0,600}'deletadoEm'\s*\]/);
+  for (const action of [
+    'getLembretesConfig','getLembretesEnvios','getClientesTelefonePendente',
+    'saveLembretesConfig','testWhatsAppConfig','runLembretesNow'
+  ]) assert.match(backend, new RegExp("case '" + action + "':"));
+});
+
+test('configuração nunca devolve o token de acesso', () => {
+  const f = fixture({
+    properties:{ whatsapp_access_token:'segredo-super-secreto' },
+    config:[
+      { chave:'lembreteAutomaticoAtivo', valor:'false' },
+      { chave:'lembreteAntecedenciaHoras', valor:'4' },
+      { chave:'whatsappTemplateName', valor:'lembrete_agendamento' },
+      { chave:'whatsappTemplateLanguage', valor:'pt_BR' },
+      { chave:'whatsappApiVersion', valor:'v23.0' },
+      { chave:'whatsappPhoneNumberId', valor:'123456789' }
+    ]
+  });
+  const config = f.call('getLembretesConfig_()');
+  assert.equal(config.tokenConfigurado, true);
+  assert.equal(JSON.stringify(config).includes('segredo-super-secreto'), false);
+});
+
+test('reconciliação cria um único lembrete e reagendamento cancela a chave antiga', () => {
+  const f = fixture({
+    properties:{ whatsapp_access_token:'token' },
+    config:[
+      { chave:'salonName', valor:'Sonia Cabral' },
+      { chave:'horaInicio', valor:'08:00' },
+      { chave:'lembreteAutomaticoAtivo', valor:'true' },
+      { chave:'lembreteAntecedenciaHoras', valor:'4' },
+      { chave:'lembreteMensagemModelo', valor:'Olá, {nome}! {servico} às {hora}.' },
+      { chave:'whatsappTemplateName', valor:'lembrete_agendamento' },
+      { chave:'whatsappTemplateLanguage', valor:'pt_BR' },
+      { chave:'whatsappApiVersion', valor:'v23.0' },
+      { chave:'whatsappPhoneNumberId', valor:'123456789' }
+    ],
+    clientes:[{ id:'cli_1', nome:'Ana', telefone:'+55 55 92 99999-1111', naoContatar:'false' }]
+  });
+  const first = f.call(`garantirLembreteAgendamentoUnlocked_({
+    id:'ag_1', clienteId:'cli_1', clienteNome:'Ana', servicos:'Escova',
+    data:'2026-07-20', hora:'14:00', status:'agendado'
+  })`);
+  const duplicate = f.call(`garantirLembreteAgendamentoUnlocked_({
+    id:'ag_1', clienteId:'cli_1', clienteNome:'Ana', servicos:'Escova',
+    data:'2026-07-20', hora:'14:00', status:'agendado'
+  })`);
+  const changed = f.call(`garantirLembreteAgendamentoUnlocked_({
+    id:'ag_1', clienteId:'cli_1', clienteNome:'Ana', servicos:'Escova',
+    data:'2026-07-20', hora:'15:00', status:'agendado'
+  })`);
+  assert.equal(first.item.programadoPara, '2026-07-20T10:00:00');
+  assert.equal(duplicate.duplicate, true);
+  assert.notEqual(changed.item.idempotencyKey, first.item.idempotencyKey);
+  assert.equal(f.stores.lembretes_envios.length, 2);
+  assert.equal(f.stores.lembretes_envios[0].status, 'cancelado');
+  assert.equal(changed.item.telefone, '5592999991111');
+});
+
+test('cliente bloqueada ou inválida não entra na fila', () => {
+  const baseConfig = [
+    { chave:'horaInicio', valor:'08:00' },
+    { chave:'lembreteAutomaticoAtivo', valor:'true' },
+    { chave:'lembreteAntecedenciaHoras', valor:'4' },
+    { chave:'whatsappTemplateName', valor:'lembrete_agendamento' },
+    { chave:'whatsappTemplateLanguage', valor:'pt_BR' },
+    { chave:'whatsappApiVersion', valor:'v23.0' },
+    { chave:'whatsappPhoneNumberId', valor:'123456789' }
+  ];
+  const f = fixture({
+    properties:{ whatsapp_access_token:'token' },
+    config:baseConfig,
+    clientes:[
+      { id:'cli_1', telefone:'92999991111', naoContatar:'true' },
+      { id:'cli_2', telefone:'123', naoContatar:'false' }
+    ]
+  });
+  for (const id of ['cli_1','cli_2']) {
+    const result = f.call(`garantirLembreteAgendamentoUnlocked_({
+      id:'ag_${id}', clienteId:'${id}', data:'2026-07-20', hora:'14:00', status:'agendado'
+    })`);
+    assert.equal(result.skipped, true);
+  }
+  assert.equal(f.stores.lembretes_envios.length, 0);
+});
+
+test('exclusão vinculada cancela lembrete pendente', () => {
+  const f = fixture({
+    agendamentos:[{ id:'ag_1', status:'agendado' }],
+    lembretes_envios:[{
+      id:'lem_1', idempotencyKey:'lembrete:ag_1:2026-07-20:14:00',
+      agendamentoId:'ag_1', status:'pendente'
+    }]
+  });
+  f.call("deleteAgendamentoVinculado_('ag_1')");
+  assert.equal(f.row('lembretes_envios','lem_1').status, 'cancelado');
+  assert.equal(f.row('lembretes_envios','lem_1').ultimoErro, 'origem_excluida');
 });

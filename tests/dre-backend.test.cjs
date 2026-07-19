@@ -8,7 +8,7 @@ const backend = fs.readFileSync(path.join(__dirname, '..', 'Código.gs'), 'utf8'
 test('caixa recebe classificação sem reordenar colunas existentes', () => {
   assert.match(backend, /caixa:\s*\[[\s\S]{0,500}'deletadoEm',[\s\n]*'dreCategoria'/);
   assert.match(backend, /dre_mapeamento:\s*\[/);
-  assert.match(backend, /const SHEETS_SCHEMA_VERSION = '4'/);
+  assert.match(backend, /const SHEETS_SCHEMA_VERSION = '5'/);
 });
 
 test('backend expõe somente rotas autenticadas de classificação DRE', () => {
