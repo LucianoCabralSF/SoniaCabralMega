@@ -10,6 +10,8 @@ const LOGIN_FAILURE_KEY = 'auth_login_failures';
 const PASSWORD_HASH_KEY = 'auth_password_hash';
 const PASSWORD_SALT_KEY = 'auth_password_salt';
 const AUTH_VERSION_KEY = 'auth_version';
+const SHEETS_SCHEMA_VERSION = '3';
+const SHEETS_SCHEMA_VERSION_KEY = 'sheets_schema_version';
 
 const SCHEMAS = {
   config: [
@@ -25,11 +27,13 @@ const SCHEMAS = {
     'id','nome','preco','descricao','ativo','criadoEm','atualizadoEm','deletadoEm'
   ],
   clientes: [
-    'id','nome','telefone','email','aniversario','observacoes','criadoEm','atualizadoEm','deletadoEm'
+    'id','nome','telefone','email','aniversario','observacoes','criadoEm','atualizadoEm','deletadoEm',
+    'naoContatar'
   ],
   agendamentos: [
     'id','data','hora','duracaoMin','clienteId','clienteNome','colaboradorId',
-    'colaboradorNome','servicos','valor','status','observacoes','criadoEm','atualizadoEm','deletadoEm'
+    'colaboradorNome','servicos','valor','status','observacoes','criadoEm','atualizadoEm','deletadoEm',
+    'retornoRecomendado','retornoMotivo','oportunidadeId'
   ],
   caixa: [
     'id','data','tipo','categoria','clienteId','clienteNome',
@@ -51,6 +55,21 @@ const SCHEMAS = {
   plan_parcelas: [
     'id','planejamentoId','descricao','tipo','valor','vencimento',
     'status','pago','dataPagamento','observacoes','criadoEm','atualizadoEm','deletadoEm'
+  ],
+  relacionamento: [
+    'id','clienteId','clienteNome','origem','referenciaId','campanhaId','dataAlvo','etapa',
+    'telefoneContato','mensagemContato','contatadaEm','respondeuEm','agendamentoId',
+    'agendouEm','retornouEm','recuperacaoAoContatar','encerramentoMotivo','observacoes',
+    'criadoEm','atualizadoEm','deletadoEm'
+  ],
+  relacionamento_eventos: [
+    'id','idempotencyKey','oportunidadeId','clienteId','tipo','etapaAnterior','etapaNova',
+    'origemAlteracao','dataHora','telefone','mensagem','observacoes',
+    'criadoEm','atualizadoEm','deletadoEm'
+  ],
+  campanhas: [
+    'id','nome','mensagemModelo','dataInicio','dataFim','criteriosJson','status',
+    'criadoEm','atualizadoEm','deletadoEm'
   ]
 };
 
@@ -142,13 +161,27 @@ function styleHeader_(sheet, cols) {
   sheet.setFrozenRows(1);
 }
 
+function ensureSheetSchema_(name, sheet) {
+  const expected = SCHEMAS[name];
+  if (!expected) throw new Error('Schema desconhecido: ' + name);
+  if (sheet.getLastRow() === 0 || sheet.getLastColumn() === 0) {
+    sheet.getRange(1, 1, 1, expected.length).setValues([expected]);
+    styleHeader_(sheet, expected.length);
+    return;
+  }
+  const current = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0]
+    .map(value => String(value || '').trim());
+  const missing = expected.filter(header => current.indexOf(header) < 0);
+  if (missing.length) {
+    sheet.getRange(1, current.length + 1, 1, missing.length).setValues([missing]);
+    styleHeader_(sheet, current.length + missing.length);
+  }
+}
+
 function ensureSheets() {
   Object.keys(SCHEMAS).forEach(name => {
     const s = getSheet(name);
-    if (s.getLastRow() === 0) {
-      s.getRange(1, 1, 1, SCHEMAS[name].length).setValues([SCHEMAS[name]]);
-      styleHeader_(s, SCHEMAS[name].length);
-    }
+    ensureSheetSchema_(name, s);
   });
 
   ensureConfigDefaults_();
@@ -156,14 +189,15 @@ function ensureSheets() {
 
 // Roda a verificação de abas no máximo 1x por período — antes rodava em TODA chamada e deixava tudo lento
 function ensureSheetsOnce_() {
-  if (CACHE.get('sheets_ok')) return;
-  if (SCRIPT_PROPS.getProperty('sheets_ok') === '1') {
-    CACHE.put('sheets_ok', '1', 21600);
+  const cacheKey = 'sheets_ok_' + SHEETS_SCHEMA_VERSION;
+  if (CACHE.get(cacheKey)) return;
+  if (SCRIPT_PROPS.getProperty(SHEETS_SCHEMA_VERSION_KEY) === SHEETS_SCHEMA_VERSION) {
+    CACHE.put(cacheKey, '1', 21600);
     return;
   }
   ensureSheets();
-  SCRIPT_PROPS.setProperty('sheets_ok', '1');
-  CACHE.put('sheets_ok', '1', 21600);
+  SCRIPT_PROPS.setProperty(SHEETS_SCHEMA_VERSION_KEY, SHEETS_SCHEMA_VERSION);
+  CACHE.put(cacheKey, '1', 21600);
 }
 
 function ensureConfigDefaults_() {
@@ -817,7 +851,168 @@ function saveCliente(d) {
     telefone: cleanText_(d.telefone, 30),
     email: email,
     aniversario: aniversario ? fmtBR(normalizarDataEstrita_(aniversario)) : '',
-    observacoes: cleanText_(d.observacoes, 1000)
+    observacoes: cleanText_(d.observacoes, 1000),
+    naoContatar: normalizeBoolStr(d.naoContatar, 'false')
+  });
+}
+
+// ── Relacionamento ────────────────────────────────────────────
+function chaveIdempotenciaRelacionamento_(value) {
+  let key = '';
+  try { key = cleanId_(value, 160); } catch (_) { return ''; }
+  return key.length >= 12 ? key : '';
+}
+
+function oportunidadeRelacionamentoPorId_(id) {
+  let cleanId = '';
+  try { cleanId = cleanId_(id); } catch (_) { return null; }
+  return getCachedRows_('relacionamento').find(item => String(item.id) === cleanId) || null;
+}
+
+function eventoRelacionamentoPorChave_(idempotencyKey) {
+  if (!idempotencyKey) return null;
+  return getCachedRows_('relacionamento_eventos')
+    .find(item => String(item.idempotencyKey) === String(idempotencyKey)) || null;
+}
+
+function listarRelacionamento_(params) {
+  params = params || {};
+  let list = getCachedRows_('relacionamento');
+  if (params.etapa) list = list.filter(item => item.etapa === params.etapa);
+  if (params.origem) list = list.filter(item => item.origem === params.origem);
+  if (params.campanhaId) list = list.filter(item => item.campanhaId === params.campanhaId);
+  if (!!params.dataInicio !== !!params.dataFim) throw new Error('Informe as duas datas do período.');
+  if (params.dataInicio && params.dataFim) {
+    const start = toISO(params.dataInicio);
+    const end = toISO(params.dataFim);
+    if (start > end) throw new Error('Período inválido.');
+    list = list.filter(item => item.dataAlvo >= start && item.dataAlvo <= end);
+  }
+  return list.sort((a, b) =>
+    String(a.dataAlvo || '').localeCompare(String(b.dataAlvo || '')) ||
+    String(a.clienteNome || '').localeCompare(String(b.clienteNome || ''))
+  );
+}
+
+function listarEventosRelacionamento_(params) {
+  params = params || {};
+  let list = getCachedRows_('relacionamento_eventos');
+  if (params.oportunidadeId) {
+    list = list.filter(item => String(item.oportunidadeId) === String(params.oportunidadeId));
+  }
+  if (params.clienteId) {
+    list = list.filter(item => String(item.clienteId) === String(params.clienteId));
+  }
+  return list.sort((a, b) => String(a.dataHora || '').localeCompare(String(b.dataHora || '')));
+}
+
+function registrarEventoRelacionamentoUnlocked_(data) {
+  const idempotencyKey = chaveIdempotenciaRelacionamento_(data && data.idempotencyKey);
+  if (!idempotencyKey) return { error: 'Identificador da operação de relacionamento inválido.' };
+  const existing = eventoRelacionamentoPorChave_(idempotencyKey);
+  if (existing) return { id: existing.id, item: existing, duplicate: true };
+  return upsertByIdUnlocked_('relacionamento_eventos', {
+    idempotencyKey: idempotencyKey,
+    oportunidadeId: data.oportunidadeId,
+    clienteId: data.clienteId,
+    tipo: cleanText_(data.tipo, 40),
+    etapaAnterior: cleanText_(data.etapaAnterior, 30),
+    etapaNova: cleanText_(data.etapaNova, 30),
+    origemAlteracao: cleanText_(data.origemAlteracao || 'manual', 30),
+    dataHora: nowIso(),
+    telefone: cleanText_(data.telefone, 30),
+    mensagem: cleanText_(data.mensagem, 2000),
+    observacoes: cleanText_(data.observacoes, 1000)
+  });
+}
+
+function atualizarEtapaRelacionamentoUnlocked_(item, etapaNova, meta) {
+  meta = meta || {};
+  const rank = { pendente:0, contatada:1, respondeu:2, agendou:3, retornou:4 };
+  const atual = String(item && item.etapa || 'pendente');
+  if (!item || !item.id) return { error: 'Oportunidade não encontrada.' };
+  if (!Object.prototype.hasOwnProperty.call(rank, etapaNova)) return { error: 'Etapa inválida.' };
+  if (meta.origemAlteracao === 'automatica' && rank[etapaNova] < rank[atual]) {
+    return { error: 'A etapa automática não pode retroceder.' };
+  }
+  const idempotencyKey = chaveIdempotenciaRelacionamento_(meta.idempotencyKey);
+  if (!idempotencyKey) return { error: 'Identificador da operação de relacionamento inválido.' };
+  const previousEvent = eventoRelacionamentoPorChave_(idempotencyKey);
+  if (previousEvent) return { id:item.id, item:item, duplicate:true };
+
+  const stampField = {
+    contatada:'contatadaEm',
+    respondeu:'respondeuEm',
+    agendou:'agendouEm',
+    retornou:'retornouEm'
+  }[etapaNova];
+  const snapshot = Object.assign({}, item);
+  const record = Object.assign({}, item, meta.patch || {}, { etapa:etapaNova });
+  if (stampField && !record[stampField]) record[stampField] = nowIso();
+
+  const saved = upsertByIdUnlocked_('relacionamento', record);
+  if (saved.error) return saved;
+  const event = registrarEventoRelacionamentoUnlocked_({
+    idempotencyKey:idempotencyKey,
+    oportunidadeId:item.id,
+    clienteId:item.clienteId,
+    tipo:meta.tipo || 'mudanca_etapa',
+    etapaAnterior:atual,
+    etapaNova:etapaNova,
+    origemAlteracao:meta.origemAlteracao || 'manual',
+    telefone:meta.telefone,
+    mensagem:meta.mensagem,
+    observacoes:meta.observacoes
+  });
+  if (event.error) {
+    upsertByIdUnlocked_('relacionamento', snapshot);
+    return event;
+  }
+  return saved;
+}
+
+function confirmarContato_(body) {
+  body = body || {};
+  return withDocumentLock_(() => {
+    const item = oportunidadeRelacionamentoPorId_(body.id);
+    if (!item) return { error: 'Oportunidade não encontrada.' };
+    if (item.encerramentoMotivo) return { error: 'Esta oportunidade já foi encerrada.' };
+    const client = getCachedRows_('clientes')
+      .find(row => String(row.id) === String(item.clienteId));
+    if (!client) return { error: 'Cliente não encontrada.' };
+    if (client.naoContatar === 'true') return { error: 'A cliente não deseja receber mensagens.' };
+    const phone = normalizarTelefoneWhatsApp_(client.telefone);
+    if (!phone) return { error: 'Cadastre um telefone válido antes de contatar.' };
+    const message = cleanText_(body.mensagem, 2000);
+    if (!message) return { error: 'Informe a mensagem enviada.' };
+    const currentRank = REL_ETAPAS_.indexOf(item.etapa);
+    const targetStage = currentRank >= REL_ETAPAS_.indexOf('contatada') ? item.etapa : 'contatada';
+    return atualizarEtapaRelacionamentoUnlocked_(item, targetStage, {
+      idempotencyKey:body.idempotencyKey,
+      origemAlteracao:'manual',
+      tipo:'contato',
+      telefone:phone,
+      mensagem:message,
+      patch:{
+        telefoneContato:phone,
+        mensagemContato:message,
+        recuperacaoAoContatar:filaRelacionamento_(item, today()) === 'recuperacao' ? 'true' : item.recuperacaoAoContatar || 'false'
+      }
+    });
+  });
+}
+
+function salvarEtapaRelacionamento_(body) {
+  body = body || {};
+  return withDocumentLock_(() => {
+    const item = oportunidadeRelacionamentoPorId_(body.id);
+    if (!item) return { error: 'Oportunidade não encontrada.' };
+    if (item.encerramentoMotivo) return { error: 'Esta oportunidade já foi encerrada.' };
+    return atualizarEtapaRelacionamentoUnlocked_(item, String(body.etapa || ''), {
+      idempotencyKey:body.idempotencyKey,
+      origemAlteracao:'manual',
+      observacoes:body.observacoes
+    });
   });
 }
 
@@ -1417,7 +1612,10 @@ function saveAgendamentoUnlocked_(d) {
     servicos: cleanText_(d.servicos, 1000),
     valor: deCentavos_(valueCents),
     status: status,
-    observacoes: cleanText_(d.observacoes, 1000)
+    observacoes: cleanText_(d.observacoes, 1000),
+    retornoRecomendado: d.retornoRecomendado ? toISO(d.retornoRecomendado) : '',
+    retornoMotivo: cleanText_(d.retornoMotivo, 1000),
+    oportunidadeId: d.oportunidadeId || ''
   });
 }
 
@@ -1849,6 +2047,10 @@ function readAction_(a, e) {
     case 'getVencimentos':      return ok(getVencimentos(e));
     case 'getAtrasados':        return ok(getAtrasados());
     case 'getHomeResumo':       return ok(getHomeResumo(e));
+    case 'getRelacionamento':   return ok(listarRelacionamento_(e.parameter));
+    case 'getRelacionamentoResumo': return ok(calcularIndicadoresRelacionamento_(listarRelacionamento_(e.parameter)));
+    case 'getRelacionamentoEventos': return ok(listarEventosRelacionamento_(e.parameter));
+    case 'getCampanhas':        return ok(getCachedRows_('campanhas'));
     default: return err('Ação desconhecida: ' + a);
   }
 }
@@ -1904,6 +2106,8 @@ function doPost(e) {
       case 'deleteAgendamento':  return result(softDelete_('agendamentos', b.id));
       case 'deleteLancamento':   return result(deleteLancamento_(b.id));
       case 'deleteCrediario':    return result(deleteCrediario(b.id));
+      case 'confirmarContato':   return result(confirmarContato_(b));
+      case 'saveRelacionamentoEtapa': return result(salvarEtapaRelacionamento_(b));
       default: return err('Ação desconhecida: ' + a);
     }
   } catch (e2) {
