@@ -176,6 +176,7 @@ test('configuração permite revisar e operar lembretes automáticos', () => {
   assert.match(html, /function saveLembretesConfig\(/);
   assert.match(html, /action:'testWhatsAppConfig'/);
   assert.match(html, /action:'runLembretesNow'/);
+  assert.match(html, /Verificar e enviar agora/);
   assert.match(html, /#page-config > \.ph,#page-config > \.cfg-sec\{max-width:820px/);
 });
 

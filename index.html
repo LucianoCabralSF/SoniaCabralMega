@@ -1348,7 +1348,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
         <div class="cfg-actions">
           <button class="btn-gold" id="btn-save-lembretes">Salvar mensagens</button>
           <button class="btn-sec" id="btn-test-whatsapp">Testar conexão</button>
-          <button class="btn-sec" id="btn-run-lembretes">Verificar lembretes agora</button>
+          <button class="btn-sec" id="btn-run-lembretes">Verificar e enviar agora</button>
         </div>
         <div class="cfg-subtitle">Últimos envios</div>
         <div class="cfg-list" id="cfg-lembrete-envios"><div class="cfg-list-empty">Nenhum envio registrado.</div></div>
@@ -6580,7 +6580,7 @@ async function testarWhatsAppConfig(){
 
 async function executarLembretesAgora(){
   const button = qs('#btn-run-lembretes');
-  const original = button?.textContent || 'Verificar lembretes agora';
+  const original = button?.textContent || 'Verificar e enviar agora';
   if(button){ button.disabled = true; button.textContent = 'Verificando…'; }
   try{
     const response = await post({ action:'runLembretesNow', token:state.token });

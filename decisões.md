@@ -84,13 +84,30 @@ Luciano autorizou a correção integral dos problemas encontrados, pediu que dec
 
 - A fila de retorno próximo começa 7 dias antes da data recomendada. A recuperação começa no 15º dia de atraso; antes desses limites a oportunidade permanece fora da fila operacional correspondente.
 - As únicas etapas operacionais expostas são `contatada`, `respondeu`, `agendou` e `retornou`. `pendente` é o estado inicial técnico e encerramentos automáticos preservam histórico sem criar uma quinta ação manual.
-- O WhatsApp não é automatizado. A operadora revisa a mensagem, abre o WhatsApp e confirma o envio; somente essa confirmação registra `contatada`.
+- Os contatos comerciais da Central continuam assistidos: a operadora revisa a mensagem, abre o WhatsApp e confirma o envio; somente essa confirmação registra `contatada`. Os lembretes do próprio agendamento passam a ter automação separada, auditável e configurável.
 - O vínculo automático de um novo agendamento prioriza: oportunidade explícita escolhida pela operadora, retorno previamente contatado e, por último, outras origens elegíveis. Um agendamento espontâneo encerra pendências concorrentes sem contar conversão indevida.
 - Concluir agenda e caixa continua sendo o núcleo transacional. Se a atualização do relacionamento falhar depois do núcleo concluído, o sistema mantém atendimento e lançamento financeiro e mostra um aviso não destrutivo para correção posterior.
 - Uma recomendação de retorno é obrigatória ao concluir o atendimento, salvo quando a operadora marcar explicitamente “sem retorno recomendado”. Repetir a mesma conclusão não duplica a oportunidade.
 - Clientes com opt-out ou WhatsApp inválido permanecem consultáveis como histórico/inaptos, mas não podem ser acionados e foram excluídos do público selecionável de campanhas.
 - Aniversários em 29 de fevereiro usam 28 de fevereiro em anos não bissextos para manter uma oportunidade anual previsível.
 - Em telas grandes, gavetas operacionais ficam centralizadas e limitadas a 720 px; no celular ocupam a largura disponível sem rolagem horizontal.
+
+## Sincronização Agenda–Caixa e lembretes automáticos
+
+- Agenda e Caixa passam a compartilhar cliente, nome, serviço/descrição e valor quando o lançamento financeiro nasceu de um atendimento. Data do caixa e data/hora da agenda permanecem independentes para não alterar o regime financeiro escolhido na conclusão.
+- O vínculo técnico `agcash:<agendamentoId>` é preservado pelo backend mesmo que uma edição antiga do navegador envie outro item. A sincronização não depende da tela que iniciou a mudança.
+- Excluir pelo Caixa ou pela Agenda produz a mesma cascata: arquiva o agendamento, o caixa vinculado e o retorno futuro originado por ele; cancela o lembrete ainda pendente e desfaz o vínculo da oportunidade anterior sem apagar seu histórico.
+- A listagem da Central trata como encerrado qualquer retorno cuja agenda de origem já tenha sido excluída. Essa defesa cobre também inconsistências antigas.
+- Telefones importados são comparados e salvos em forma brasileira canônica. `+55 55 92...`, `+55 92...` e `(92)...` passam a representar o mesmo número; entradas inválidas não são apagadas e ficam disponíveis em **Telefones para revisar**.
+- Foi escolhida a API oficial do WhatsApp Business Cloud. Conectores não oficiais foram descartados por risco de instabilidade e bloqueio do número.
+- Mensagens iniciadas pelo salão usam modelo aprovado na Meta. A tela permite revisar a mensagem e sua prévia, mas qualquer mudança de texto precisa ser refletida e aprovada no modelo da Meta; criação e aprovação automática do modelo ficaram fora do escopo.
+- A antecedência padrão é 4 horas, com opção de 3 horas. O envio ocorre somente no dia do atendimento, nunca antes da abertura e nunca no horário ou depois do início. Se o horário calculado cair antes da abertura, usa-se a abertura; se a abertura não anteceder o atendimento, não há envio automático.
+- Uma fila `lembretes_envios` registra programação, tentativa, identificador devolvido pela Meta, erro sanitizado e estado final. A chave inclui agendamento, data e hora para impedir duplicidade; reagendamento cancela a chave antiga.
+- O processador roda a cada 15 minutos, tenta no máximo três vezes e só marca `enviado` quando a Meta devolve o identificador da mensagem. Agendamentos cancelados, concluídos ou excluídos, clientes com bloqueio e telefones inválidos não são elegíveis.
+- O token da Meta fica somente em `ScriptProperties`. A planilha, o frontend, a resposta da API e o histórico recebem apenas a indicação de que existe um token, nunca seu valor.
+- A automação é implantada desativada e não pode ser ligada sem ID do número, token e nome de modelo. Nenhuma mensagem foi enviada para clientes reais nos testes ou na revisão visual.
+- O botão **Testar conexão** apenas consulta os dados do número. O botão **Verificar e enviar agora** processa a fila e pode enviar mensagens reais quando a automação estiver ativa; essa diferença foi mantida explícita na interface e na documentação.
+- A nova seção foi validada em 390×844 e 1440×900, sem rolagem horizontal, com prévia ao vivo, edição direta de telefone e largura de leitura limitada no desktop.
 
 ## DRE gerencial anual
 

@@ -6,7 +6,7 @@ Frontend estático do sistema do salão Sonia Cabral, publicado na Vercel e inte
 
 - `index.html`: aplicação principal
 - `rules.js`: regras puras usadas pelo navegador
-- `Código.gs` e `Regras.gs`: backend do Google Apps Script
+- `Código.gs`, `Regras.gs`, `RelacionamentoRegras.gs`, `DreRegras.gs` e `LembreteRegras.gs`: backend do Google Apps Script
 - `vercel.json`: configuração de deploy e cabeçalhos de segurança
 - `tests/`: testes automatizados e ambiente visual com dados fictícios
 
@@ -15,7 +15,7 @@ Frontend estático do sistema do salão Sonia Cabral, publicado na Vercel e inte
 Sempre publique o backend antes do frontend. A nova interface depende das regras e rotas novas do Apps Script.
 
 1. Rode `npm test` e confirme que todos os testes passaram.
-2. No projeto Apps Script, envie `Código.gs`, `Regras.gs` e `appsscript.json`. Antes de enviar, `clasp status` deve listar os três arquivos.
+2. No projeto Apps Script, envie os cinco arquivos `.gs` e `appsscript.json`. Antes de enviar, `clasp status` deve listar todos eles.
 3. Crie uma nova versão do Web App sem substituir ou apagar a versão anterior. Confirme que a ação pública de configuração responde e que a URL continua correta.
 4. Só então publique o frontend na Vercel, com framework preset `Other`, build command vazio e output directory vazio.
 5. Faça uma verificação curta: login, abertura da agenda, conclusão de um atendimento fictício controlado e conferência do lançamento no caixa.
@@ -28,12 +28,30 @@ A Central reúne retornos próximos, clientes atrasados, aniversariantes e campa
 
 - Retornos entram na fila de atenção 7 dias antes da data recomendada e passam para recuperação depois de 15 dias de atraso.
 - Ao concluir um atendimento, informe a próxima data recomendada ou marque explicitamente que não há retorno.
-- O WhatsApp é assistido: a mensagem pode ser revisada antes de abrir o aplicativo e a etapa só muda para `contatada` depois da confirmação humana de envio.
+- Os contatos comerciais da Central continuam assistidos: a mensagem pode ser revisada antes de abrir o aplicativo e a etapa só muda para `contatada` depois da confirmação humana. Somente o lembrete do agendamento usa a automação descrita abaixo.
 - Clientes com bloqueio de contato ou telefone inválido continuam visíveis no histórico, mas não podem receber mensagens nem integrar públicos de campanha.
 - Campanhas usam um público explicitamente selecionado e não duplicam oportunidades quando a geração é repetida.
 - Os indicadores mostram oportunidades elegíveis, contatos, respostas, agendamentos e retornos. Valores vazios são apresentados como zero.
 
 Para revisar localmente sem acessar dados reais, rode `npm run preview:fixture` e entre com a senha `fixture`.
+
+## Lembretes automáticos do WhatsApp
+
+O sistema pode enviar um lembrete no mesmo dia do atendimento, por padrão 4 horas antes. A antecedência pode ser alterada para 3 horas. Quando o horário calculado cair antes da abertura do salão, o envio fica para a hora de abertura; se a abertura não anteceder o atendimento, o lembrete não é enviado.
+
+A automação usa a API oficial do WhatsApp Business e começa desativada. Para ativar:
+
+1. No ambiente da Meta, configure o número do WhatsApp Business e obtenha o ID do número e um token de acesso apropriado.
+2. Crie e aguarde a aprovação de um modelo com cinco parâmetros, nesta ordem: nome, serviço, salão, data e hora.
+3. No sistema, abra **Mais → Config → Mensagens automáticas**, revise a mensagem, preencha a conexão oficial e salve.
+4. Use **Testar conexão**. Esse teste consulta os dados do número e não envia mensagem para clientes.
+5. Ative o envio automático e salve novamente. O sistema cria um único agendador que verifica a fila a cada 15 minutos.
+
+O texto revisado na tela é a prévia operacional. Mensagens iniciadas pelo salão precisam corresponder a um modelo aprovado pela Meta; depois de mudar o texto, publique e aprove o mesmo modelo na Meta antes de trocar seu nome na configuração. O token fica protegido nas propriedades do Apps Script e nunca é devolvido ao navegador ou gravado na planilha.
+
+O botão **Verificar e enviar agora** processa imediatamente os lembretes vencidos da fila e pode enviar mensagens reais quando a automação estiver ativa. Clientes com bloqueio de contato, telefone inválido ou agendamento cancelado, concluído ou excluído não recebem o lembrete. Cada tentativa fica registrada em **Últimos envios** e uma mensagem só é marcada como enviada quando a Meta devolve seu identificador.
+
+Ao editar um telefone importado, o sistema remove um `55` brasileiro repetido. Números inválidos continuam armazenados para correção e aparecem na lista **Telefones para revisar**.
 
 ## DRE gerencial anual
 
@@ -54,7 +72,7 @@ O quadro de conciliação compara, por caminhos independentes, a variação eleg
 
 ## Backend
 
-A URL do backend Apps Script está configurada em `window.__API_URL__`, no `index.html`. Os arquivos `Código.gs` e `Regras.gs` devem estar no mesmo projeto Apps Script; publicar somente um deles deixa o backend incompleto.
+A URL do backend Apps Script está configurada em `window.__API_URL__`, no `index.html`. Todos os arquivos `.gs` listados na estrutura devem estar no mesmo projeto Apps Script; publicar somente parte deles deixa o backend incompleto.
 
 Em instalações existentes, a senha em texto puro é migrada automaticamente para hash com salt no primeiro login válido. Em uma instalação nova, execute uma vez pelo editor do Apps Script:
 
