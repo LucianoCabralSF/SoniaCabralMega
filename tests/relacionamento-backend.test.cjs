@@ -253,3 +253,93 @@ test('contrato de conclusão separa núcleo financeiro do CRM', () => {
   assert.match(backend, /relationship:\s*relationship/);
   assert.match(backend, /Atendimento e caixa concluídos/);
 });
+
+test('materializa uma oportunidade de aniversário por cliente e ano', () => {
+  const fixture = relationshipFixture({
+    clientes:[
+      { id:'cli_1', nome:'Ana', telefone:'(92) 99999-1111', aniversario:'31/12/1990', naoContatar:'false' },
+      { id:'cli_2', nome:'Bia', telefone:'92999992222', aniversario:'01/01/1991', naoContatar:'true' },
+      { id:'cli_3', nome:'Cida', telefone:'123', aniversario:'02/01/1992', naoContatar:'false' }
+    ]
+  });
+  const first = fixture.call('materializarAniversarios_(2026)');
+  const repeated = fixture.call('materializarAniversarios_(2026)');
+  assert.equal(first.total, 1);
+  assert.equal(repeated.total, 0);
+  assert.equal(fixture.stores.relacionamento.length, 1);
+  assert.equal(fixture.stores.relacionamento[0].referenciaId, 'aniversario:cli_1:2026');
+  assert.equal(fixture.stores.relacionamento[0].dataAlvo, '2026-12-31');
+  assert.equal(fixture.stores.relacionamento_eventos.length, 1);
+});
+
+test('campanha cria público explícito elegível sem duplicar', () => {
+  const fixture = relationshipFixture({
+    clientes:[
+      { id:'cli_1', nome:'Ana', telefone:'92999991111', naoContatar:'false' },
+      { id:'cli_2', nome:'Bia', telefone:'92999992222', naoContatar:'true' },
+      { id:'cli_3', nome:'Cida', telefone:'123', naoContatar:'false' },
+      { id:'cli_4', nome:'Dora', telefone:'92999994444', naoContatar:'false' }
+    ],
+    campanhas:[{
+      id:'cam_1', nome:'Julho', mensagemModelo:'Olá, {nome}!',
+      dataInicio:'2026-07-01', dataFim:'2026-07-31', status:'ativa'
+    }]
+  });
+  const expression =
+    "gerarOportunidadesCampanha_({ campanhaId:'cam_1', clienteIds:['cli_1','cli_2','cli_3'] })";
+  const first = fixture.call(expression);
+  const repeated = fixture.call(expression);
+  assert.equal(first.total, 1);
+  assert.equal(first.ignoradas, 2);
+  assert.equal(repeated.total, 0);
+  assert.equal(fixture.stores.relacionamento.length, 1);
+  assert.equal(fixture.stores.relacionamento[0].referenciaId, 'campanha:cam_1:cli_1');
+  assert.equal(fixture.stores.relacionamento_eventos.length, 1);
+});
+
+test('salva campanha validada e expõe rotas autenticadas', () => {
+  const fixture = relationshipFixture();
+  const invalid = fixture.call("salvarCampanha_({ nome:'', mensagemModelo:'Oi', status:'ativa' })");
+  assert.match(invalid.error, /nome/i);
+  const saved = fixture.call(
+    "salvarCampanha_({ nome:'Retorno julho', mensagemModelo:'Olá, {nome}!', dataInicio:'2026-07-01', dataFim:'2026-07-31', criterios:{ origem:'manual' }, status:'ativa' })"
+  );
+  assert.equal(saved.item.status, 'ativa');
+  assert.equal(saved.item.criteriosJson, '{"origem":"manual"}');
+  assert.match(backend, /case 'saveCampanha'/);
+  assert.match(backend, /case 'generateCampanha'/);
+});
+
+test('lista enriquece fila, contato, mensagem e último atendimento', () => {
+  const fixture = relationshipFixture({
+    clientes:[
+      { id:'cli_1', nome:'Ana', telefone:'(92) 99999-1111', naoContatar:'false' },
+      { id:'cli_2', nome:'Bia', telefone:'92999992222', naoContatar:'true' },
+      { id:'cli_3', nome:'Cida', telefone:'123', naoContatar:'false' }
+    ],
+    relacionamento:[
+      { id:'rel_1', clienteId:'cli_1', clienteNome:'Ana', origem:'retorno', dataAlvo:'2026-07-20', etapa:'pendente', observacoes:'Corte' },
+      { id:'rel_2', clienteId:'cli_2', clienteNome:'Bia', origem:'aniversario', dataAlvo:'2026-07-19', etapa:'pendente' },
+      { id:'rel_3', clienteId:'cli_3', clienteNome:'Cida', origem:'campanha', campanhaId:'cam_1', dataAlvo:'2026-07-19', etapa:'pendente' }
+    ],
+    campanhas:[{ id:'cam_1', mensagemModelo:'Olá, {nome}! Temos uma novidade.' }],
+    agendamentos:[
+      { id:'ag_1', clienteId:'cli_1', data:'2026-06-10', servicos:'Escova', status:'concluido' },
+      { id:'ag_2', clienteId:'cli_1', data:'2026-07-10', servicos:'Corte', status:'concluido' }
+    ]
+  });
+  const list = fixture.call('listarRelacionamento_({})');
+  const ana = list.find(item => item.id === 'rel_1');
+  const bia = list.find(item => item.id === 'rel_2');
+  const cida = list.find(item => item.id === 'rel_3');
+  assert.equal(ana.fila, 'proximo');
+  assert.equal(ana.telefoneWhatsApp, '5592999991111');
+  assert.equal(ana.telefoneValido, true);
+  assert.equal(ana.ultimoAtendimento, '2026-07-10');
+  assert.equal(ana.ultimoServico, 'Corte');
+  assert.match(ana.mensagemSugerida, /Ana/);
+  assert.equal(bia.fila, 'inapto');
+  assert.equal(bia.telefoneValido, false);
+  assert.equal(cida.fila, 'inapto');
+  assert.equal(cida.telefoneValido, false);
+});

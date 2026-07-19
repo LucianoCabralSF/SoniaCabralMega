@@ -877,10 +877,80 @@ function eventoRelacionamentoPorChave_(idempotencyKey) {
 
 function listarRelacionamento_(params) {
   params = params || {};
-  let list = getCachedRows_('relacionamento');
+  const clients = getCachedRows_('clientes');
+  const campaigns = getCachedRows_('campanhas');
+  const appointments = getCachedRows_('agendamentos');
+  const clientById = {};
+  const campaignById = {};
+  const lastAppointmentByClient = {};
+  clients.forEach(function (client) { clientById[String(client.id)] = client; });
+  campaigns.forEach(function (campaign) { campaignById[String(campaign.id)] = campaign; });
+  appointments.filter(function (appointment) {
+    return appointment.status === 'concluido' && appointment.clienteId;
+  }).forEach(function (appointment) {
+    const key = String(appointment.clienteId);
+    const current = lastAppointmentByClient[key];
+    const stamp = String(normDate(appointment.data) || '') + 'T' + String(appointment.hora || '');
+    const currentStamp = current
+      ? String(normDate(current.data) || '') + 'T' + String(current.hora || '')
+      : '';
+    if (!current || stamp > currentStamp) lastAppointmentByClient[key] = appointment;
+  });
+
+  let list = getCachedRows_('relacionamento').map(function (item) {
+    const client = clientById[String(item.clienteId)] || {};
+    const lastAppointment = lastAppointmentByClient[String(item.clienteId)] || {};
+    const phone = normalizarTelefoneWhatsApp_(client.telefone);
+    const canContact = client.naoContatar !== 'true' && !!phone;
+    const baseQueue = filaRelacionamento_(item, today());
+    let queue = baseQueue;
+    if (baseQueue !== 'encerrado' && !canContact) queue = 'inapto';
+    else if (baseQueue !== 'encerrado' && item.origem === 'aniversario') queue = 'aniversario';
+    else if (baseQueue !== 'encerrado' && item.origem === 'campanha') queue = 'campanha';
+
+    const targetMs = relDateMs_(normDate(item.dataAlvo));
+    const todayMs = relDateMs_(today());
+    const delay = Number.isFinite(targetMs) && Number.isFinite(todayMs)
+      ? Math.max(0, Math.floor((todayMs - targetMs) / 86400000))
+      : 0;
+    const campaign = campaignById[String(item.campanhaId)] || {};
+    let message = '';
+    if (item.origem === 'campanha') {
+      message = campaign.mensagemModelo || '';
+    } else if (item.origem === 'aniversario') {
+      message = 'Olá, {nome}! Feliz aniversário! Desejamos um dia muito especial para você.';
+    } else {
+      message = 'Olá, {nome}! Está chegando a época do seu retorno de {servico}. Vamos agendar?';
+    }
+    const service = item.observacoes || lastAppointment.servicos || 'seu cuidado';
+    message = cleanText_(String(message)
+      .replace(/\{nome\}/g, client.nome || item.clienteNome || '')
+      .replace(/\{servico\}/g, service)
+      .replace(/\{ultimoServico\}/g, lastAppointment.servicos || '')
+      .replace(/\{dataAlvo\}/g, fmtBR(normDate(item.dataAlvo))), 2000);
+
+    return Object.assign({}, item, {
+      fila:queue,
+      diasAtraso:delay,
+      telefoneWhatsApp:phone,
+      telefoneValido:canContact,
+      naoContatar:client.naoContatar === 'true',
+      ultimoAtendimento:normDate(lastAppointment.data),
+      ultimoServico:lastAppointment.servicos || '',
+      mensagemSugerida:message
+    });
+  });
   if (params.etapa) list = list.filter(item => item.etapa === params.etapa);
   if (params.origem) list = list.filter(item => item.origem === params.origem);
   if (params.campanhaId) list = list.filter(item => item.campanhaId === params.campanhaId);
+  if (params.fila) list = list.filter(item => item.fila === params.fila);
+  if (params.telefoneValido === true || params.telefoneValido === 'true') {
+    list = list.filter(item => item.telefoneValido);
+  }
+  if (params.atrasoMin !== '' && typeof params.atrasoMin !== 'undefined') {
+    const minDelay = Math.max(0, parseInt(params.atrasoMin, 10) || 0);
+    list = list.filter(item => item.diasAtraso >= minDelay);
+  }
   if (!!params.dataInicio !== !!params.dataFim) throw new Error('Informe as duas datas do período.');
   if (params.dataInicio && params.dataFim) {
     const start = toISO(params.dataInicio);
@@ -892,6 +962,192 @@ function listarRelacionamento_(params) {
     String(a.dataAlvo || '').localeCompare(String(b.dataAlvo || '')) ||
     String(a.clienteNome || '').localeCompare(String(b.clienteNome || ''))
   );
+}
+
+function dataAniversarioNoAno_(aniversario, ano) {
+  const value = String(aniversario || '').trim();
+  let day = 0;
+  let month = 0;
+  let match = value.match(/^(\d{2})\/(\d{2})\/\d{4}$/);
+  if (match) {
+    day = parseInt(match[1], 10);
+    month = parseInt(match[2], 10);
+  } else {
+    match = value.match(/^\d{4}-(\d{2})-(\d{2})$/);
+    if (!match) return '';
+    month = parseInt(match[1], 10);
+    day = parseInt(match[2], 10);
+  }
+  if (month < 1 || month > 12 || day < 1 || day > 31) return '';
+  const lastDay = new Date(Date.UTC(ano, month, 0)).getUTCDate();
+  const adjustedDay = Math.min(day, lastDay);
+  return String(ano) + '-' + String(month).padStart(2, '0') + '-' + String(adjustedDay).padStart(2, '0');
+}
+
+function materializarAniversarios_(ano) {
+  const year = parseInt(ano, 10);
+  if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+    return { error:'Ano de aniversário inválido.' };
+  }
+  return withDocumentLock_(function () {
+    const existingReferences = {};
+    getCachedRows_('relacionamento').forEach(function (item) {
+      existingReferences[String(item.referenciaId)] = true;
+    });
+    const createdIds = [];
+    getCachedRows_('clientes').forEach(function (client) {
+      const targetDate = dataAniversarioNoAno_(client.aniversario, year);
+      const reference = 'aniversario:' + client.id + ':' + year;
+      if (!targetDate || existingReferences[reference] || client.naoContatar === 'true') return;
+      if (!normalizarTelefoneWhatsApp_(client.telefone)) return;
+      const saved = upsertByIdUnlocked_('relacionamento', {
+        clienteId:client.id,
+        clienteNome:cleanText_(client.nome, 120),
+        origem:'aniversario',
+        referenciaId:reference,
+        dataAlvo:targetDate,
+        etapa:'pendente'
+      });
+      if (saved.error) return;
+      const event = registrarEventoRelacionamentoUnlocked_({
+        idempotencyKey:'auto:aniversario:' + client.id + ':' + year,
+        oportunidadeId:saved.id,
+        clienteId:client.id,
+        tipo:'criacao',
+        etapaAnterior:'',
+        etapaNova:'pendente',
+        origemAlteracao:'automatica',
+        observacoes:'Oportunidade anual de aniversário.'
+      });
+      if (event.error) {
+        softDeleteUnlocked_('relacionamento', saved.id);
+        return;
+      }
+      existingReferences[reference] = true;
+      createdIds.push(saved.id);
+    });
+    return { total:createdIds.length, ids:createdIds };
+  });
+}
+
+function salvarCampanha_(body) {
+  const data = body && body.data ? body.data : (body || {});
+  return withDocumentLock_(function () {
+    const name = cleanText_(data.nome, 120);
+    const message = cleanText_(data.mensagemModelo, 2000);
+    const status = String(data.status || 'rascunho');
+    if (!name) return { error:'Informe o nome da campanha.' };
+    if (!message) return { error:'Informe a mensagem da campanha.' };
+    if (['rascunho','ativa','encerrada'].indexOf(status) < 0) {
+      return { error:'Status da campanha inválido.' };
+    }
+    let start;
+    let end;
+    try {
+      start = toISO(data.dataInicio || today());
+      end = toISO(data.dataFim || start);
+    } catch (error) {
+      return { error:error.message };
+    }
+    if (end < start) return { error:'O fim da campanha não pode ser anterior ao início.' };
+
+    let criteria = data.criterios || {};
+    if (typeof data.criteriosJson === 'string' && data.criteriosJson.trim()) {
+      try {
+        criteria = JSON.parse(data.criteriosJson);
+      } catch (_) {
+        return { error:'Os critérios da campanha são inválidos.' };
+      }
+    }
+    let criteriaJson;
+    try {
+      criteriaJson = JSON.stringify(criteria || {});
+    } catch (_) {
+      return { error:'Os critérios da campanha são inválidos.' };
+    }
+    if (criteriaJson.length > 5000) return { error:'Os critérios da campanha são muito extensos.' };
+    return upsertByIdUnlocked_('campanhas', {
+      id:data.id || '',
+      nome:name,
+      mensagemModelo:message,
+      dataInicio:start,
+      dataFim:end,
+      criteriosJson:criteriaJson,
+      status:status
+    });
+  });
+}
+
+function gerarOportunidadesCampanha_(body) {
+  body = body || {};
+  return withDocumentLock_(function () {
+    const campaignId = String(body.campanhaId || '');
+    const campaign = getCachedRows_('campanhas').find(function (item) {
+      return String(item.id) === campaignId;
+    });
+    if (!campaign || campaign.status !== 'ativa') {
+      return { error:'Campanha não encontrada ou inativa.' };
+    }
+    const requestedIds = Array.isArray(body.clienteIds)
+      ? Array.from(new Set(body.clienteIds.map(String).filter(Boolean)))
+      : [];
+    if (!requestedIds.length) return { error:'Selecione ao menos uma cliente para a campanha.' };
+    if (requestedIds.length > 1000) return { error:'Selecione no máximo 1.000 clientes por vez.' };
+
+    const clients = getCachedRows_('clientes');
+    const clientById = {};
+    clients.forEach(function (client) { clientById[String(client.id)] = client; });
+    const unknown = requestedIds.filter(function (id) { return !clientById[id]; });
+    if (unknown.length) return { error:'Uma ou mais clientes selecionadas não existem mais.' };
+
+    const existingReferences = {};
+    getCachedRows_('relacionamento').forEach(function (item) {
+      existingReferences[String(item.referenciaId)] = true;
+    });
+    const createdIds = [];
+    let ignored = 0;
+    requestedIds.forEach(function (clientId) {
+      const client = clientById[clientId];
+      const reference = 'campanha:' + campaign.id + ':' + client.id;
+      if (existingReferences[reference] || client.naoContatar === 'true' ||
+          !normalizarTelefoneWhatsApp_(client.telefone)) {
+        ignored += 1;
+        return;
+      }
+      const saved = upsertByIdUnlocked_('relacionamento', {
+        clienteId:client.id,
+        clienteNome:cleanText_(client.nome, 120),
+        origem:'campanha',
+        referenciaId:reference,
+        campanhaId:campaign.id,
+        dataAlvo:today(),
+        etapa:'pendente',
+        observacoes:cleanText_(campaign.nome, 1000)
+      });
+      if (saved.error) {
+        ignored += 1;
+        return;
+      }
+      const event = registrarEventoRelacionamentoUnlocked_({
+        idempotencyKey:'auto:campanha:' + campaign.id + ':' + client.id,
+        oportunidadeId:saved.id,
+        clienteId:client.id,
+        tipo:'criacao',
+        etapaAnterior:'',
+        etapaNova:'pendente',
+        origemAlteracao:'automatica',
+        observacoes:'Cliente incluída na campanha ' + campaign.nome + '.'
+      });
+      if (event.error) {
+        softDeleteUnlocked_('relacionamento', saved.id);
+        ignored += 1;
+        return;
+      }
+      existingReferences[reference] = true;
+      createdIds.push(saved.id);
+    });
+    return { total:createdIds.length, ids:createdIds, ignoradas:ignored };
+  });
 }
 
 function listarEventosRelacionamento_(params) {
@@ -2271,8 +2527,12 @@ function readAction_(a, e) {
     case 'getVencimentos':      return ok(getVencimentos(e));
     case 'getAtrasados':        return ok(getAtrasados());
     case 'getHomeResumo':       return ok(getHomeResumo(e));
-    case 'getRelacionamento':   return ok(listarRelacionamento_(e.parameter));
-    case 'getRelacionamentoResumo': return ok(calcularIndicadoresRelacionamento_(listarRelacionamento_(e.parameter)));
+    case 'getRelacionamento':
+      materializarAniversarios_(parseInt(today().slice(0, 4), 10));
+      return ok(listarRelacionamento_(e.parameter));
+    case 'getRelacionamentoResumo':
+      materializarAniversarios_(parseInt(today().slice(0, 4), 10));
+      return ok(calcularIndicadoresRelacionamento_(listarRelacionamento_(e.parameter)));
     case 'getRelacionamentoEventos': return ok(listarEventosRelacionamento_(e.parameter));
     case 'getCampanhas':        return ok(getCachedRows_('campanhas'));
     default: return err('Ação desconhecida: ' + a);
@@ -2332,6 +2592,8 @@ function doPost(e) {
       case 'deleteCrediario':    return result(deleteCrediario(b.id));
       case 'confirmarContato':   return result(confirmarContato_(b));
       case 'saveRelacionamentoEtapa': return result(salvarEtapaRelacionamento_(b));
+      case 'saveCampanha':       return result(salvarCampanha_(b));
+      case 'generateCampanha':   return result(gerarOportunidadesCampanha_(b));
       default: return err('Ação desconhecida: ' + a);
     }
   } catch (e2) {
