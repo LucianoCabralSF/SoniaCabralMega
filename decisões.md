@@ -92,6 +92,22 @@ Luciano autorizou a correção integral dos problemas encontrados, pediu que dec
 - Aniversários em 29 de fevereiro usam 28 de fevereiro em anos não bissextos para manter uma oportunidade anual previsível.
 - Em telas grandes, gavetas operacionais ficam centralizadas e limitadas a 720 px; no celular ocupam a largura disponível sem rolagem horizontal.
 
+## DRE gerencial anual
+
+- A DRE usa regime de caixa e somente linhas ativas da aba `caixa`. Parcelas futuras, obrigações planejadas e fiados ainda não recebidos ficam fora até gerarem um lançamento efetivo.
+- O relatório é gerencial e não será apresentado como demonstração contábil oficial.
+- Todos os valores são convertidos e agregados em centavos inteiros; subtotais, total anual, detalhe e conciliação não usam ponto flutuante monetário.
+- Retiradas dos proprietários ficam fora do resultado líquido gerencial. Elas aparecem separadamente e reduzem apenas o “resultado após retiradas”.
+- Categorias genéricas ou ambíguas não recebem inferência silenciosa: entram em `nao_classificado` e tornam a DRE provisória até revisão humana.
+- `fora_dre` só pode ser aplicado por classificação ou padrão explícito. A categoria exclui o movimento do relatório, mas não altera nem apaga o lançamento original.
+- A reclassificação grava somente `dreCategoria` e `atualizadoEm`; data, tipo, valor, pagamento e histórico financeiro permanecem intactos.
+- Um padrão futuro precisa ter pelo menos um critério e pode ser desativado. Padrões desativados, seja como booleano ou texto da planilha, nunca são aplicados.
+- Lançamentos excluídos são ignorados tanto pela leitura ativa do backend quanto pelo motor puro, como proteção adicional.
+- A conciliação técnica é calculada por dois caminhos independentes: variação bruta elegível do Caixa e resultado após retiradas somado ao saldo não classificado. Qualquer diferença fica visível.
+- O relatório anual não inclui comparação entre anos nesta entrega. A prioridade foi garantir um único ano auditável, com janeiro a dezembro, total, melhor/pior mês e detalhamento exato.
+- A resposta anual não envia movimentos brutos ao navegador. Os lançamentos são consultados somente ao abrir uma linha e um mês válidos.
+- A tela usa tabela horizontal com primeira coluna fixa no celular e gráfico SVG local, sem biblioteca ou código carregado por rede.
+
 ## Riscos residuais aceitos
 
 - Apps Script + senha compartilhada continua sendo menos robusto que autenticação individual com provedor de identidade.
@@ -128,3 +144,11 @@ Registro feito em 19/07/2026 após a janela de trabalho solicitada:
 - A inspeção real foi repetida em 390×844 e 1280×900: sem rolagem lateral, público de campanha restrito a clientes elegíveis e gaveta de desktop com 720 px.
 - Próxima tarefa: executar `docs/superpowers/plans/2026-07-19-dre-gerencial-anual-implementation.md`.
 - Apps Script, implantação, Vercel, merge e GitHub continuam pendentes até a DRE anual e a verificação conjunta ficarem concluídas.
+
+## Atualização de retomada — DRE concluída
+
+- O motor, a persistência, as rotas, o detalhamento e a interface anual foram implementados nos commits `ae3f837`, `8d88137`, `35dde77`, `2014a12` e `0002bba`.
+- A suíte está com 84 testes aprovados e zero falhas antes da documentação final.
+- A validação real confirmou tabela sem rolagem lateral da página em 390×844 e 1280 px, primeira coluna fixa, mês negativo, total anual, aviso provisório, conciliação zerada e detalhe de janeiro fechando em R$ 2.400,00.
+- Caixa e Extrato mensais continuaram com sua navegação e resultados do fixture sem regressão observável.
+- Próxima etapa: verificação conjunta, integração na `main`, envio do Apps Script, nova implantação, publicação da Vercel e push para o GitHub, nesta ordem.

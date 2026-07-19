@@ -52,7 +52,7 @@
 - Produces: `detalharCelulaDre_(movimentosClassificados, linha, mes) -> array`.
 - `DreAnual` contains `ano`, `linhas`, `totais`, `indicadores`, `naoClassificados`, `conciliacao` and `movimentosClassificados`.
 
-- [ ] **Step 1: Write failing pure-rule tests**
+- [x] **Step 1: Write failing pure-rule tests**
 
 ```js
 const test = require('node:test');
@@ -106,13 +106,13 @@ test('ano vazio não inventa melhor ou pior mês', () => {
 });
 ```
 
-- [ ] **Step 2: Run the focused test and verify RED**
+- [x] **Step 2: Run the focused test and verify RED**
 
 Run: `node --test tests/dre-rules.test.cjs`
 
 Expected: FAIL with `ENOENT` for `DreRegras.gs`.
 
-- [ ] **Step 3: Implement constants and safe classification**
+- [x] **Step 3: Implement constants and safe classification**
 
 ```js
 var DRE_CATEGORIAS_ = [
@@ -145,7 +145,7 @@ function classificarMovimentoDre_(movement, mappings) {
 }
 ```
 
-- [ ] **Step 4: Implement annual aggregation and formulas**
+- [x] **Step 4: Implement annual aggregation and formulas**
 
 ```js
 function novaLinhaDre_() {
@@ -227,13 +227,13 @@ function montarDreAnual_(movements, mappings, year) {
 }
 ```
 
-- [ ] **Step 5: Run tests and verify GREEN**
+- [x] **Step 5: Run tests and verify GREEN**
 
 Run: `node --test tests/dre-rules.test.cjs`
 
 Expected: all DRE rule tests PASS.
 
-- [ ] **Step 6: Include Apps Script file and commit**
+- [x] **Step 6: Include Apps Script file and commit**
 
 Add `!DreRegras.gs` to `.claspignore`.
 
@@ -256,7 +256,7 @@ git commit -m "test: adicionar motor da DRE anual"
 - Produces read action `getDreMapeamentos`.
 - Produces write actions `saveDreClassificacao` and `saveDreMapeamento`.
 
-- [ ] **Step 1: Add failing backend contract tests**
+- [x] **Step 1: Add failing backend contract tests**
 
 ```js
 test('caixa recebe classificação sem reordenar colunas existentes', () => {
@@ -274,13 +274,13 @@ test('reclassificação escreve categoria e atualização, não valor ou data', 
 });
 ```
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 Run: `node --test tests/dre-backend.test.cjs tests/static-regressions.test.cjs`
 
 Expected: FAIL for missing schema and actions.
 
-- [ ] **Step 3: Add schema definitions**
+- [x] **Step 3: Add schema definitions**
 
 ```js
 caixa: [
@@ -295,7 +295,7 @@ dre_mapeamento: [
 ]
 ```
 
-- [ ] **Step 4: Implement guarded single-record classification**
+- [x] **Step 4: Implement guarded single-record classification**
 
 ```js
 function validarCategoriaDre_(value) {
@@ -316,7 +316,7 @@ function salvarClassificacaoDre_(body) {
 }
 ```
 
-- [ ] **Step 5: Implement optional mapping**
+- [x] **Step 5: Implement optional mapping**
 
 ```js
 function salvarMapeamentoDre_(body) {
@@ -333,7 +333,7 @@ function salvarMapeamentoDre_(body) {
 }
 ```
 
-- [ ] **Step 6: Add routes, run tests and commit**
+- [x] **Step 6: Add routes, run tests and commit**
 
 ```js
 case 'getDreMapeamentos':    return ok(getCachedRows_('dre_mapeamento'));
@@ -363,7 +363,7 @@ git commit -m "feat: persistir classificações da DRE"
 - `getDreAnual` returns no raw movements; returns annual rows, indicators, provisional status and reconciliation.
 - `getDreDetalhe` returns escaped-ready movement objects for exactly one line and optional month.
 
-- [ ] **Step 1: Add failing detail and route tests**
+- [x] **Step 1: Add failing detail and route tests**
 
 ```js
 test('detalhe soma a célula selecionada', () => {
@@ -377,13 +377,13 @@ test('backend expõe relatório e detalhe como leituras autenticadas', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 Run: `node --test tests/dre-rules.test.cjs tests/dre-backend.test.cjs`
 
 Expected: FAIL for missing detail and routes.
 
-- [ ] **Step 3: Implement deterministic cell detail**
+- [x] **Step 3: Implement deterministic cell detail**
 
 ```js
 function detalharCelulaDre_(classified, line, monthOneBased) {
@@ -407,7 +407,7 @@ function detalharCelulaDre_(classified, line, monthOneBased) {
 }
 ```
 
-- [ ] **Step 4: Add authenticated backend report functions**
+- [x] **Step 4: Add authenticated backend report functions**
 
 ```js
 function getDreAnual_(params) {
@@ -428,7 +428,7 @@ function getDreDetalhe_(params) {
 }
 ```
 
-- [ ] **Step 5: Add routes, run tests and commit**
+- [x] **Step 5: Add routes, run tests and commit**
 
 ```js
 case 'getDreAnual':   return result(getDreAnual_(e.parameter));
@@ -455,7 +455,7 @@ git commit -m "feat: calcular DRE gerencial anual"
 - Consumes: `getDreAnual`, `getDreDetalhe`, `getDreMapeamentos`, `saveDreClassificacao`, `saveDreMapeamento`.
 - Produces view `dre-anual`, `loadDreAnual()`, `renderDreAnual(data)`, `abrirDetalheDre(linha, mes)` and `salvarClassificacaoDre(id)`.
 
-- [ ] **Step 1: Add failing UI contracts**
+- [x] **Step 1: Add failing UI contracts**
 
 ```js
 test('DRE anual possui navegação, seletor, tabela e aviso provisório', () => {
@@ -471,13 +471,13 @@ test('detalhe e classificação usam rotas dedicadas', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 Run: `node --test tests/static-regressions.test.cjs`
 
 Expected: FAIL for missing view and routes.
 
-- [ ] **Step 3: Add annual data loading**
+- [x] **Step 3: Add annual data loading**
 
 ```js
 async function loadDreAnual() {
@@ -489,7 +489,7 @@ async function loadDreAnual() {
 }
 ```
 
-- [ ] **Step 4: Render fixed rows, 12 months and total**
+- [x] **Step 4: Render fixed rows, 12 months and total**
 
 Define a fixed frontend row list matching the spec and never use arbitrary backend labels as HTML. Render monetary cents with the existing Brazilian currency formatter. Use a sticky first column and horizontal scroll on narrow screens.
 
@@ -529,7 +529,7 @@ function renderDreTable(data) {
 }
 ```
 
-- [ ] **Step 5: Add detail, reclassification and optional future mapping**
+- [x] **Step 5: Add detail, reclassification and optional future mapping**
 
 ```js
 async function abrirDetalheDre(linha, mes) {
@@ -550,7 +550,7 @@ async function salvarClassificacaoDre(id, category, applySimilar, mapping) {
 }
 ```
 
-- [ ] **Step 6: Render a dependency-free monthly chart**
+- [x] **Step 6: Render a dependency-free monthly chart**
 
 ```js
 function renderDreChart(data) {
@@ -575,7 +575,7 @@ function renderDreChart(data) {
 
 Do not introduce Chart.js or network-loaded code.
 
-- [ ] **Step 7: Extend fixture and inspect**
+- [x] **Step 7: Extend fixture and inspect**
 
 Provide synthetic annual data with positive month, negative month, empty month, withdrawal, deduction, and unclassified input/output. Mock detail and classification responses.
 
@@ -583,7 +583,7 @@ Run: `npm run preview:fixture`
 
 Expected: readable at desktop and 390×844, sticky row labels, no clipped totals, keyboard-operable cells, correct provisional warning and exact detail sum.
 
-- [ ] **Step 8: Run tests and commit**
+- [x] **Step 8: Run tests and commit**
 
 Run: `npm test`
 
@@ -605,31 +605,31 @@ git commit -m "feat: criar tela da DRE anual"
 - `npm test` remains the full local regression command.
 - The existing monthly finance view remains behaviorally unchanged.
 
-- [ ] **Step 1: Run complete automated tests**
+- [x] **Step 1: Run complete automated tests**
 
 Run: `npm test`
 
 Expected: zero failures, including old monthly finance tests.
 
-- [ ] **Step 2: Run fixture financial checklist**
+- [x] **Step 2: Run fixture financial checklist**
 
 Validate service/product revenue, deductions, variable costs, payroll, structure, financial result, withdrawals, future installment exclusion, deleted record exclusion, `fora_dre`, unclassified income/outflow, provisional badge, empty year, negative month, best/worst month, detail equality and technical reconciliation.
 
 Expected: every scenario matches the cent values prepared in the fixture and never calls real Sheets.
 
-- [ ] **Step 3: Compare monthly regression behavior**
+- [x] **Step 3: Compare monthly regression behavior**
 
 Open Caixa and Extrato in the fixture before and after the DRE changes.
 
 Expected: existing monthly totals, filters, edit and delete behavior remain unchanged.
 
-- [ ] **Step 4: Update documentation**
+- [x] **Step 4: Update documentation**
 
 Document in `README.md`: cash-basis meaning, row definitions, provisional status, classification workflow, drill-down and backend-before-frontend deployment.
 
 Record in `decisões.md`: owner withdrawals outside operating result, generic categories unclassified, explicit `fora_dre`, cents arithmetic, no year comparison and independent reconciliation paths.
 
-- [ ] **Step 5: Verify final diff**
+- [x] **Step 5: Verify final diff**
 
 Run: `git diff --check`
 
@@ -637,7 +637,7 @@ Run: `git status --short`
 
 Expected: only DRE implementation, tests and documentation are changed.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add README.md decisões.md docs/superpowers/plans/2026-07-19-dre-gerencial-anual-implementation.md

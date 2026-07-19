@@ -35,6 +35,23 @@ A Central reúne retornos próximos, clientes atrasados, aniversariantes e campa
 
 Para revisar localmente sem acessar dados reais, rode `npm run preview:fixture` e entre com a senha `fixture`.
 
+## DRE gerencial anual
+
+A DRE anual é uma síntese gerencial por regime de caixa: considera somente entradas e saídas efetivamente registradas no Caixa no ano escolhido. Ela não substitui uma demonstração contábil oficial e não antecipa parcelas futuras de fiado ou planejamento.
+
+As linhas seguem esta leitura:
+
+- Receitas de serviços, produtos e outras receitas formam a receita bruta.
+- Deduções, estornos e impostos reduzem a receita líquida.
+- Custos variáveis reduzem a margem de contribuição.
+- Pessoal, estrutura, outras despesas operacionais e resultado financeiro formam o resultado líquido gerencial.
+- Retiradas dos proprietários ficam separadas do resultado gerencial e aparecem no resultado após retiradas.
+- Movimentos sem uma regra segura aparecem em “Movimentos a classificar” e deixam o relatório marcado como “DRE provisória”.
+
+Cada valor mensal e o total anual são botões: ao abrir uma célula, o sistema mostra os lançamentos que compõem exatamente aquele valor. Movimentos pendentes podem ser classificados individualmente; opcionalmente, um padrão pode ser criado para os próximos lançamentos semelhantes. A classificação altera somente a categoria da DRE, nunca data, tipo ou valor do Caixa. Use “Fora da DRE” apenas por decisão explícita.
+
+O quadro de conciliação compara, por caminhos independentes, a variação elegível do Caixa com o total explicado pela DRE, retiradas e pendências. Diferença técnica diferente de zero exige revisão antes de usar o relatório para decisão.
+
 ## Backend
 
 A URL do backend Apps Script está configurada em `window.__API_URL__`, no `index.html`. Os arquivos `Código.gs` e `Regras.gs` devem estar no mesmo projeto Apps Script; publicar somente um deles deixa o backend incompleto.
