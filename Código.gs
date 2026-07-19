@@ -1215,13 +1215,16 @@ function saveCliente(d) {
   const nome = cleanText_(d && d.nome, 120);
   const email = cleanText_(d.email, 180);
   const aniversario = cleanText_(d.aniversario, 10);
+  const telefoneInformado = String(d.telefone || '').trim();
+  const telefoneWhatsApp = normalizarTelefoneWhatsApp_(telefoneInformado);
+  const telefoneCadastro = telefoneWhatsApp ? telefoneWhatsApp.slice(2) : cleanText_(telefoneInformado, 30);
   if (!nome) return { error: 'Nome da cliente é obrigatório.' };
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: 'Informe um e-mail válido.' };
   if (aniversario && !normalizarDataEstrita_(aniversario)) return { error: 'Informe uma data de aniversário válida.' };
   return upsertById_('clientes', {
     id: d.id || '',
     nome: nome,
-    telefone: cleanText_(d.telefone, 30),
+    telefone: telefoneCadastro,
     email: email,
     aniversario: aniversario ? fmtBR(normalizarDataEstrita_(aniversario)) : '',
     observacoes: cleanText_(d.observacoes, 1000),

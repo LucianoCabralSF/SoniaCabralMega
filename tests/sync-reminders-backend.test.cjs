@@ -360,6 +360,14 @@ test('cliente bloqueada ou inválida não entra na fila', () => {
   assert.equal(f.stores.lembretes_envios.length, 0);
 });
 
+test('backend corrige o 55 duplicado ao salvar cliente sem ocultar telefone inválido', () => {
+  const f = fixture();
+  const valid = f.call("saveCliente({ nome:'Ana', telefone:'+55 55 92 99999-1111' })");
+  const invalid = f.call("saveCliente({ nome:'Carla', telefone:'123' })");
+  assert.equal(valid.item.telefone, '92999991111');
+  assert.equal(invalid.item.telefone, '123');
+});
+
 test('exclusão vinculada cancela lembrete pendente', () => {
   const f = fixture({
     agendamentos:[{ id:'ag_1', status:'agendado' }],
