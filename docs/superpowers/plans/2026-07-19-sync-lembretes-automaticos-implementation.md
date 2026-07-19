@@ -62,7 +62,7 @@ test('corrige 55 duplicado sem alterar número brasileiro válido', () => {
 
 - [ ] **Step 2: Run the test and verify RED**
 
-Run: `node --test tests/lembrete-rules.test.cjs`  
+Run: `node --test tests/lembrete-rules.test.cjs`
 Expected: FAIL because the duplicated `55` is not corrected and reminder functions do not exist.
 
 - [ ] **Step 3: Implement the minimal canonicalizer**
@@ -107,7 +107,7 @@ Implement with integer minutes, ISO local without timezone suffix, keys containi
 
 - [ ] **Step 6: Verify GREEN and commit**
 
-Run: `node --test tests/lembrete-rules.test.cjs`  
+Run: `node --test tests/lembrete-rules.test.cjs`
 Expected: all tests PASS.
 
 ```powershell
@@ -155,7 +155,7 @@ test('excluir caixa da agenda arquiva o conjunto vinculado', () => {
 
 - [ ] **Step 2: Run cascade tests and verify RED**
 
-Run: `node --test tests/sync-reminders-backend.test.cjs`  
+Run: `node --test tests/sync-reminders-backend.test.cjs`
 Expected: FAIL because current routes delete only one sheet.
 
 - [ ] **Step 3: Implement linked resolution and idempotent cascade**
@@ -164,7 +164,7 @@ Use `getRowObjectById_` to read even soft-deleted rows, collect row snapshots be
 
 - [ ] **Step 4: Verify cascade GREEN**
 
-Run: `node --test tests/sync-reminders-backend.test.cjs --test-name-pattern="arquiva|idempotente|órfão"`  
+Run: `node --test tests/sync-reminders-backend.test.cjs --test-name-pattern="arquiva|idempotente|órfão"`
 Expected: PASS.
 
 - [ ] **Step 5: Write failing bidirectional edit tests**
@@ -186,7 +186,7 @@ Wrap public saves in one lock; preserve technical linkage from the stored cash r
 
 - [ ] **Step 7: Verify, run full suite and commit**
 
-Run: `npm.cmd test`  
+Run: `npm.cmd test`
 Expected: all tests PASS.
 
 ```powershell
@@ -225,7 +225,7 @@ test('schema de envios termina com metadados de exclusão', () => {
 
 - [ ] **Step 2: Verify RED**
 
-Run: `node --test tests/sync-reminders-backend.test.cjs --test-name-pattern="configuração|schema"`  
+Run: `node --test tests/sync-reminders-backend.test.cjs --test-name-pattern="configuração|schema"`
 Expected: FAIL because schema and routes are absent.
 
 - [ ] **Step 3: Add schema version 5, defaults and validators**
@@ -240,7 +240,7 @@ Add a regression test that seeds a pending row, calls the linked appointment del
 
 - [ ] **Step 5: Verify GREEN and commit**
 
-Run: `npm.cmd test`  
+Run: `npm.cmd test`
 Expected: all tests PASS.
 
 ```powershell
@@ -286,7 +286,7 @@ test('resposta sem id continua erro e não vaza bearer', () => {
 
 - [ ] **Step 2: Verify RED**
 
-Run: `node --test tests/sync-reminders-backend.test.cjs --test-name-pattern="Meta|enviado|bearer|acionador"`  
+Run: `node --test tests/sync-reminders-backend.test.cjs --test-name-pattern="Meta|enviado|bearer|acionador"`
 Expected: FAIL because provider and trigger do not exist.
 
 - [ ] **Step 3: Implement Cloud API request**
@@ -307,7 +307,7 @@ Add `!LembreteRegras.gs` to `.claspignore`. Keep automatic scope discovery unles
 
 - [ ] **Step 7: Verify full suite and commit**
 
-Run: `npm.cmd test`  
+Run: `npm.cmd test`
 Expected: all tests PASS.
 
 ```powershell
@@ -347,7 +347,7 @@ test('importação compara telefone canônico', () => {
 
 - [ ] **Step 2: Verify RED**
 
-Run: `node --test tests/static-regressions.test.cjs --test-name-pattern="mensagens automáticas|telefone canônico"`  
+Run: `node --test tests/static-regressions.test.cjs --test-name-pattern="mensagens automáticas|telefone canônico"`
 Expected: FAIL because controls and canonical import are absent.
 
 - [ ] **Step 3: Add responsive Config section**
@@ -368,7 +368,7 @@ Return configured-but-disabled sample settings, `enviado`, `erro` and `pendente`
 
 - [ ] **Step 7: Verify tests and commit**
 
-Run: `npm.cmd test`  
+Run: `npm.cmd test`
 Expected: all tests PASS.
 
 ```powershell

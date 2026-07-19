@@ -544,10 +544,6 @@ function garantirLembreteAgendamentoUnlocked_(appointment) {
     }));
   });
 
-  const existing = getCachedRows_('lembretes_envios').find(function (item) {
-    return String(item.idempotencyKey) === idempotencyKey;
-  });
-  if (existing) return { id:existing.id, item:existing, duplicate:true };
   const message = renderizarMensagemLembrete_(config.mensagemModelo, {
     nome:client.nome || appointment.clienteNome,
     servico:appointment.servicos || 'seu atendimento',
@@ -555,7 +551,7 @@ function garantirLembreteAgendamentoUnlocked_(appointment) {
     data:fmtBR(normDate(appointment.data)),
     hora:String(appointment.hora || '').slice(0, 5)
   });
-  return upsertByIdUnlocked_('lembretes_envios', {
+  const queueData = {
     idempotencyKey:idempotencyKey,
     agendamentoId:appointment.id,
     clienteId:appointment.clienteId,
@@ -570,7 +566,33 @@ function garantirLembreteAgendamentoUnlocked_(appointment) {
     providerMessageId:'',
     ultimoErro:'',
     enviadoEm:''
+  };
+  const existing = getCachedRows_('lembretes_envios').find(function (item) {
+    return String(item.idempotencyKey) === idempotencyKey;
   });
+  if (existing) {
+    if (existing.status === 'cancelado') {
+      const reactivated = upsertByIdUnlocked_('lembretes_envios', Object.assign({}, existing, queueData, {
+        id:existing.id
+      }));
+      if (reactivated.error) return reactivated;
+      reactivated.reactivated = true;
+      return reactivated;
+    }
+    if (['pendente','erro'].indexOf(String(existing.status)) >= 0) {
+      const refreshed = upsertByIdUnlocked_('lembretes_envios', Object.assign({}, existing, queueData, {
+        id:existing.id,
+        status:existing.status,
+        tentativas:existing.tentativas || 0,
+        ultimoErro:existing.ultimoErro || ''
+      }));
+      if (refreshed.error) return refreshed;
+      refreshed.duplicate = true;
+      return refreshed;
+    }
+    return { id:existing.id, item:existing, duplicate:true };
+  }
+  return upsertByIdUnlocked_('lembretes_envios', queueData);
 }
 
 function sanitizarErroWhatsApp_(error, accessToken) {

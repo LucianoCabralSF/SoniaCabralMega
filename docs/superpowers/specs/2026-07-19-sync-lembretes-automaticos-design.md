@@ -1,6 +1,6 @@
 # Sincronização Agenda–Caixa e Lembretes Automáticos — Design
 
-**Data:** 19/07/2026  
+**Data:** 19/07/2026
 **Status:** aprovado pela autorização prévia de Luciano para decidir e registrar escolhas sem interromper a execução
 
 ## Objetivo
@@ -169,4 +169,3 @@ As rotas de edição e exclusão existentes passarão a delegar ao serviço tran
 - interpretação automática da resposta “confirmo” por webhook;
 - campanhas automáticas em massa;
 - uso de conectores não oficiais.
-

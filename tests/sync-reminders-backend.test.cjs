@@ -333,6 +333,40 @@ test('reconciliação cria um único lembrete e reagendamento cancela a chave an
   assert.equal(changed.item.telefone, '5592999991111');
 });
 
+test('fila pendente acompanha telefone e reativa horário restaurado sem duplicar', () => {
+  const f = fixture({
+    properties:{ whatsapp_access_token:'token' },
+    config:[
+      { chave:'salonName', valor:'Sonia Cabral' },
+      { chave:'horaInicio', valor:'08:00' },
+      { chave:'lembreteAutomaticoAtivo', valor:'true' },
+      { chave:'lembreteAntecedenciaHoras', valor:'4' },
+      { chave:'lembreteMensagemModelo', valor:'Olá, {nome}! {servico} às {hora}.' },
+      { chave:'whatsappTemplateName', valor:'lembrete_agendamento' },
+      { chave:'whatsappTemplateLanguage', valor:'pt_BR' },
+      { chave:'whatsappApiVersion', valor:'v23.0' },
+      { chave:'whatsappPhoneNumberId', valor:'123456789' }
+    ],
+    clientes:[{ id:'cli_1', nome:'Ana', telefone:'92999991111', naoContatar:'false' }]
+  });
+  const at14 = `{
+    id:'ag_1', clienteId:'cli_1', clienteNome:'Ana', servicos:'Escova',
+    data:'2026-07-20', hora:'14:00', status:'agendado'
+  }`;
+  const first = f.call(`garantirLembreteAgendamentoUnlocked_(${at14})`);
+  f.call(`garantirLembreteAgendamentoUnlocked_({
+    id:'ag_1', clienteId:'cli_1', clienteNome:'Ana', servicos:'Escova',
+    data:'2026-07-20', hora:'15:00', status:'agendado'
+  })`);
+  f.row('clientes','cli_1').telefone = '92988882222';
+  const restored = f.call(`garantirLembreteAgendamentoUnlocked_(${at14})`);
+  assert.equal(f.stores.lembretes_envios.length, 2);
+  assert.equal(restored.id, first.id);
+  assert.equal(restored.reactivated, true);
+  assert.equal(f.row('lembretes_envios', first.id).status, 'pendente');
+  assert.equal(f.row('lembretes_envios', first.id).telefone, '5592988882222');
+});
+
 test('cliente bloqueada ou inválida não entra na fila', () => {
   const baseConfig = [
     { chave:'horaInicio', valor:'08:00' },
