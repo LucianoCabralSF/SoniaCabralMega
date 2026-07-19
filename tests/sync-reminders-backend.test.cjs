@@ -18,6 +18,9 @@ function fixture(seed = {}) {
   ]) stores[name] = structuredClone(seed[name] || []);
 
   const properties = structuredClone(seed.properties || {});
+  const fetchCalls = [];
+  const fetchResponses = structuredClone(seed.fetchResponses || []);
+  const triggers = [];
   const noopCache = { get:() => null, put() {}, remove() {} };
   const noopLock = { waitLock() {}, releaseLock() {} };
   const context = vm.createContext({
@@ -37,8 +40,41 @@ function fixture(seed = {}) {
     },
     SpreadsheetApp:{ getActiveSpreadsheet:() => ({}) },
     LockService:{ getDocumentLock:() => noopLock, getScriptLock:() => noopLock },
-    ScriptApp:{ getProjectTriggers:() => [] },
-    UrlFetchApp:{ fetch() { throw new Error('Envio externo não permitido neste fixture.'); } },
+    ScriptApp:{
+      getProjectTriggers:() => triggers,
+      deleteTrigger:trigger => {
+        const index = triggers.indexOf(trigger);
+        if (index >= 0) triggers.splice(index, 1);
+      },
+      newTrigger:handler => {
+        const draft = { handler, minutes:0 };
+        const builder = {
+          timeBased() { return builder; },
+          everyMinutes(minutes) { draft.minutes = minutes; return builder; },
+          create() {
+            const trigger = {
+              handler:draft.handler,
+              minutes:draft.minutes,
+              getHandlerFunction() { return this.handler; }
+            };
+            triggers.push(trigger);
+            return trigger;
+          }
+        };
+        return builder;
+      }
+    },
+    UrlFetchApp:{
+      fetch(url, options) {
+        fetchCalls.push({ url:String(url), options:structuredClone(options || {}) });
+        const response = fetchResponses.shift() || { code:200, body:{ messages:[{ id:'wamid.fixture' }] } };
+        if (response.throw) throw new Error(response.throw);
+        return {
+          getResponseCode:() => response.code,
+          getContentText:() => typeof response.body === 'string' ? response.body : JSON.stringify(response.body || {})
+        };
+      }
+    },
     Session:{ getScriptTimeZone:() => 'America/Manaus' },
     Utilities:{
       DigestAlgorithm:{ SHA_256:'SHA_256' },
@@ -114,6 +150,8 @@ function fixture(seed = {}) {
   return {
     stores,
     properties,
+    fetchCalls,
+    triggers,
     call(expression) {
       return JSON.parse(JSON.stringify(vm.runInContext(expression, context)));
     },
@@ -333,4 +371,119 @@ test('exclusão vinculada cancela lembrete pendente', () => {
   f.call("deleteAgendamentoVinculado_('ag_1')");
   assert.equal(f.row('lembretes_envios','lem_1').status, 'cancelado');
   assert.equal(f.row('lembretes_envios','lem_1').ultimoErro, 'origem_excluida');
+});
+
+test('processador envia template Meta devido uma única vez', () => {
+  const f = fixture({
+    properties:{ whatsapp_access_token:'token-secreto' },
+    config:[
+      { chave:'salonName', valor:'Sonia Cabral' },
+      { chave:'horaInicio', valor:'08:00' },
+      { chave:'lembreteAutomaticoAtivo', valor:'true' },
+      { chave:'lembreteAntecedenciaHoras', valor:'4' },
+      { chave:'whatsappTemplateName', valor:'lembrete_agendamento' },
+      { chave:'whatsappTemplateLanguage', valor:'pt_BR' },
+      { chave:'whatsappApiVersion', valor:'v23.0' },
+      { chave:'whatsappPhoneNumberId', valor:'123456789' }
+    ],
+    clientes:[{ id:'cli_1', nome:'Ana', telefone:'92999991111', naoContatar:'false' }],
+    agendamentos:[{
+      id:'ag_1', clienteId:'cli_1', clienteNome:'Ana', servicos:'Escova',
+      data:'2026-07-19', hora:'14:00', status:'agendado'
+    }],
+    lembretes_envios:[{
+      id:'lem_1', idempotencyKey:'lembrete:ag_1:2026-07-19:14:00',
+      agendamentoId:'ag_1', clienteId:'cli_1', agendamentoData:'2026-07-19',
+      agendamentoHora:'14:00', programadoPara:'2026-07-19T10:00:00',
+      telefone:'5592999991111', status:'pendente', tentativas:0
+    }],
+    fetchResponses:[{ code:200, body:{ messages:[{ id:'wamid.123' }] } }]
+  });
+  const first = f.call("processarLembretesAutomaticos_('2026-07-19T10:01:00')");
+  const second = f.call("processarLembretesAutomaticos_('2026-07-19T10:02:00')");
+  assert.equal(first.enviados, 1);
+  assert.equal(second.enviados, 0);
+  assert.equal(f.fetchCalls.length, 1);
+  assert.equal(f.row('lembretes_envios','lem_1').status, 'enviado');
+  assert.equal(f.row('lembretes_envios','lem_1').providerMessageId, 'wamid.123');
+  const payload = JSON.parse(f.fetchCalls[0].options.payload);
+  assert.equal(payload.type, 'template');
+  assert.equal(payload.template.name, 'lembrete_agendamento');
+  assert.deepEqual(payload.template.components[0].parameters.map(item => item.text),
+    ['Ana','Escova','Sonia Cabral','19/07/2026','14:00']);
+});
+
+test('falha da Meta é auditada sem expor o token', () => {
+  const f = fixture({
+    properties:{ whatsapp_access_token:'token-secreto' },
+    config:[
+      { chave:'lembreteAutomaticoAtivo', valor:'true' },
+      { chave:'whatsappTemplateName', valor:'lembrete_agendamento' },
+      { chave:'whatsappTemplateLanguage', valor:'pt_BR' },
+      { chave:'whatsappApiVersion', valor:'v23.0' },
+      { chave:'whatsappPhoneNumberId', valor:'123456789' }
+    ],
+    agendamentos:[{ id:'ag_1', data:'2026-07-19', hora:'14:00', status:'agendado' }],
+    lembretes_envios:[{
+      id:'lem_1', agendamentoId:'ag_1', agendamentoData:'2026-07-19',
+      agendamentoHora:'14:00', programadoPara:'2026-07-19T10:00:00',
+      telefone:'5592999991111', status:'pendente', tentativas:0
+    }],
+    fetchResponses:[{ code:400, body:{ error:{ message:'token-secreto expirou' } } }]
+  });
+  const result = f.call("processarLembretesAutomaticos_('2026-07-19T10:01:00')");
+  const reminder = f.row('lembretes_envios','lem_1');
+  assert.equal(result.erros, 1);
+  assert.equal(reminder.status, 'erro');
+  assert.equal(reminder.tentativas, 1);
+  assert.equal(reminder.ultimoErro.includes('token-secreto'), false);
+});
+
+test('lembrete vencido nunca é enviado depois do atendimento', () => {
+  const f = fixture({
+    properties:{ whatsapp_access_token:'token' },
+    config:[
+      { chave:'lembreteAutomaticoAtivo', valor:'true' },
+      { chave:'whatsappTemplateName', valor:'lembrete_agendamento' },
+      { chave:'whatsappPhoneNumberId', valor:'123456789' }
+    ],
+    agendamentos:[{ id:'ag_1', data:'2026-07-19', hora:'10:00', status:'agendado' }],
+    lembretes_envios:[{
+      id:'lem_1', agendamentoId:'ag_1', agendamentoData:'2026-07-19',
+      agendamentoHora:'10:00', programadoPara:'2026-07-19T08:00:00',
+      telefone:'5592999991111', status:'pendente', tentativas:0
+    }]
+  });
+  const result = f.call("processarLembretesAutomaticos_('2026-07-19T10:00:00')");
+  assert.equal(result.expirados, 1);
+  assert.equal(f.fetchCalls.length, 0);
+  assert.equal(f.row('lembretes_envios','lem_1').status, 'expirado');
+});
+
+test('agendador mantém apenas um gatilho de quinze minutos', () => {
+  const f = fixture();
+  f.call('configurarTriggerLembretes_(true)');
+  f.call('configurarTriggerLembretes_(true)');
+  assert.equal(f.triggers.length, 1);
+  assert.equal(f.triggers[0].handler, 'processarLembretesAutomaticos_');
+  assert.equal(f.triggers[0].minutes, 15);
+  f.call('configurarTriggerLembretes_(false)');
+  assert.equal(f.triggers.length, 0);
+});
+
+test('teste de credenciais consulta o número sem enviar mensagem', () => {
+  const f = fixture({
+    properties:{ whatsapp_access_token:'token' },
+    config:[
+      { chave:'whatsappTemplateName', valor:'lembrete_agendamento' },
+      { chave:'whatsappApiVersion', valor:'v23.0' },
+      { chave:'whatsappPhoneNumberId', valor:'123456789' }
+    ],
+    fetchResponses:[{ code:200, body:{ id:'123456789', display_phone_number:'+55 92 99999-0000' } }]
+  });
+  const result = f.call('testarWhatsAppConfig_()');
+  assert.equal(result.ok, true);
+  assert.equal(f.fetchCalls.length, 1);
+  assert.equal(String(f.fetchCalls[0].options.method).toLowerCase(), 'get');
+  assert.equal(f.fetchCalls[0].url.endsWith('/messages'), false);
 });

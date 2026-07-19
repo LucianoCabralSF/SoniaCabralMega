@@ -573,6 +573,180 @@ function garantirLembreteAgendamentoUnlocked_(appointment) {
   });
 }
 
+function sanitizarErroWhatsApp_(error, accessToken) {
+  let message = error && error.message ? error.message : String(error || 'Falha desconhecida no WhatsApp.');
+  const token = String(accessToken || '');
+  if (token) message = message.split(token).join('[credencial protegida]');
+  message = message.replace(/Bearer\s+[A-Za-z0-9._~-]+/gi, 'Bearer [credencial protegida]');
+  return cleanText_(message, 500);
+}
+
+function respostaJsonWhatsApp_(response) {
+  const code = Number(response.getResponseCode());
+  const text = String(response.getContentText() || '');
+  let body = {};
+  try { body = text ? JSON.parse(text) : {}; } catch (_) { body = { raw:text.slice(0, 500) }; }
+  return { code:code, body:body };
+}
+
+function enviarTemplateWhatsApp_(reminder, appointment, client, config) {
+  const accessToken = SCRIPT_PROPS.getProperty(WHATSAPP_ACCESS_TOKEN_KEY);
+  if (!accessToken) throw new Error('Token do WhatsApp não configurado.');
+  const endpoint = 'https://graph.facebook.com/' + config.apiVersion + '/' + config.phoneNumberId + '/messages';
+  const parameters = [
+    client && client.nome || appointment.clienteNome || 'Cliente',
+    appointment.servicos || 'seu atendimento',
+    config.salao || 'Sonia Cabral',
+    fmtBR(normDate(appointment.data)),
+    String(appointment.hora || '').slice(0, 5)
+  ].map(function (value) { return { type:'text', text:String(value) }; });
+  const payload = {
+    messaging_product:'whatsapp',
+    recipient_type:'individual',
+    to:reminder.telefone,
+    type:'template',
+    template:{
+      name:config.templateName,
+      language:{ code:config.templateLanguage },
+      components:[{ type:'body', parameters:parameters }]
+    }
+  };
+  let parsed;
+  try {
+    parsed = respostaJsonWhatsApp_(UrlFetchApp.fetch(endpoint, {
+      method:'post',
+      contentType:'application/json',
+      headers:{ Authorization:'Bearer ' + accessToken },
+      payload:JSON.stringify(payload),
+      muteHttpExceptions:true
+    }));
+  } catch (fetchError) {
+    throw new Error(sanitizarErroWhatsApp_(fetchError, accessToken));
+  }
+  const providerId = parsed.body && parsed.body.messages && parsed.body.messages[0] && parsed.body.messages[0].id;
+  if (parsed.code < 200 || parsed.code >= 300 || !providerId) {
+    const providerError = parsed.body && parsed.body.error && parsed.body.error.message ||
+      parsed.body && parsed.body.raw || 'Resposta sem identificador da mensagem.';
+    throw new Error(sanitizarErroWhatsApp_('WhatsApp HTTP ' + parsed.code + ': ' + providerError, accessToken));
+  }
+  return { id:String(providerId), code:parsed.code };
+}
+
+function configurarTriggerLembretes_(active) {
+  const triggers = ScriptApp.getProjectTriggers().filter(function (trigger) {
+    return trigger.getHandlerFunction() === REMINDER_HANDLER;
+  });
+  if (!active) {
+    triggers.forEach(function (trigger) { ScriptApp.deleteTrigger(trigger); });
+    return { ativo:false, total:0 };
+  }
+  triggers.slice(1).forEach(function (trigger) { ScriptApp.deleteTrigger(trigger); });
+  if (!triggers.length) {
+    ScriptApp.newTrigger(REMINDER_HANDLER).timeBased().everyMinutes(15).create();
+  }
+  return { ativo:true, total:1 };
+}
+
+function testarWhatsAppConfig_() {
+  const config = getLembretesConfig_();
+  const accessToken = SCRIPT_PROPS.getProperty(WHATSAPP_ACCESS_TOKEN_KEY);
+  if (!config.pronto || !accessToken) return { error:'Preencha e salve as credenciais do WhatsApp antes de testar.' };
+  const endpoint = 'https://graph.facebook.com/' + config.apiVersion + '/' + config.phoneNumberId +
+    '?fields=id,display_phone_number,verified_name';
+  let parsed;
+  try {
+    parsed = respostaJsonWhatsApp_(UrlFetchApp.fetch(endpoint, {
+      method:'get',
+      headers:{ Authorization:'Bearer ' + accessToken },
+      muteHttpExceptions:true
+    }));
+  } catch (fetchError) {
+    return { error:sanitizarErroWhatsApp_(fetchError, accessToken) };
+  }
+  if (parsed.code < 200 || parsed.code >= 300 || !parsed.body.id) {
+    const providerError = parsed.body && parsed.body.error && parsed.body.error.message || 'Não foi possível validar o número.';
+    return { error:sanitizarErroWhatsApp_('WhatsApp HTTP ' + parsed.code + ': ' + providerError, accessToken) };
+  }
+  return {
+    ok:true,
+    phoneNumberId:String(parsed.body.id),
+    numero:String(parsed.body.display_phone_number || ''),
+    nomeVerificado:String(parsed.body.verified_name || '')
+  };
+}
+
+function processarLembretesAutomaticos_(nowOverride) {
+  const config = getLembretesConfig_();
+  if (!config.ativo || !config.pronto) {
+    return { skipped:true, motivo:'automacao_inativa', enviados:0, erros:0, expirados:0 };
+  }
+  const current = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(String(nowOverride || '')) ?
+    String(nowOverride) : nowIso();
+  const currentDate = current.slice(0, 10);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    let reconciled = 0;
+    getCachedRows_('agendamentos').filter(function (appointment) {
+      return appointment.status === 'agendado' && normDate(appointment.data) === currentDate;
+    }).forEach(function (appointment) {
+      const result = garantirLembreteAgendamentoUnlocked_(appointment);
+      if (result && !result.skipped) reconciled += 1;
+    });
+
+    const summary = { reconciliados:reconciled, enviados:0, erros:0, expirados:0, cancelados:0 };
+    getCachedRows_('lembretes_envios').filter(function (reminder) {
+      return ['pendente','erro'].indexOf(String(reminder.status)) >= 0 &&
+        Number(reminder.tentativas || 0) < 3 &&
+        String(reminder.programadoPara || '') <= current &&
+        String(reminder.agendamentoData || '').slice(0, 10) <= currentDate;
+    }).forEach(function (reminder) {
+      const appointment = getCachedRows_('agendamentos').find(function (item) {
+        return String(item.id) === String(reminder.agendamentoId);
+      });
+      if (!appointment || appointment.status !== 'agendado') {
+        upsertByIdUnlocked_('lembretes_envios', Object.assign({}, reminder, {
+          status:'cancelado', ultimoErro:'agendamento_inativo'
+        }));
+        summary.cancelados += 1;
+        return;
+      }
+      const appointmentStart = normDate(appointment.data) + 'T' + String(appointment.hora || '').slice(0, 5) + ':00';
+      if (current >= appointmentStart) {
+        upsertByIdUnlocked_('lembretes_envios', Object.assign({}, reminder, {
+          status:'expirado', ultimoErro:'horario_do_atendimento_atingido'
+        }));
+        summary.expirados += 1;
+        return;
+      }
+      const client = getCachedRows_('clientes').find(function (item) {
+        return String(item.id) === String(appointment.clienteId);
+      });
+      const attempts = Number(reminder.tentativas || 0) + 1;
+      upsertByIdUnlocked_('lembretes_envios', Object.assign({}, reminder, {
+        status:'enviando', tentativas:attempts, ultimoErro:''
+      }));
+      try {
+        const sent = enviarTemplateWhatsApp_(reminder, appointment, client, config);
+        upsertByIdUnlocked_('lembretes_envios', Object.assign({}, reminder, {
+          status:'enviado', tentativas:attempts, providerMessageId:sent.id,
+          ultimoErro:'', enviadoEm:current
+        }));
+        summary.enviados += 1;
+      } catch (sendError) {
+        upsertByIdUnlocked_('lembretes_envios', Object.assign({}, reminder, {
+          status:'erro', tentativas:attempts,
+          ultimoErro:sanitizarErroWhatsApp_(sendError, SCRIPT_PROPS.getProperty(WHATSAPP_ACCESS_TOKEN_KEY))
+        }));
+        summary.erros += 1;
+      }
+    });
+    return summary;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function isPaid_(value) {
   const normalized = String(value == null ? '' : value).toLowerCase();
   return value === true || normalized === 'true' || normalized === 'pago';
