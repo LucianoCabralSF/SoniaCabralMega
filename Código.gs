@@ -73,6 +73,15 @@ function nowIso() { return Utilities.formatDate(now(), tz(), "yyyy-MM-dd'T'HH:mm
 function today() { return Utilities.formatDate(now(), tz(), 'yyyy-MM-dd'); }
 function uid(prefix) { return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6); }
 
+function cleanId_(value, maxLength) {
+  const id = String(value || '').trim();
+  if (!id) return '';
+  if (id.length > (maxLength || 160) || !/^[A-Za-z0-9:_-]+$/.test(id)) {
+    throw new Error('Identificador inválido. Atualize a tela e tente novamente.');
+  }
+  return id;
+}
+
 function normalizeBoolStr(v, fallback) {
   if (v === true || String(v).toLowerCase() === 'true') return 'true';
   if (v === false || String(v).toLowerCase() === 'false') return 'false';
@@ -237,11 +246,11 @@ function buildIdIndex_(sheetName) {
 
   const s = getSheet(sheetName);
   const lastRow = s.getLastRow();
-  const idx = {};
+  const idx = Object.create(null);
 
   if (lastRow >= 2) {
     const ids = s.getRange(2, 1, lastRow - 1, 1).getValues().flat();
-    const duplicados = {};
+    const duplicados = Object.create(null);
     ids.forEach((id, i) => {
       if (!id) return;
       const k = String(id);
@@ -258,9 +267,9 @@ function buildIdIndex_(sheetName) {
 }
 
 function invalidateSheetCache_(sheetName) {
-  CACHE.remove('idx_' + sheetName);
-  CACHE.remove('rows_' + sheetName);
-  CACHE.remove('cfg_obj');
+  ['idx_' + sheetName, 'rows_' + sheetName, 'cfg_obj'].forEach(function (key) {
+    try { CACHE.remove(key); } catch (_) { /* cache é otimização; nunca invalida uma gravação concluída */ }
+  });
 }
 
 function getCachedRows_(sheetName, seconds) {
@@ -280,6 +289,8 @@ function getCachedRows_(sheetName, seconds) {
 // Localiza a linha de um id com verificação: se o índice estiver desatualizado
 // (ex.: linhas movidas/apagadas manualmente na planilha), reconstrói antes de gravar.
 function rowNumForId_(sheetName, id) {
+  try { id = cleanId_(id); } catch (_) { return null; }
+  if (!id) return null;
   const s = getSheet(sheetName);
   let idx = buildIdIndex_(sheetName);
   let rowNum = idx[String(id)];
@@ -437,9 +448,10 @@ function constantTimeEqual_(left, right) {
   return difference === 0;
 }
 
-function setPasswordHash_(password) {
+function setPasswordHash_(password, allowLegacyShortPassword) {
   const value = String(password || '');
-  if (value.length < 8) throw new Error('A senha deve ter pelo menos 8 caracteres.');
+  if (value.length < 8 && !allowLegacyShortPassword) throw new Error('A senha deve ter pelo menos 8 caracteres.');
+  if (value.length > 256) throw new Error('A senha deve ter no máximo 256 caracteres.');
   const salt = Utilities.getUuid().replace(/-/g, '');
   SCRIPT_PROPS.setProperties({
     [PASSWORD_SALT_KEY]: salt,
@@ -448,6 +460,7 @@ function setPasswordHash_(password) {
 }
 
 function verifyPassword_(password, migrateLegacy) {
+  if (String(password || '').length > 256) return false;
   const salt = SCRIPT_PROPS.getProperty(PASSWORD_SALT_KEY);
   const storedHash = SCRIPT_PROPS.getProperty(PASSWORD_HASH_KEY);
   if (salt && storedHash) return constantTimeEqual_(storedHash, passwordHash_(password, salt));
@@ -456,7 +469,7 @@ function verifyPassword_(password, migrateLegacy) {
   const legacy = String(cfg.senha || '');
   const validLegacy = !!legacy && constantTimeEqual_(legacy, String(password || ''));
   if (validLegacy && migrateLegacy !== false) {
-    setPasswordHash_(String(password));
+    setPasswordHash_(String(password), true);
     updateConfigValues_({ senha: '' });
   }
   return validLegacy;
@@ -498,21 +511,57 @@ function getLoginFailures_() {
   catch (_) { return { count: 0 }; }
 }
 
-function registerLoginFailure_() {
+function registerLoginFailureUnlocked_() {
   const current = getLoginFailures_();
   const count = (parseInt(current.count, 10) || 0) + 1;
   CACHE.put(LOGIN_FAILURE_KEY, JSON.stringify({ count: count }), 300);
   return count;
 }
 
+function registerLoginFailure_() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  try { return registerLoginFailureUnlocked_(); }
+  finally { lock.releaseLock(); }
+}
+
+function clearLoginFailures_() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  try {
+    try { CACHE.remove(LOGIN_FAILURE_KEY); } catch (_) { /* não bloquear login válido por falha de cache */ }
+  }
+  finally { lock.releaseLock(); }
+}
+
 function authLogic(senha, lembrar) {
-  const failures = getLoginFailures_();
-  if ((failures.count || 0) >= 5) return err('Muitas tentativas incorretas. Aguarde 5 minutos.');
-  if (!verifyPassword_(senha, true)) {
-    registerLoginFailure_();
+  const shouldThrottle = (getLoginFailures_().count || 0) >= 5;
+  const throttleLock = shouldThrottle ? LockService.getScriptLock() : null;
+  let validPassword = false;
+  let failureCount = 0;
+
+  if (throttleLock) throttleLock.waitLock(30000);
+  try {
+    // Depois do limite, uma única tentativa por vez atravessa esta espera.
+    // A senha correta ainda entra após o atraso, evitando bloqueio administrativo total.
+    if (shouldThrottle) Utilities.sleep(1200);
+    validPassword = String(senha || '').length <= 256 && verifyPassword_(senha, true);
+    if (!validPassword) {
+      failureCount = shouldThrottle ? registerLoginFailureUnlocked_() : registerLoginFailure_();
+    } else if (shouldThrottle) {
+      try { CACHE.remove(LOGIN_FAILURE_KEY); } catch (_) { /* não bloquear login válido por falha de cache */ }
+    }
+  } finally {
+    if (throttleLock) throttleLock.releaseLock();
+  }
+
+  if (!validPassword) {
+    if (failureCount >= 5) return err('Muitas tentativas incorretas. Aguarde 5 minutos.');
     return err('Senha incorreta.');
   }
-  CACHE.remove(LOGIN_FAILURE_KEY);
+  // A senha correta sempre pode entrar e limpar o contador; assim um atacante
+  // não bloqueia o salão inteiro ao errar cinco vezes.
+  if (!shouldThrottle) clearLoginFailures_();
 
   limparTokensExpirados_();
 
@@ -544,6 +593,7 @@ function authLogic(senha, lembrar) {
 
 function validateToken(t) {
   if (!t) return false;
+  if (!/^[0-9a-f-]{36}$/i.test(String(t))) return false;
   const currentVersion = getAuthVersion_();
   const cachedToken = CACHE.get('tok_' + t);
   if (cachedToken) {
@@ -576,6 +626,7 @@ function updatePassword_(currentPassword, newPassword) {
   const next = String(newPassword || '');
   if (!verifyPassword_(currentPassword, true)) return { error: 'Senha atual incorreta.' };
   if (next.length < 8) return { error: 'A nova senha deve ter pelo menos 8 caracteres.' };
+  if (next.length > 256) return { error: 'A nova senha deve ter no máximo 256 caracteres.' };
   setPasswordHash_(next);
   revokeAllTokens_();
   updateConfigValues_({ senha: '' });
@@ -605,7 +656,8 @@ function upsertById_(sheetName, record) {
 function upsertByIdUnlocked_(sheetName, record) {
   const s = getSheet(sheetName);
   const headers = SCHEMAS[sheetName];
-  const id = record.id || uid(sheetName.slice(0, 3));
+  const providedId = record.id ? cleanId_(record.id) : '';
+  const id = providedId || uid(sheetName.slice(0, 3));
   // rowNumForId_ confere se o id realmente está naquela linha (protege contra planilha mexida à mão)
   const existingRow = record.id ? rowNumForId_(sheetName, id) : null;
   if (record.id && !existingRow) {
@@ -624,7 +676,9 @@ function upsertByIdUnlocked_(sheetName, record) {
   headers.forEach(h => rowObj[h] = '');
 
   headers.forEach(h => {
-    if (Object.prototype.hasOwnProperty.call(record, h)) rowObj[h] = record[h];
+    if (Object.prototype.hasOwnProperty.call(record, h)) {
+      rowObj[h] = h === 'id' || /Id$/.test(h) ? cleanId_(record[h]) : record[h];
+    }
   });
 
   rowObj.id = id;
@@ -752,13 +806,17 @@ function getClientes(e) {
 function saveCliente(d) {
   d = d || {};
   const nome = cleanText_(d && d.nome, 120);
+  const email = cleanText_(d.email, 180);
+  const aniversario = cleanText_(d.aniversario, 10);
   if (!nome) return { error: 'Nome da cliente é obrigatório.' };
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: 'Informe um e-mail válido.' };
+  if (aniversario && !normalizarDataEstrita_(aniversario)) return { error: 'Informe uma data de aniversário válida.' };
   return upsertById_('clientes', {
     id: d.id || '',
     nome: nome,
     telefone: cleanText_(d.telefone, 30),
-    email: cleanText_(d.email, 180),
-    aniversario: cleanText_(d.aniversario, 10),
+    email: email,
+    aniversario: aniversario ? fmtBR(normalizarDataEstrita_(aniversario)) : '',
     observacoes: cleanText_(d.observacoes, 1000)
   });
 }
@@ -776,7 +834,7 @@ function caixaDiaList_(data) {
 
 function invalidateCaixaCaches_(data) {
   invalidateSheetCache_('caixa');
-  CACHE.remove('caixa_dia_' + data);
+  try { CACHE.remove('caixa_dia_' + data); } catch (_) { /* cache é melhor esforço */ }
 }
 
 function getCaixa(e) {
@@ -1023,6 +1081,7 @@ function saveLancamentoFiado(d) {
     const saldoCentavos = totalCentavos - entradaCentavos;
     if (saldoCentavos > 0 && numParcelas > saldoCentavos) return { error: 'Reduza o número de parcelas: cada parcela precisa ter ao menos R$ 0,01.' };
     const parcelasCentavos = dividirCentavos_(saldoCentavos, numParcelas, 36);
+    const clienteId = cleanId_(d.clienteId);
     const entradaValor = deCentavos_(entradaCentavos);
     const valorTotal = deCentavos_(totalCentavos);
     const saldo = deCentavos_(saldoCentavos);
@@ -1035,7 +1094,7 @@ function saveLancamentoFiado(d) {
 
     const credRow = [[
       credId,
-      d.clienteId || '',
+      clienteId,
       clienteNome,
       'parcelado',
       valorTotal,
@@ -1057,7 +1116,7 @@ function saveLancamentoFiado(d) {
       movRows.push([
         movId,
         credId,
-        d.clienteId || '',
+        clienteId,
         clienteNome,
         'parcela',
         deCentavos_(parcelasCentavos[i]),
@@ -1081,20 +1140,26 @@ function saveLancamentoFiado(d) {
       insertRowsBatch_('crediario_mov', movRows);
 
       if (entradaValor > 0) {
-        const cashResult = saveLancamentoUnlocked_({
-          tipo: 'entrada',
-          clienteId: d.clienteId,
-          clienteNome: clienteNome,
-          itemId: 'fiadoentrada:' + idempotencyKey,
-          itemNome: cleanText_(d.itemNome, 300) || 'Entrada de fiado',
-          itemTipo: cleanText_(d.itemTipo, 40) || 'crediario',
-          valor: entradaValor,
-          formaPagamento: d.formaEntrada || 'dinheiro',
-          observacoes: 'Entrada fiado' + (d.observacoes ? ' · ' + cleanText_(d.observacoes, 1000) : ''),
-          data: dataLancamento
-        });
-        if (cashResult.error) throw new Error(cashResult.error);
-        cashId = cashResult.id;
+        const entryItemId = 'fiadoentrada:' + idempotencyKey;
+        const existingEntryCash = findCashByItemId_(entryItemId);
+        if (existingEntryCash) {
+          cashId = existingEntryCash.id;
+        } else {
+          const cashResult = saveLancamentoUnlocked_({
+            tipo: 'entrada',
+            clienteId: clienteId,
+            clienteNome: clienteNome,
+            itemId: entryItemId,
+            itemNome: cleanText_(d.itemNome, 300) || 'Entrada de fiado',
+            itemTipo: cleanText_(d.itemTipo, 40) || 'crediario',
+            valor: entradaValor,
+            formaPagamento: d.formaEntrada || 'dinheiro',
+            observacoes: 'Entrada fiado' + (d.observacoes ? ' · ' + cleanText_(d.observacoes, 1000) : ''),
+            data: dataLancamento
+          });
+          if (cashResult.error) throw new Error(cashResult.error);
+          cashId = cashResult.id;
+        }
       }
     } catch (writeError) {
       markRowDeletedUnlocked_('crediario', credId, timestamp);
@@ -1114,7 +1179,7 @@ function pagarCrediario(b) {
   lock.waitLock(30000);
   try {
     const crediarioId = String(b.crediarioId || '');
-    const idempotencyKey = String(b.idempotencyKey || '').trim();
+    const idempotencyKey = String(b.idempotencyKey || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 100);
     if (!idempotencyKey) return { error: 'Identificador do pagamento ausente. Reabra a tela e tente novamente.' };
     const cashItemId = 'credpg:' + idempotencyKey;
     const existingCash = findCashByItemId_(cashItemId);
@@ -1332,10 +1397,11 @@ function getAgendamentos(e) {
 function saveAgendamentoUnlocked_(d) {
   d = d || {};
   const clienteNome = cleanText_(d.clienteNome, 120);
-  const duration = parseInt(d.duracaoMin || 60, 10);
-  const status = ['agendado','concluido','cancelado'].indexOf(d.status) >= 0 ? d.status : 'agendado';
+  const duration = parseInt(typeof d.duracaoMin === 'undefined' || d.duracaoMin === '' ? 60 : d.duracaoMin, 10);
+  const status = d.status || 'agendado';
   const valueCents = paraCentavos_(d.valor || 0);
   if (!clienteNome) return { error: 'Selecione a cliente do agendamento.' };
+  if (['agendado','concluido','cancelado'].indexOf(status) < 0) return { error: 'Status do agendamento inválido.' };
   if (!validTime_(d.hora || '09:00')) return { error: 'Horário do agendamento inválido.' };
   if (!Number.isInteger(duration) || duration < 5 || duration > 1440) return { error: 'Duração do agendamento inválida.' };
   if (valueCents < 0) return { error: 'Valor do agendamento inválido.' };
@@ -1343,7 +1409,7 @@ function saveAgendamentoUnlocked_(d) {
     id: d.id || '',
     data: toISO(d.data || today()),
     hora: d.hora || '09:00',
-    duracaoMin: parseInt(d.duracaoMin || 60, 10),
+    duracaoMin: duration,
     clienteId: d.clienteId || '',
     clienteNome: clienteNome,
     colaboradorId: d.colaboradorId || '',
@@ -1356,7 +1422,30 @@ function saveAgendamentoUnlocked_(d) {
 }
 
 function saveAgendamento(d) {
-  return withDocumentLock_(function () { return saveAgendamentoUnlocked_(d); });
+  d = d || {};
+  return withDocumentLock_(function () {
+    const requestedStatus = d.status || 'agendado';
+
+    if (!d.id && requestedStatus === 'concluido') {
+      return { error: 'Conclua o atendimento pela ação própria para registrar também a entrada no caixa.' };
+    }
+
+    if (d.id) {
+      const rowNum = rowNumForId_('agendamentos', d.id);
+      if (!rowNum) return { error: 'Agendamento não encontrado.' };
+
+      const statusCol = SCHEMAS.agendamentos.indexOf('status') + 1;
+      const currentStatus = String(getSheet('agendamentos').getRange(rowNum, statusCol).getValue() || 'agendado');
+      if (currentStatus !== 'concluido' && requestedStatus === 'concluido') {
+        return { error: 'Conclua o atendimento pela ação própria para registrar também a entrada no caixa.' };
+      }
+      if (currentStatus === 'concluido' && requestedStatus !== 'concluido') {
+        return { error: 'Um atendimento concluído não pode ter o status reaberto pela edição.' };
+      }
+    }
+
+    return saveAgendamentoUnlocked_(d);
+  });
 }
 
 function concluirAgendamentoComCaixa_(b) {
@@ -1367,14 +1456,22 @@ function concluirAgendamentoComCaixa_(b) {
     const cash = b.cash || {};
     const appointmentId = String(appointment.id || '');
     if (!appointmentId) return { error: 'Agendamento inválido.' };
-    const cashItemId = 'agcash:' + appointmentId;
-    const existingCash = findCashByItemId_(cashItemId);
-    if (existingCash) return { completed: true, duplicate: true, cashId: existingCash.id };
-
     const rowNum = rowNumForId_('agendamentos', appointmentId);
     if (!rowNum) return { error: 'Agendamento não encontrado.' };
     const sheet = getSheet('agendamentos');
     const snapshot = sheet.getRange(rowNum, 1, 1, SCHEMAS.agendamentos.length).getValues()[0];
+    const currentStatus = String(snapshot[SCHEMAS.agendamentos.indexOf('status')] || 'agendado');
+    const cashItemId = 'agcash:' + appointmentId;
+    const existingCash = findCashByItemId_(cashItemId);
+    if (existingCash && currentStatus === 'concluido') {
+      return { completed: true, duplicate: true, cashId: existingCash.id };
+    }
+    if (existingCash) {
+      return { error: 'Já existe uma entrada no caixa para este atendimento, mas o status está inconsistente.' };
+    }
+    if (currentStatus !== 'agendado') {
+      return { error: 'Somente um atendimento agendado pode ser concluído.' };
+    }
 
     try {
       const savedAppointment = saveAgendamentoUnlocked_({ ...appointment, status: 'concluido' });
@@ -1607,7 +1704,7 @@ function pagarParcela(b) {
       s.getRange(rowNum, 8).setValue('true');     // pago
       s.getRange(rowNum, 7).setValue('pago');     // status
       s.getRange(rowNum, 9).setValue(paymentDate); // dataPagamento
-      s.getRange(rowNum, 10).setValue(b.observacoes || '');
+      s.getRange(rowNum, 10).setValue(cleanText_(b.observacoes, 1000));
       s.getRange(rowNum, 12).setValue(nowIso());  // atualizadoEm
 
       invalidateSheetCache_('plan_parcelas');

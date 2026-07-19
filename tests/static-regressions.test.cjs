@@ -8,7 +8,9 @@ const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const backend = fs.readFileSync(path.join(root, 'Código.gs'), 'utf8');
 const worker = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
 const vercel = fs.readFileSync(path.join(root, 'vercel.json'), 'utf8');
+const readme = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
 const visualFixture = fs.readFileSync(path.join(root, 'tests', 'visual-fixture-server.cjs'), 'utf8');
+const claspIgnore = fs.readFileSync(path.join(root, '.claspignore'), 'utf8');
 
 test('frontend and backend scripts keep valid JavaScript syntax', () => {
   const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match => match[1]);
@@ -23,6 +25,11 @@ test('frontend and backend scripts keep valid JavaScript syntax', () => {
 test('login uses POST and sends remember choice', () => {
   assert.match(html, /post\(\{\s*action:'login',\s*senha,\s*lembrar\s*\}\)/);
   assert.doesNotMatch(html, /api\(\{\s*action:'login'/);
+});
+
+test('failed logins are serialized and throttled after the limit', () => {
+  assert.match(backend, /LockService\.getScriptLock\(\)/);
+  assert.match(backend, /Utilities\.sleep\(1200\)/);
 });
 
 test('authenticated reads use POST so session tokens stay out of URLs', () => {
@@ -41,6 +48,7 @@ test('public config never returns or locally caches the password', () => {
 test('password changes use a dedicated endpoint and revoke sessions', () => {
   assert.match(backend, /case 'updatePassword'/);
   assert.match(backend, /function revokeAllTokens_\(/);
+  assert.match(backend, /setPasswordHash_\(String\(password\), true\)/);
   assert.doesNotMatch(html, /config:\s*\{\s*senha:/);
 });
 
@@ -74,6 +82,9 @@ test('appointment completion and cash entry share one locked backend operation',
   assert.match(backend, /function concluirAgendamentoComCaixa_\(/);
   assert.match(backend, /const lock = LockService\.getDocumentLock\(\)/);
   assert.match(html, /action:'completeAppointment'/);
+  assert.match(backend, /function saveAgendamento\(d\)[\s\S]{0,900}currentStatus/);
+  assert.match(backend, /function concluirAgendamentoComCaixa_\(b\)[\s\S]{0,1500}currentStatus !== 'agendado'/);
+  assert.match(html, /ag\.status === 'concluido' \? 'disabled'/);
 });
 
 test('appointment and cash deletions use their explicit soft-delete routes', () => {
@@ -104,6 +115,15 @@ test('critical render paths escape API text', () => {
 test('backend neutralizes spreadsheet formulas in user-controlled text', () => {
   assert.match(backend, /return \/\^\[=\+\\-@\]\//);
   assert.match(backend, /'\\u200B' \+ text/);
+  assert.match(backend, /function cleanId_\(/);
+  assert.match(backend, /h === 'id' \|\| \/Id\$\//);
+  assert.match(backend, /const idx = Object\.create\(null\)/);
+  assert.match(backend, /setValue\(cleanText_\(b\.observacoes, 1000\)\)/);
+});
+
+test('cache invalidation cannot turn a completed sheet write into a failure', () => {
+  assert.match(backend, /function invalidateSheetCache_\(sheetName\)[\s\S]{0,400}try \{ CACHE\.remove/);
+  assert.match(backend, /function invalidateCaixaCaches_\(data\)[\s\S]{0,220}try \{ CACHE\.remove/);
 });
 
 test('viewport, live regions and icon controls are accessible', () => {
@@ -115,6 +135,11 @@ test('viewport, live regions and icon controls are accessible', () => {
   assert.match(html, /aria-label="Novo planejamento"/);
   assert.match(html, /function keepFocusInsideDialog\(/);
   assert.match(html, /setAttribute\('aria-label'/);
+  assert.match(html, /<label class="lbl" for="inp-senha">Senha<\/label>/);
+  assert.match(html, /aria-pressed="true"/);
+  assert.match(html, /setAttribute\('aria-pressed', 'false'\)/);
+  assert.match(html, /<button type="button" class="gcal-event"/);
+  assert.match(html, /<button type="button" onclick="addItemDireto\(this\)"/);
 });
 
 test('projected result is labelled accurately', () => {
@@ -132,4 +157,10 @@ test('security headers include a content security policy', () => {
   assert.match(vercel, /Content-Security-Policy/);
   assert.match(vercel, /Strict-Transport-Security/);
   assert.match(vercel, /Permissions-Policy/);
+});
+
+test('Apps Script deployment includes the shared backend rules', () => {
+  assert.match(claspIgnore, /^!Regras\.gs$/m);
+  assert.match(readme, /Sempre publique o backend antes do frontend/);
+  assert.match(readme, /reverta primeiro a Vercel[\s\S]*versão anterior do Web App/);
 });

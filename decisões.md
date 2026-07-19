@@ -24,6 +24,7 @@ Luciano autorizou a correção integral dos problemas encontrados, pediu que dec
 - “Manter conectada” será respeitado: marcada usa token persistente; desmarcada usa somente a sessão da aba.
 - Logout limpará tokens e caches sensíveis do navegador e tentará revogar o token no backend.
 - O backend limitará tentativas consecutivas de login para reduzir força bruta.
+- O contador de tentativas será serializado. Depois do limite, as verificações também serão processadas uma por vez com atraso; a senha correta continuará aceita após essa espera para impedir que um atacante trave o salão inteiro.
 - Configurações alteráveis serão limitadas a uma lista permitida; senha terá rota própria.
 
 ### Integridade financeira
@@ -84,3 +85,11 @@ Luciano autorizou a correção integral dos problemas encontrados, pediu que dec
 - Apps Script + senha compartilhada continua sendo menos robusto que autenticação individual com provedor de identidade.
 - O frontend permanece majoritariamente em um arquivo grande; a reestruturação completa fica fora desta correção para reduzir risco.
 - Operações no Google Sheets não oferecem transações ACID. Serão adicionadas validação, idempotência e rollback de melhor esforço, mas uma reescrita com banco transacional seria necessária para garantia absoluta.
+
+## Ajustes decididos após a revisão independente
+
+- Senhas legadas curtas, inclusive a antiga `1234`, poderão ser migradas para hash no primeiro login sem bloquear uma instalação existente. Senhas novas e trocas continuam exigindo 8 ou mais caracteres.
+- Identificadores recebidos pela API passam por uma lista restrita de caracteres antes de qualquer consulta ou gravação na planilha.
+- Falhas do serviço de cache não transformam uma gravação financeira já concluída em erro, evitando que um rollback deixe um lançamento órfão.
+- Seletores de visualização e tipo ganharam estado acessível; senha tem rótulo associado e eventos/itens clicáveis foram convertidos em botões operáveis pelo teclado.
+- A publicação deve ocorrer na ordem Apps Script → verificação → Vercel, mantendo as versões anteriores disponíveis para reversão.

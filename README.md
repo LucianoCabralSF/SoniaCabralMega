@@ -10,16 +10,21 @@ Frontend estático do sistema do salão Sonia Cabral, publicado na Vercel e inte
 - `vercel.json`: configuração de deploy e cabeçalhos de segurança
 - `tests/`: testes automatizados e ambiente visual com dados fictícios
 
-## Deploy
-1. Subir os arquivos para a branch principal no GitHub
-2. Importar o repositório na Vercel
-3. Framework preset: `Other`
-4. Build command: vazio
-5. Output directory: vazio
+## Publicação segura
+
+Sempre publique o backend antes do frontend. A nova interface depende das regras e rotas novas do Apps Script.
+
+1. Rode `npm test` e confirme que todos os testes passaram.
+2. No projeto Apps Script, envie `Código.gs`, `Regras.gs` e `appsscript.json`. Antes de enviar, `clasp status` deve listar os três arquivos.
+3. Crie uma nova versão do Web App sem substituir ou apagar a versão anterior. Confirme que a ação pública de configuração responde e que a URL continua correta.
+4. Só então publique o frontend na Vercel, com framework preset `Other`, build command vazio e output directory vazio.
+5. Faça uma verificação curta: login, abertura da agenda, conclusão de um atendimento fictício controlado e conferência do lançamento no caixa.
+
+Se a validação falhar, reverta primeiro a Vercel para o deploy anterior e depois selecione a versão anterior do Web App no Apps Script. Não apague as versões anteriores até a nova versão passar pela revisão operacional.
 
 ## Backend
 
-A URL do backend Apps Script está configurada em `window.__API_URL__`, no `index.html`. Ao publicar o backend, envie `Código.gs` e `Regras.gs` para o mesmo projeto Apps Script.
+A URL do backend Apps Script está configurada em `window.__API_URL__`, no `index.html`. Os arquivos `Código.gs` e `Regras.gs` devem estar no mesmo projeto Apps Script; publicar somente um deles deixa o backend incompleto.
 
 Em instalações existentes, a senha em texto puro é migrada automaticamente para hash com salt no primeiro login válido. Em uma instalação nova, execute uma vez pelo editor do Apps Script:
 

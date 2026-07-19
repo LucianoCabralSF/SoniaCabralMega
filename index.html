@@ -700,6 +700,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 .gcal-event{
   position:absolute;left:2px;right:2px;border-radius:4px;padding:2px 5px;
   font-size:13px;overflow:hidden;cursor:pointer;border-left:3px solid;
+  border-top:0;border-right:0;border-bottom:0;text-align:left;font-family:inherit;
   transition:filter .12s;box-shadow:0 1px 4px rgba(26,18,8,.1);z-index:2
 }
 .gcal-event:active{filter:brightness(.88)}
@@ -721,7 +722,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 .gcal-month-pill{
   font-size:13px;padding:1px 4px;border-radius:3px;margin-bottom:2px;
   overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;
-  line-height:1.5;font-weight:500;display:block
+  line-height:1.5;font-weight:500;display:block;width:100%;border:0;text-align:left;font-family:inherit
 }
 .gcal-month-pill:active{filter:brightness(.88)}
 .gcal-month-mais{font-size:13px;color:var(--dim);padding:1px 4px;font-weight:500}
@@ -883,7 +884,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <div class="login-tag">Mega-Hair · Técnica Exclusiva</div>
   <div class="login-box">
     <div>
-      <span class="lbl">Senha</span>
+      <label class="lbl" for="inp-senha">Senha</label>
       <input class="inp" id="inp-senha" type="password" placeholder="••••"/>
     </div>
     <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--dim);cursor:pointer">
@@ -987,10 +988,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
         <div class="ptitle">Agenda</div>
         <button class="btn-add" id="btn-open-agend" aria-label="Novo agendamento">+</button>
       </div>
-      <div class="seg" id="ag-seg">
-        <button class="seg-btn active" data-ag-view="dia">Dia</button>
-        <button class="seg-btn" data-ag-view="semana">Semana</button>
-        <button class="seg-btn" data-ag-view="mes">Mês</button>
+      <div class="seg" id="ag-seg" role="group" aria-label="Visualização da agenda">
+        <button class="seg-btn active" data-ag-view="dia" aria-pressed="true">Dia</button>
+        <button class="seg-btn" data-ag-view="semana" aria-pressed="false">Semana</button>
+        <button class="seg-btn" data-ag-view="mes" aria-pressed="false">Mês</button>
       </div>
       <div class="cdate-bar">
         <input type="date" id="ag-data"/>
@@ -1029,10 +1030,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
         <div class="ptitle">Fiado</div>
         <button class="btn-add" id="btn-open-fiado" aria-label="Novo fiado">+</button>
       </div>
-      <div class="seg" id="cred-seg">
-        <button class="seg-btn active" data-cred-filter="aberto">Em aberto</button>
-        <button class="seg-btn" data-cred-filter="quitado">Quitados</button>
-        <button class="seg-btn" data-cred-filter="todos">Todos</button>
+      <div class="seg" id="cred-seg" role="group" aria-label="Filtro do crediário">
+        <button class="seg-btn active" data-cred-filter="aberto" aria-pressed="true">Em aberto</button>
+        <button class="seg-btn" data-cred-filter="quitado" aria-pressed="false">Quitados</button>
+        <button class="seg-btn" data-cred-filter="todos" aria-pressed="false">Todos</button>
       </div>
       <div id="list-cred"></div>
     </div>
@@ -1052,9 +1053,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
         <button class="btn-gold" id="btn-ext-unlock">Confirmar</button>
       </div>
       <div id="ext-ui">
-        <div class="seg" id="ext-modo-seg">
-          <button class="seg-btn active" data-ext-mode="mes">Por Mês</button>
-          <button class="seg-btn" data-ext-mode="periodo">Por Período</button>
+        <div class="seg" id="ext-modo-seg" role="group" aria-label="Período do extrato">
+          <button class="seg-btn active" data-ext-mode="mes" aria-pressed="true">Por Mês</button>
+          <button class="seg-btn" data-ext-mode="periodo" aria-pressed="false">Por Período</button>
         </div>
         <div id="ext-mes-ui" class="ext-periodo">
           <select id="ext-mes"></select>
@@ -1145,10 +1146,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
         <div class="ptitle">Planejamento</div>
         <button class="btn-add" id="btn-open-plan" aria-label="Novo planejamento">+</button>
       </div>
-      <div class="seg" id="plan-seg">
-        <button class="seg-btn active" data-plan-filter="todos">Todos</button>
-        <button class="seg-btn" data-plan-filter="despesa">Despesas</button>
-        <button class="seg-btn" data-plan-filter="receita">Receitas</button>
+      <div class="seg" id="plan-seg" role="group" aria-label="Filtro do planejamento">
+        <button class="seg-btn active" data-plan-filter="todos" aria-pressed="true">Todos</button>
+        <button class="seg-btn" data-plan-filter="despesa" aria-pressed="false">Despesas</button>
+        <button class="seg-btn" data-plan-filter="receita" aria-pressed="false">Receitas</button>
       </div>
       <div id="list-plan"></div>
     </div>
@@ -2012,8 +2013,12 @@ function initExtSelectors(){
 
 function setExtModo(modo, btn){
   state.ui.extModo = modo;
-  qsa('#ext-modo-seg .seg-btn').forEach(b => b.classList.remove('active'));
+  qsa('#ext-modo-seg .seg-btn').forEach(b => {
+    b.classList.remove('active');
+    b.setAttribute('aria-pressed', 'false');
+  });
   btn.classList.add('active');
+  btn.setAttribute('aria-pressed', 'true');
   qs('#ext-mes-ui').style.display = modo === 'mes' ? 'flex' : 'none';
   qs('#ext-per-ui').style.display = modo === 'periodo' ? 'flex' : 'none';
 }
@@ -2042,22 +2047,34 @@ async function desbloquearExtrato(){
 
 function setAgView(v, btn){
   state.ui.agView = v;
-  qsa('#ag-seg .seg-btn').forEach(b => b.classList.remove('active'));
+  qsa('#ag-seg .seg-btn').forEach(b => {
+    b.classList.remove('active');
+    b.setAttribute('aria-pressed', 'false');
+  });
   btn.classList.add('active');
+  btn.setAttribute('aria-pressed', 'true');
   loadAgenda();
 }
 
 function setCredFiltro(f, btn){
   state.ui.credFiltro = f;
-  qsa('#cred-seg .seg-btn').forEach(b => b.classList.remove('active'));
+  qsa('#cred-seg .seg-btn').forEach(b => {
+    b.classList.remove('active');
+    b.setAttribute('aria-pressed', 'false');
+  });
   btn.classList.add('active');
+  btn.setAttribute('aria-pressed', 'true');
   renderCred();
 }
 
 function setPlanFiltro(f, btn){
   state.ui.planFiltro = f;
-  qsa('#plan-seg .seg-btn').forEach(b => b.classList.remove('active'));
+  qsa('#plan-seg .seg-btn').forEach(b => {
+    b.classList.remove('active');
+    b.setAttribute('aria-pressed', 'false');
+  });
   btn.classList.add('active');
+  btn.setAttribute('aria-pressed', 'true');
   renderPlan();
 }
 
@@ -2990,13 +3007,13 @@ function renderAgendaSemana(el, list, dataBase){
       ags.forEach(ag => {
         const clr = ag.status==='concluido' ? 'var(--ok)' : ag.status==='cancelado' ? 'var(--err)' : 'var(--info)';
         const bg  = ag.status==='concluido' ? 'var(--ok-bg)' : ag.status==='cancelado' ? 'var(--err-bg)' : 'var(--info-bg)';
-        html += `<div class="gcal-event" data-id="${attr(ag.id)}"
+        html += `<button type="button" class="gcal-event" data-id="${attr(ag.id)}"
           style="position:relative;height:auto;top:auto;left:auto;right:auto;
                  background:${bg};border-left-color:${clr};color:${clr};margin-bottom:4px">
           <div class="gcal-event-hora">${safe(ag.hora || '—')}</div>
           <div style="font-size:13px;font-weight:500;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${safe(ag.clienteNome || '')}</div>
           <div class="gcal-event-desc">${safe(ag.servicos || '')}</div>
-        </div>`;
+        </button>`;
       });
     }
 
@@ -3055,7 +3072,7 @@ function renderAgendaMes(el, list, dataBase){
       visible.forEach(ag => {
         const clr = ag.status==='concluido' ? 'var(--ok)' : ag.status==='cancelado' ? 'var(--err)' : 'var(--info)';
         const bg  = ag.status==='concluido' ? 'var(--ok-bg)' : ag.status==='cancelado' ? 'var(--err-bg)' : 'var(--info-bg)';
-        html += `<div class="gcal-month-pill" data-id="${attr(ag.id)}" style="background:${bg};color:${clr}">${ag.hora ? safe(ag.hora)+' ' : ''}${safe(ag.clienteNome || ag.servicos || '—')}</div>`;
+        html += `<button type="button" class="gcal-month-pill" data-id="${attr(ag.id)}" style="background:${bg};color:${clr}">${ag.hora ? safe(ag.hora)+' ' : ''}${safe(ag.clienteNome || ag.servicos || '—')}</button>`;
       });
       if(extra > 0) html += `<div class="gcal-month-mais">+${extra} mais</div>`;
       html += `</div>`;
@@ -3932,9 +3949,9 @@ function openDrawerPlan(){
   state.ui.editId = null;
   openDrawer(`
     <div class="dtitle">Novo Planejamento</div>
-    <div class="seg">
-      <button class="seg-btn active" id="plan-d">Despesa</button>
-      <button class="seg-btn" id="plan-r">Receita</button>
+    <div class="seg" role="group" aria-label="Tipo do planejamento">
+      <button class="seg-btn active" id="plan-d" aria-pressed="true">Despesa</button>
+      <button class="seg-btn" id="plan-r" aria-pressed="false">Receita</button>
     </div>
     <div class="fg"><span class="lbl">Descrição *</span><input id="pn-desc" type="text" class="inp" placeholder="Ex: Equipamento parcelado…"/></div>
     <div class="form-row">
@@ -3959,10 +3976,14 @@ function openDrawerPlan(){
   qs('#plan-d').addEventListener('click', () => {
     qs('#plan-d').classList.add('active');
     qs('#plan-r').classList.remove('active');
+    qs('#plan-d').setAttribute('aria-pressed', 'true');
+    qs('#plan-r').setAttribute('aria-pressed', 'false');
   });
   qs('#plan-r').addEventListener('click', () => {
     qs('#plan-r').classList.add('active');
     qs('#plan-d').classList.remove('active');
+    qs('#plan-r').setAttribute('aria-pressed', 'true');
+    qs('#plan-d').setAttribute('aria-pressed', 'false');
   });
 
   qs('#btn-cancel-plan').addEventListener('click', closeDrawer);
@@ -3979,9 +4000,9 @@ function editPlan(id){
   state.ui.editId = plan.id;
   openDrawer(`
     <div class="dtitle">Editar Planejamento</div>
-    <div class="seg">
-      <button class="seg-btn ${plan.tipo === 'despesa' ? 'active' : ''}" id="plan-d">Despesa</button>
-      <button class="seg-btn ${plan.tipo === 'receita' ? 'active' : ''}" id="plan-r">Receita</button>
+    <div class="seg" role="group" aria-label="Tipo do planejamento">
+      <button class="seg-btn ${plan.tipo === 'despesa' ? 'active' : ''}" id="plan-d" aria-pressed="${plan.tipo === 'despesa'}">Despesa</button>
+      <button class="seg-btn ${plan.tipo === 'receita' ? 'active' : ''}" id="plan-r" aria-pressed="${plan.tipo === 'receita'}">Receita</button>
     </div>
     <div class="fg"><span class="lbl">Descrição *</span><input id="pn-desc" type="text" class="inp" placeholder="Ex: Equipamento parcelado…" value="${attr(plan.descricao || '')}"/></div>
     <div class="form-row">
@@ -4007,10 +4028,14 @@ function editPlan(id){
   qs('#plan-d').addEventListener('click', () => {
     qs('#plan-d').classList.add('active');
     qs('#plan-r').classList.remove('active');
+    qs('#plan-d').setAttribute('aria-pressed', 'true');
+    qs('#plan-r').setAttribute('aria-pressed', 'false');
   });
   qs('#plan-r').addEventListener('click', () => {
     qs('#plan-r').classList.add('active');
     qs('#plan-d').classList.remove('active');
+    qs('#plan-r').setAttribute('aria-pressed', 'true');
+    qs('#plan-d').setAttribute('aria-pressed', 'false');
   });
 
   qs('#btn-cancel-plan').addEventListener('click', closeDrawer);
@@ -4259,11 +4284,14 @@ function editAgend(ag){
     </div>
     <div class="fg">
       <span class="lbl">Status</span>
-      <select id="ag-status">
+      <select id="ag-status" ${ag.status === 'concluido' ? 'disabled' : ''}>
         <option value="agendado" ${ag.status === 'agendado' ? 'selected' : ''}>Agendado</option>
-        <option value="concluido" ${ag.status === 'concluido' ? 'selected' : ''}>Concluído</option>
+        <option value="concluido" ${ag.status === 'concluido' ? 'selected' : ''} ${ag.status === 'concluido' ? '' : 'disabled'}>Concluído</option>
         <option value="cancelado" ${ag.status === 'cancelado' ? 'selected' : ''}>Cancelado</option>
       </select>
+      ${ag.status === 'concluido'
+        ? '<small class="muted">Atendimento já concluído e lançado no caixa.</small>'
+        : '<small class="muted">Para concluir, use a ação “Concluir atendimento”.</small>'}
     </div>
     <div class="fg"><span class="lbl">Observações</span><input id="ag-obs" type="text" class="inp" value="${attr(ag.observacoes || '')}"/></div>
     <div class="dfooter">
@@ -4530,14 +4558,14 @@ function abrirSeletorItem(){
 
   svcOpts.forEach(s => {
     const preco = parseFloat(s.preco) || 0;
-    html += `<div onclick="addItemDireto(this)" data-id="${attr(s.id)}" data-nome="${attr(s.nome)}" data-tipo="servico" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${safe(s.nome)}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
+    html += `<button type="button" onclick="addItemDireto(this)" data-id="${attr(s.id)}" data-nome="${attr(s.nome)}" data-tipo="servico" data-preco="${preco}" style="width:100%;padding:16px 14px;border:0;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2);text-align:left;font:inherit"><span style="font-size:17px;color:var(--text);font-weight:500">${safe(s.nome)}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></button>`;
   });
   if(!svcOpts.length) html += '<div style="color:var(--dim);font-size:14px;padding:12px">Nenhum serviço cadastrado</div>';
 
   html += '<div style="font-size:13px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin:14px 0 8px">PRODUTOS</div>';
   prdOpts.forEach(p => {
     const preco = parseFloat(p.preco) || 0;
-    html += `<div onclick="addItemDireto(this)" data-id="${attr(p.id)}" data-nome="${attr(p.nome)}" data-tipo="produto" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${safe(p.nome)}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
+    html += `<button type="button" onclick="addItemDireto(this)" data-id="${attr(p.id)}" data-nome="${attr(p.nome)}" data-tipo="produto" data-preco="${preco}" style="width:100%;padding:16px 14px;border:0;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2);text-align:left;font:inherit"><span style="font-size:17px;color:var(--text);font-weight:500">${safe(p.nome)}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></button>`;
   });
   if(!prdOpts.length) html += '<div style="color:var(--dim);font-size:14px;padding:12px">Nenhum produto cadastrado</div>';
 
@@ -4552,13 +4580,13 @@ function abrirSeletorItemComanda(){
   html += '<div style="font-size:13px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">SERVIÇOS</div>';
   svcOpts.forEach(s => {
     const preco = parseFloat(s.preco) || 0;
-    html += `<div onclick="addItemComanda(this)" data-nome="${attr(s.nome)}" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${safe(s.nome)}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
+    html += `<button type="button" onclick="addItemComanda(this)" data-nome="${attr(s.nome)}" data-preco="${preco}" style="width:100%;padding:16px 14px;border:0;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2);text-align:left;font:inherit"><span style="font-size:17px;color:var(--text);font-weight:500">${safe(s.nome)}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></button>`;
   });
   if(!svcOpts.length) html += '<div style="color:var(--dim);font-size:14px;padding:12px">Nenhum serviço cadastrado</div>';
   html += '<div style="font-size:13px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin:14px 0 8px">PRODUTOS</div>';
   prdOpts.forEach(p => {
     const preco = parseFloat(p.preco) || 0;
-    html += `<div onclick="addItemComanda(this)" data-nome="${attr(p.nome)}" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${safe(p.nome)}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
+    html += `<button type="button" onclick="addItemComanda(this)" data-nome="${attr(p.nome)}" data-preco="${preco}" style="width:100%;padding:16px 14px;border:0;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2);text-align:left;font:inherit"><span style="font-size:17px;color:var(--text);font-weight:500">${safe(p.nome)}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></button>`;
   });
   if(!prdOpts.length) html += '<div style="color:var(--dim);font-size:14px;padding:12px">Nenhum produto cadastrado</div>';
   html += '<button onclick="closeModal()" class="btn-sec" style="width:100%;margin-top:16px">Fechar</button>';
@@ -4670,8 +4698,14 @@ function renderItens(){
 
 function setTipoLanc(t){
   state.ui.tipoLanc = t;
-  ['e','s','r'].forEach(x => qs('#seg-' + x)?.classList.remove('active'));
-  qs('#seg-' + ({entrada:'e', saida:'s', retirada:'r'}[t]))?.classList.add('active');
+  ['e','s','r'].forEach(x => {
+    const segment = qs('#seg-' + x);
+    segment?.classList.remove('active');
+    segment?.setAttribute('aria-pressed', 'false');
+  });
+  const activeSegment = qs('#seg-' + ({entrada:'e', saida:'s', retirada:'r'}[t]));
+  activeSegment?.classList.add('active');
+  activeSegment?.setAttribute('aria-pressed', 'true');
   qs('#f-entrada').style.display = t === 'entrada' ? 'block' : 'none';
   qs('#f-saida').style.display = t === 'saida' ? 'block' : 'none';
   qs('#f-retirada').style.display = t === 'retirada' ? 'block' : 'none';
@@ -4993,10 +5027,10 @@ function openDrawerLanc(){
 
   openDrawer(`
     <div class="dtitle">Novo Lançamento</div>
-    <div class="seg seg-tipos-lanc">
-      <button class="seg-btn seg-btn-launch seg-btn-entrada active" id="seg-e" onclick="setTipoLanc('entrada')">Entrada</button>
-      <button class="seg-btn seg-btn-launch seg-btn-saida" id="seg-s" onclick="setTipoLanc('saida')">Saída</button>
-      <button class="seg-btn seg-btn-launch seg-btn-retirada" id="seg-r" onclick="setTipoLanc('retirada')">Retirada</button>
+    <div class="seg seg-tipos-lanc" role="group" aria-label="Tipo do lançamento">
+      <button class="seg-btn seg-btn-launch seg-btn-entrada active" id="seg-e" aria-pressed="true" onclick="setTipoLanc('entrada')">Entrada</button>
+      <button class="seg-btn seg-btn-launch seg-btn-saida" id="seg-s" aria-pressed="false" onclick="setTipoLanc('saida')">Saída</button>
+      <button class="seg-btn seg-btn-launch seg-btn-retirada" id="seg-r" aria-pressed="false" onclick="setTipoLanc('retirada')">Retirada</button>
     </div>
 
     <div id="f-entrada">
@@ -5108,10 +5142,10 @@ function editLanc(l){
 
   openDrawer(`
     <div class="dtitle">Editar Lançamento</div>
-    <div class="seg seg-tipos-lanc">
-      <button class="seg-btn seg-btn-launch seg-btn-entrada ${t === 'entrada' ? 'active' : ''}" id="seg-e" onclick="setTipoLanc('entrada')">Entrada</button>
-      <button class="seg-btn seg-btn-launch seg-btn-saida ${t === 'saida' ? 'active' : ''}" id="seg-s" onclick="setTipoLanc('saida')">Saída</button>
-      <button class="seg-btn seg-btn-launch seg-btn-retirada ${t === 'retirada' ? 'active' : ''}" id="seg-r" onclick="setTipoLanc('retirada')">Retirada</button>
+    <div class="seg seg-tipos-lanc" role="group" aria-label="Tipo do lançamento">
+      <button class="seg-btn seg-btn-launch seg-btn-entrada ${t === 'entrada' ? 'active' : ''}" id="seg-e" aria-pressed="${t === 'entrada'}" onclick="setTipoLanc('entrada')">Entrada</button>
+      <button class="seg-btn seg-btn-launch seg-btn-saida ${t === 'saida' ? 'active' : ''}" id="seg-s" aria-pressed="${t === 'saida'}" onclick="setTipoLanc('saida')">Saída</button>
+      <button class="seg-btn seg-btn-launch seg-btn-retirada ${t === 'retirada' ? 'active' : ''}" id="seg-r" aria-pressed="${t === 'retirada'}" onclick="setTipoLanc('retirada')">Retirada</button>
     </div>
     <div id="f-entrada" style="display:${t === 'entrada' ? 'block' : 'none'}">
       <div class="fg">

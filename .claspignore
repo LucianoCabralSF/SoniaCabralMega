@@ -1,4 +1,5 @@
 # Envia ao Apps Script somente o backend — nunca o site
 **/**
 !Código.gs
+!Regras.gs
 !appsscript.json
