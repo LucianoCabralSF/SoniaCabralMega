@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no"/>
-<meta name="theme-color" content="#faf8f4"/>
+<meta name="theme-color" content="#f0f2f5"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
@@ -12,34 +12,37 @@
 <link rel="apple-touch-icon" href="/icon.svg"/>
 <title>Sonia Cabral</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#faf8f4;
+  --bg:#f0f2f5;
   --bg2:#ffffff;
-  --bg3:#f3f0ea;
-  --bg4:#ede9e0;
+  --bg3:#f0f2f5;
+  --bg4:#e4e6eb;
   --gold:#9a6f1e;
-  --gold-lt:#b88a2a;
+  --gold-lt:#c9a132;
   --gold-dk:#6b4c10;
   --gold-bg:rgba(154,111,30,.08);
-  --dark:#1a1208;
-  --dark2:#2d2410;
-  --text:#1a1208;
-  --dim:#7a6d58;
-  --border:#e0d9cc;
+  --dark:#1c1e21;
+  --dark2:#242526;
+  --text:#050505;
+  --dim:#65676b;
+  --border:#ced0d4;
   --ok:#1a7a3c;
   --ok-bg:rgba(26,122,60,.1);
   --err:#c0392b;
   --err-bg:rgba(192,57,43,.1);
-  --info:#1a5a8a;
-  --info-bg:rgba(26,90,138,.1);
-  --warn:#9a6f1e;
+  --info:#1462c4;
+  --info-bg:rgba(24,119,242,.09);
+  --warn:#8a6116;
   --warn-bg:rgba(154,111,30,.12);
+  --azul:#1877f2;
+  --azul-dk:#1462c4;
+  --azul-bg:rgba(24,119,242,.09);
   --r:12px;
-  --shadow:0 2px 12px rgba(26,18,8,.08);
-  --shadow-md:0 4px 24px rgba(26,18,8,.12);
+  --shadow:0 1px 4px rgba(0,0,0,.08);
+  --shadow-md:0 4px 20px rgba(0,0,0,.12);
 }
 html,body{
   height:100%;
@@ -47,16 +50,16 @@ html,body{
   max-width:100%;
   background:var(--bg);
   color:var(--text);
-  font-family:'DM Mono',monospace;
-  font-size:14px;
-  line-height:1.6;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  font-size:16px;
+  line-height:1.5;
   overflow:hidden;
   overflow-x:hidden;
   -webkit-text-size-adjust:100%;
   touch-action:manipulation
 }
 button{cursor:pointer;font-family:inherit;border:none;outline:none}
-input,textarea,select{font-family:'DM Mono',monospace;font-size:14px;outline:none;color:var(--text)}
+input,textarea,select{font-family:inherit;font-size:16px;outline:none;color:var(--text)}
 input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;color-scheme:light;cursor:pointer}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -85,7 +88,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   position:fixed;bottom:88px;left:50%;
   transform:translateX(-50%) translateY(16px);
   background:var(--dark);color:#fff;padding:10px 20px;border-radius:var(--r);
-  font-size:12px;opacity:0;transition:all .3s;z-index:998;
+  font-size:14px;opacity:0;transition:all .3s;z-index:998;
   pointer-events:none;white-space:nowrap;max-width:92vw;text-align:center;
   box-shadow:var(--shadow-md)
 }
@@ -119,12 +122,12 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   color:var(--dark);margin-bottom:4px
 }
 .login-tag{
-  font-size:10px;color:var(--dim);letter-spacing:3px;
+  font-size:13px;color:var(--dim);letter-spacing:3px;
   text-transform:uppercase;margin-bottom:40px
 }
 .login-box{width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px}
 .lbl{
-  font-size:10px;color:var(--dim);letter-spacing:2px;
+  font-size:13px;color:var(--dim);letter-spacing:2px;
   text-transform:uppercase;margin-bottom:3px;display:block
 }
 .inp{
@@ -134,7 +137,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 .inp:focus{border-color:var(--gold)}
 .btn-gold{
   background:var(--dark);color:var(--gold-lt);padding:15px;border-radius:var(--r);
-  font-size:13px;letter-spacing:1px;text-transform:uppercase;font-weight:600;
+  font-size:15px;letter-spacing:1px;text-transform:uppercase;font-weight:600;
   width:100%;transition:opacity .2s;border:1.5px solid var(--gold-dk)
 }
 .btn-gold:active{opacity:.8}
@@ -171,7 +174,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 .nav-item{
   flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;
   padding:10px 4px 8px;background:transparent;color:rgba(255,255,255,.5);
-  font-size:10px;letter-spacing:.3px;text-transform:uppercase;transition:all .2s;
+  font-size:13px;letter-spacing:.3px;text-transform:uppercase;transition:all .2s;
   border-top:3px solid transparent;margin-top:-1px
 }
 .nav-item svg{
@@ -238,14 +241,14 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 }
 .cli-option:last-child{border-bottom:none}
 .cli-option.active,.cli-option:active{background:var(--gold-bg)}
-.cli-option-name{font-size:13px;font-weight:500}
-.cli-option-meta{font-size:10px;color:var(--dim)}
+.cli-option-name{font-size:15px;font-weight:500}
+.cli-option-meta{font-size:13px;color:var(--dim)}
 .cli-empty{
-  padding:14px;color:var(--dim);font-size:12px;display:flex;flex-direction:column;gap:10px
+  padding:14px;color:var(--dim);font-size:14px;display:flex;flex-direction:column;gap:10px
 }
 .cli-empty button{
   background:var(--dark);color:var(--gold-lt);padding:11px 12px;border-radius:10px;
-  border:1.5px solid var(--gold-dk);font-size:11px;letter-spacing:.5px;text-transform:uppercase
+  border:1.5px solid var(--gold-dk);font-size:14px;letter-spacing:.5px;text-transform:uppercase
 }
 
 #doverlay{
@@ -269,11 +272,11 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 .dfooter{display:flex;gap:10px;margin-top:20px}
 .btn-sec{
   flex:1;background:transparent;border:1.5px solid var(--border);color:var(--dim);
-  padding:15px;border-radius:var(--r);font-size:13px;letter-spacing:.5px;text-transform:uppercase
+  padding:15px;border-radius:var(--r);font-size:15px;letter-spacing:.5px;text-transform:uppercase
 }
 .btn-save{
   flex:2;background:var(--dark);color:var(--gold-lt);padding:15px;border-radius:var(--r);
-  font-size:13px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;
+  font-size:15px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;
   border:1.5px solid var(--gold-dk)
 }
 .btn-save:disabled{opacity:.5;cursor:default}
@@ -296,16 +299,16 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 }
 .cbody{flex:1;min-width:0}
 .cname{
-  font-size:15px;color:var(--text);font-weight:600;
+  font-size:17px;color:var(--text);font-weight:600;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
 .cmeta{
-  font-size:12px;color:var(--dim);margin-top:3px;
+  font-size:14px;color:var(--dim);margin-top:3px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
 .btn-e,.btn-d,.btn-s,.btn-ok{
   display:flex;align-items:center;gap:4px;padding:7px 11px;border-radius:8px;
-  font-size:11px;letter-spacing:.5px;font-weight:500;transition:all .15s;
+  font-size:14px;letter-spacing:.5px;font-weight:500;transition:all .15s;
   border:1.5px solid transparent
 }
 .btn-e{background:var(--bg3);color:var(--gold-dk);border-color:var(--border)}
@@ -322,7 +325,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 }
 
 .badge{
-  display:inline-block;font-size:9px;padding:3px 8px;border-radius:20px;
+  display:inline-block;font-size:13px;padding:3px 8px;border-radius:20px;
   letter-spacing:1px;text-transform:uppercase;font-weight:500
 }
 .b-on{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok)}
@@ -339,7 +342,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   border-radius:var(--r);overflow:hidden;margin-bottom:16px;gap:0
 }
 .seg-btn{
-  flex:1;padding:13px 6px;font-size:12px;letter-spacing:.5px;text-transform:uppercase;
+  flex:1;padding:13px 6px;font-size:14px;letter-spacing:.5px;text-transform:uppercase;
   background:transparent;color:var(--dim);transition:all .2s;border-radius:0;
   border-right:1px solid var(--border)
 }
@@ -373,7 +376,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   width:20px;
   height:20px;
   border-radius:50%;
-  font-size:12px;
+  font-size:14px;
   line-height:1
 }
 .seg-btn-entrada{
@@ -402,7 +405,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 .seg-btn-retirada::before{
   content:'R$';
   background:rgba(154,111,30,.16);
-  font-size:9px;
+  font-size:13px;
   font-weight:700
 }
 .seg-tipos-lanc .seg-btn.active{
@@ -429,7 +432,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 
 .info-box{
   background:var(--gold-bg);border:1px solid var(--gold-dk);border-radius:var(--r);
-  padding:12px;margin-bottom:14px;font-size:11px;color:var(--dark);line-height:1.6
+  padding:12px;margin-bottom:14px;font-size:14px;color:var(--dark);line-height:1.6
 }
 
 .itens-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
@@ -439,22 +442,22 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 }
 .item-row-body{flex:1;min-width:0}
 .item-row-nome{
-  font-size:13px;color:var(--text);font-weight:500;
+  font-size:15px;color:var(--text);font-weight:500;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
-.item-row-val{font-size:12px;color:var(--dim);margin-top:2px}
+.item-row-val{font-size:14px;color:var(--dim);margin-top:2px}
 .item-val-input{
   width:90px;background:var(--bg2);border:1.5px solid var(--border);color:var(--text);
-  padding:6px 8px;border-radius:8px;font-size:12px;text-align:right
+  padding:6px 8px;border-radius:8px;font-size:14px;text-align:right
 }
 .item-val-input:focus{border-color:var(--gold)}
 .btn-remove-item{
   background:var(--err-bg);color:var(--err);border:1.5px solid var(--err);
-  border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;flex-shrink:0
+  border-radius:8px;padding:6px 10px;font-size:14px;font-weight:600;flex-shrink:0
 }
 .btn-add-item{
   background:var(--bg2);border:1.5px solid var(--gold-dk);color:var(--gold-dk);
-  border-radius:var(--r);padding:12px;width:100%;font-size:12px;font-weight:600;
+  border-radius:var(--r);padding:12px;width:100%;font-size:14px;font-weight:600;
   letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;
   justify-content:center;gap:6px
 }
@@ -464,7 +467,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   justify-content:space-between;align-items:center;margin-bottom:14px
 }
 .total-bar-label{
-  font-size:11px;color:rgba(255,255,255,.6);letter-spacing:1px;text-transform:uppercase
+  font-size:14px;color:rgba(255,255,255,.6);letter-spacing:1px;text-transform:uppercase
 }
 .total-bar-val{
   font-family:'Playfair Display',serif;font-size:22px;color:var(--gold-lt);font-weight:600
@@ -475,7 +478,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   margin-bottom:2px
 }
 .dg-greeting em{color:var(--gold)}
-.dg-date{font-size:11px;color:var(--dim)}
+.dg-date{font-size:14px;color:var(--dim)}
 .dg-div{
   width:40px;height:2px;background:linear-gradient(90deg,var(--gold),transparent);
   margin:12px 0 20px;border-radius:1px
@@ -490,7 +493,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   background:linear-gradient(90deg,var(--gold-dk),var(--gold-lt))
 }
 .sc-label{
-  font-size:9px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;
+  font-size:13px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;
   margin-bottom:8px
 }
 .sc-val{font-family:'Playfair Display',serif;font-size:28px;color:var(--dark);line-height:1}
@@ -503,14 +506,14 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 .meta-bar-bg{background:var(--bg3);border-radius:4px;height:6px;overflow:hidden;margin-top:4px}
 .meta-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gold-dk),var(--gold-lt));transition:width .6s ease}
 .slabel{
-  font-size:9px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;
+  font-size:13px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;
   margin-bottom:10px
 }
 .qa{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
 .qb{
   background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);
   padding:18px 6px;display:flex;flex-direction:column;align-items:center;gap:9px;
-  color:var(--dark);font-size:11px;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--dark);font-size:14px;letter-spacing:.5px;text-transform:uppercase;
   transition:all .2s;box-shadow:var(--shadow);font-weight:500
 }
 .qb svg{
@@ -532,10 +535,10 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 .venc-dot.err{background:var(--err)}
 .venc-body{flex:1;min-width:0}
 .venc-desc{
-  font-size:13px;color:var(--text);font-weight:500;
+  font-size:15px;color:var(--text);font-weight:500;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
-.venc-data{font-size:10px;color:var(--dim);margin-top:1px}
+.venc-data{font-size:13px;color:var(--dim);margin-top:1px}
 .venc-val{
   font-family:'Playfair Display',serif;font-size:16px;color:var(--dark);flex-shrink:0
 }
@@ -552,7 +555,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   padding:12px;text-align:center;box-shadow:var(--shadow)
 }
 .rc-label{
-  font-size:9px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;
+  font-size:13px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;
   margin-bottom:6px
 }
 .rc-val{font-family:'Playfair Display',serif;font-size:18px;line-height:1;font-weight:600}
@@ -572,10 +575,10 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 .licon.saida{background:var(--err-bg);color:var(--err);border:1.5px solid var(--err)}
 .lbody{flex:1;min-width:0}
 .lnome{
-  font-size:13px;color:var(--text);font-weight:500;
+  font-size:15px;color:var(--text);font-weight:500;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
-.lmeta{font-size:10px;color:var(--dim);margin-top:1px}
+.lmeta{font-size:13px;color:var(--dim);margin-top:1px}
 .lval{font-family:'Playfair Display',serif;font-size:16px;flex-shrink:0;font-weight:600}
 .lval.entrada{color:var(--ok)}
 .lval.saida{color:var(--err)}
@@ -598,7 +601,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   color:var(--gold-lt);margin-bottom:2px
 }
 .ext-sub{
-  font-size:10px;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase
+  font-size:13px;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase
 }
 .ext-rg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
 .ext-rc{
@@ -606,7 +609,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   padding:12px;box-shadow:var(--shadow)
 }
 .ext-rc-label{
-  font-size:9px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;
+  font-size:13px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;
   margin-bottom:6px
 }
 .ext-rc-val{font-family:'Playfair Display',serif;font-size:20px;line-height:1;font-weight:600}
@@ -619,7 +622,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   padding:14px;margin-bottom:12px;box-shadow:var(--shadow)
 }
 .bk-title{
-  font-size:9px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;
+  font-size:13px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;
   margin-bottom:10px
 }
 .bk-row{
@@ -627,9 +630,9 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   padding:7px 0;border-bottom:1px solid var(--border)
 }
 .bk-row:last-child{border-bottom:none}
-.bk-label{font-size:12px;color:var(--dim)}
-.bk-val{font-size:12px;color:var(--text);font-weight:500}
-.bk-pct{font-size:10px;color:var(--dim);margin-left:6px}
+.bk-label{font-size:14px;color:var(--dim)}
+.bk-val{font-size:14px;color:var(--text);font-weight:500}
+.bk-pct{font-size:13px;color:var(--dim);margin-left:6px}
 .dia-hdr{
   display:flex;justify-content:space-between;align-items:center;padding:10px 14px;
   background:var(--bg4);border:1.5px solid var(--border);border-radius:var(--r);
@@ -658,14 +661,14 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 .cred-vals{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .cv-item{text-align:center;background:var(--bg3);border-radius:8px;padding:8px}
 .cv-label{
-  font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;
+  font-size:13px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;
   margin-bottom:3px
 }
 .cv-num{font-family:'Playfair Display',serif;font-size:16px;color:var(--dark);font-weight:600}
 .cv-num.err{color:var(--err)}
 .btn-pagar{
   background:var(--dark);color:var(--gold-lt);padding:14px 16px;border-radius:var(--r);
-  font-size:13px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:100%;
+  font-size:15px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:100%;
   border:1.5px solid var(--gold-dk)
 }
 
@@ -674,8 +677,8 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   border-radius:var(--r);padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow)
 }
 .ag-hora{font-family:'Playfair Display',serif;font-size:18px;color:var(--dark);font-weight:600}
-.ag-cli{font-size:14px;color:var(--dark);font-weight:500;margin-top:2px}
-.ag-meta{font-size:11px;color:var(--dim);margin-top:2px}
+.ag-cli{font-size:16px;color:var(--dark);font-weight:500;margin-top:2px}
+.ag-meta{font-size:14px;color:var(--dim);margin-top:2px}
 .ag-card.concluido{border-left-color:var(--ok);opacity:.85}
 .ag-card.cancelado{border-left-color:var(--err);opacity:.7}
 
@@ -685,36 +688,36 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 .gcal-hcell{text-align:center;padding:6px 2px;border-right:1px solid var(--border);min-width:42px}
 .gcal-hcell:last-child{border-right:none}
 .gcal-hcell-hoje{background:var(--gold-bg)}
-.gcal-hday-name{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);display:block}
+.gcal-hday-name{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);display:block}
 .gcal-hday{font-size:16px;font-weight:400;color:var(--text);width:28px;height:28px;line-height:28px;border-radius:50%;margin:2px auto 0;text-align:center}
-.gcal-hday.hoje{background:var(--gold);color:#fff;font-weight:700;font-size:14px}
+.gcal-hday.hoje{background:var(--gold);color:#fff;font-weight:700;font-size:16px}
 .gcal-event{
   position:absolute;left:2px;right:2px;border-radius:4px;padding:2px 5px;
-  font-size:10px;overflow:hidden;cursor:pointer;border-left:3px solid;
+  font-size:13px;overflow:hidden;cursor:pointer;border-left:3px solid;
   transition:filter .12s;box-shadow:0 1px 4px rgba(26,18,8,.1);z-index:2
 }
 .gcal-event:active{filter:brightness(.88)}
-.gcal-event-hora{font-weight:600;font-size:10px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gcal-event-desc{font-size:9px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.gcal-event-hora{font-weight:600;font-size:13px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gcal-event-desc{font-size:13px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 
 /* === Agenda: grade mensal === */
 .gcal-month{width:100%}
 .gcal-month-title{text-align:center;font-family:'Playfair Display',serif;font-size:18px;font-style:italic;color:var(--dark);margin-bottom:10px}
 .gcal-month-header{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1.5px solid var(--border)}
-.gcal-month-hcell{text-align:center;padding:5px 2px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)}
+.gcal-month-hcell{text-align:center;padding:5px 2px;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)}
 .gcal-month-grid{display:grid;grid-template-columns:repeat(7,1fr);border-left:1.5px solid var(--border);border-top:1.5px solid var(--border)}
 .gcal-month-cell{min-height:76px;padding:3px;border-right:1.5px solid var(--border);border-bottom:1.5px solid var(--border);overflow:hidden}
 .gcal-month-cell.outro-mes{background:var(--bg3)}
-.gcal-month-num{font-size:11px;color:var(--text);margin-bottom:2px;text-align:center;width:22px;height:22px;line-height:22px;border-radius:50%}
+.gcal-month-num{font-size:14px;color:var(--text);margin-bottom:2px;text-align:center;width:22px;height:22px;line-height:22px;border-radius:50%}
 .gcal-month-num.hoje{background:var(--gold);color:#fff;font-weight:700;margin:0 auto 2px}
 .gcal-month-cell.outro-mes .gcal-month-num{color:var(--dim);opacity:.5}
 .gcal-month-pill{
-  font-size:9px;padding:1px 4px;border-radius:3px;margin-bottom:2px;
+  font-size:13px;padding:1px 4px;border-radius:3px;margin-bottom:2px;
   overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;
   line-height:1.5;font-weight:500;display:block
 }
 .gcal-month-pill:active{filter:brightness(.88)}
-.gcal-month-mais{font-size:9px;color:var(--dim);padding:1px 4px;font-weight:500}
+.gcal-month-mais{font-size:13px;color:var(--dim);padding:1px 4px;font-weight:500}
 
 /* === Mobile: agenda views === */
 @media (max-width:520px){
@@ -739,14 +742,14 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   .gcal-week{min-width:0}
   .gcal-week > div{min-width:336px}/* 7 cols × 48px each scrolls horizontally */
   .gcal-hcell{min-width:48px;padding:4px 1px}
-  .gcal-hday{font-size:13px;width:24px;height:24px;line-height:24px}
+  .gcal-hday{font-size:15px;width:24px;height:24px;line-height:24px}
   .gcal-hday-name{font-size:8px}
   .gcal-event{padding:2px 4px}
-  .gcal-event-hora{font-size:9px}
+  .gcal-event-hora{font-size:13px}
   .gcal-month-cell{min-height:52px;padding:2px}
   .gcal-month-hcell{font-size:8px;padding:4px 1px;letter-spacing:.5px}
   .gcal-month-pill{font-size:8px;padding:1px 3px}
-  .gcal-month-num{font-size:10px;width:18px;height:18px;line-height:18px}
+  .gcal-month-num{font-size:13px;width:18px;height:18px;line-height:18px}
 }
 
 .cfg-sec{
@@ -754,12 +757,12 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
   padding:18px;margin-bottom:14px;box-shadow:var(--shadow)
 }
 .cfg-title{
-  font-size:9px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;
+  font-size:13px;color:var(--dim);letter-spacing:3px;text-transform:uppercase;
   margin-bottom:14px
 }
 
 #parcelas-container .parc-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
-#parcelas-container .parc-row span{font-size:11px;color:var(--dim);min-width:80px}
+#parcelas-container .parc-row span{font-size:14px;color:var(--dim);min-width:80px}
 #parcelas-container .parc-row input{
   flex:1;background:var(--bg3);border:1.5px solid var(--border);
   color:var(--text);padding:8px 10px;border-radius:8px
@@ -779,8 +782,8 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 .result-box.destaque-err{background:var(--err-bg);border-color:var(--err)}
 .result-box.destaque-err .result-label{color:var(--err)}
 .result-box.destaque-err .result-sub{color:var(--dim)}
-.result-label{font-size:11px;color:var(--dim);font-weight:500}
-.result-sub{font-size:10px;color:var(--dim);margin-top:2px}
+.result-label{font-size:14px;color:var(--dim);font-weight:500}
+.result-sub{font-size:13px;color:var(--dim);margin-top:2px}
 .result-val{font-family:'Playfair Display',serif;font-size:22px;font-weight:600}
 .result-val.pos{color:var(--ok)}
 .result-val.neg{color:var(--err)}
@@ -793,14 +796,65 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 .alert-bar-icon{font-size:18px;flex-shrink:0}
 .alert-bar-body{flex:1;min-width:0}
 .alert-bar-desc{
-  font-size:13px;color:var(--err);font-weight:500;
+  font-size:15px;color:var(--err);font-weight:500;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
-.alert-bar-meta{font-size:10px;color:var(--dim)}
+.alert-bar-meta{font-size:13px;color:var(--dim)}
 .alert-bar-val{
-  font-family:'Playfair Display',serif;font-size:15px;color:var(--err);
+  font-family:'Playfair Display',serif;font-size:17px;color:var(--err);
   font-weight:600;flex-shrink:0
 }
+
+/* ===== TEMA ACESSÍVEL — claro, familiar e com letras grandes ===== */
+/* Barras brancas (topo e navegação), como nos apps que ela já conhece */
+#header{background:var(--bg2);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.htitle{color:var(--gold-dk)}
+.hdot{background:var(--gold-bg)}
+.icon-btn{color:var(--dim)}
+#nav{background:var(--bg2);border-top:1px solid var(--border)}
+.nav-item{color:var(--dim);text-transform:none;letter-spacing:0;font-weight:600;font-size:13px;gap:4px;padding:10px 4px 10px}
+.nav-item svg{width:28px;height:28px;stroke-width:1.8}
+.nav-item.active{color:var(--azul);border-top-color:var(--azul);background:var(--azul-bg)}
+
+/* Ações principais em azul, com botões altos e fáceis de tocar */
+.btn-gold,.btn-save{background:var(--azul);border-color:var(--azul);color:#fff;text-transform:none;letter-spacing:0;font-weight:700;min-height:52px;font-size:17px}
+.btn-sec{min-height:52px;text-transform:none;letter-spacing:0;font-size:16px;color:var(--text)}
+.btn-add{background:var(--azul);color:#fff;width:48px;height:48px;font-size:26px}
+.btn-add-item{border-color:var(--azul);color:var(--azul-dk);font-size:16px;padding:14px}
+.btn-pagar{background:var(--azul);border-color:var(--azul);color:#fff;text-transform:none;letter-spacing:0;min-height:50px}
+.seg-btn.active{background:var(--azul);color:#fff}
+.qb:active{background:var(--azul);color:#fff;border-color:var(--azul)}
+.cli-empty button{background:var(--azul);border-color:var(--azul);color:#fff;text-transform:none;letter-spacing:0}
+.total-bar{background:var(--azul)}
+.total-bar-label{color:rgba(255,255,255,.9)}
+.total-bar-val{color:#fff}
+.meta-bar-fill{background:var(--azul)}
+.sc::before{background:linear-gradient(90deg,var(--azul),#6ba7f5)}
+.cavatar{background:var(--azul-bg);color:var(--azul-dk);font-family:inherit;font-style:normal;font-weight:700}
+.btn-e{color:var(--azul-dk)}
+.dg-greeting em{color:var(--gold-dk)}
+
+/* Campos maiores e foco azul bem visível */
+.inp,.fg select,.fg input,.fg textarea{padding:14px;min-height:52px}
+.inp:focus,.fg select:focus,.fg input:focus,.fg textarea:focus,.search-bar input:focus,.cdate-bar input:focus{border-color:var(--azul)}
+.cli-option.active,.cli-option:active{background:var(--azul-bg)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--azul);outline-offset:2px}
+.btn-e,.btn-d,.btn-s,.btn-ok{padding:10px 14px;font-size:14px}
+.btn-e svg,.btn-d svg,.btn-s svg,.btn-ok svg{width:16px;height:16px}
+.badge{font-size:12px;letter-spacing:.5px;padding:4px 10px}
+.lbl,.sc-label,.rc-label,.slabel,.login-tag{letter-spacing:1px}
+
+/* Navegador de mês do Caixa: ◀ Mês Ano ▶ */
+.mes-nav{flex:1;display:flex;align-items:center;gap:6px;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);padding:4px;box-shadow:var(--shadow)}
+.mes-nav-btn{width:52px;height:46px;border-radius:9px;background:var(--azul-bg);color:var(--azul-dk);font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mes-nav-btn:active{background:var(--azul);color:#fff}
+.mes-nav-label{flex:1;text-align:center;font-weight:700;font-size:17px;color:var(--text)}
+
+/* Botão "Ver" do extrato sem cortar na tela do celular */
+#btn-ext-ver-mes,#btn-ext-ver-per{min-height:52px;min-width:64px;flex:0 0 auto!important}
+.ext-periodo select{min-width:0}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -824,7 +878,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
       <span class="lbl">Senha</span>
       <input class="inp" id="inp-senha" type="password" placeholder="••••"/>
     </div>
-    <label style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim);cursor:pointer">
+    <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--dim);cursor:pointer">
       <input type="checkbox" id="chk-lembrar" checked style="accent-color:var(--gold)"/>
       Manter conectada neste dispositivo
     </label>
@@ -835,7 +889,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
 <div id="screen-app" style="display:none!important">
   <div id="header">
     <div class="hbrand">
-      <div class="hdot"><span style="font-family:'Playfair Display',serif;font-size:13px;font-style:italic;color:var(--gold-lt)">SC</span></div>
+      <div class="hdot"><span style="font-family:'Playfair Display',serif;font-size:15px;font-style:italic;color:var(--gold-lt)">SC</span></div>
       <div class="htitle" id="h-salonname">Sonia Cabral</div>
     </div>
     <button class="icon-btn" id="btn-logout">
@@ -869,7 +923,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
           <div id="st-meta-pct" style="font-family:'Playfair Display',serif;font-size:18px;color:var(--dim)">—%</div>
         </div>
         <div class="meta-bar-bg"><div class="meta-bar-fill" id="st-meta-bar" style="width:0%"></div></div>
-        <div id="st-meta-sub" style="font-size:10px;color:var(--dim);margin-top:6px">calculando…</div>
+        <div id="st-meta-sub" style="font-size:13px;color:var(--dim);margin-top:6px">calculando…</div>
       </div>
       <div id="home-atrasados"></div>
       <div class="slabel">⏰ Vencem em 15 dias</div>
@@ -897,7 +951,12 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
         <button class="btn-add" id="btn-open-lanc">+</button>
       </div>
       <div class="cdate-bar">
-        <input type="month" id="cx-data"/>
+        <input type="hidden" id="cx-data"/>
+        <div class="mes-nav">
+          <button class="mes-nav-btn" id="cx-mes-prev" aria-label="Mês anterior">◀</button>
+          <div class="mes-nav-label" id="cx-mes-label"></div>
+          <button class="mes-nav-btn" id="cx-mes-next" aria-label="Próximo mês">▶</button>
+        </div>
         <button class="icon-btn" id="btn-reload-caixa" style="background:var(--bg2);border:1.5px solid var(--border);padding:10px;border-radius:var(--r)">
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="23 4 23 10 17 10"/>
@@ -948,7 +1007,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
         <input id="search-cli" type="search" placeholder="Buscar nome ou telefone…"/>
       </div>
       <div id="btn-importar-agenda-wrap" style="padding:0 16px 12px;display:none">
-        <button id="btn-importar-agenda" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--gold-bg);border:1.5px dashed var(--gold);color:var(--gold);border-radius:var(--r);padding:11px 16px;font-family:inherit;font-size:13px;font-weight:500">
+        <button id="btn-importar-agenda" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--gold-bg);border:1.5px dashed var(--gold);color:var(--gold);border-radius:var(--r);padding:11px 16px;font-family:inherit;font-size:15px;font-weight:500">
           <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
           Importar da Agenda do Celular
         </button>
@@ -979,7 +1038,7 @@ input[type="date"],input[type="month"]{-webkit-appearance:auto;appearance:auto;c
       <div id="ext-lock" style="display:none;text-align:center;padding:40px 20px">
         <div style="font-size:40px;margin-bottom:12px">🔒</div>
         <div style="font-family:'Playfair Display',serif;font-size:18px;font-style:italic;color:var(--dark);margin-bottom:8px">Confirmação necessária</div>
-        <div style="font-size:12px;color:var(--dim);margin-bottom:20px">Períodos maiores que 7 dias requerem a senha para exibir o extrato.</div>
+        <div style="font-size:14px;color:var(--dim);margin-bottom:20px">Períodos maiores que 7 dias requerem a senha para exibir o extrato.</div>
         <div class="fg"><span class="lbl">Senha</span><input class="inp" id="ext-senha" type="password" placeholder="••••"/></div>
         <button class="btn-gold" id="btn-ext-unlock">Confirmar</button>
       </div>
@@ -1158,6 +1217,24 @@ const fmt = v => brlFormatter.format(Number(v) || 0);
 
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
+// Navegação de mês do Caixa (substitui o input type="month", que não funciona no iPhone)
+function setCaixaMes(mes){
+  const inp = qs('#cx-data');
+  if(inp) inp.value = mes;
+  const lbl = qs('#cx-mes-label');
+  if(lbl){
+    const [a, m] = mes.split('-').map(Number);
+    lbl.textContent = `${MESES[m-1]} ${a}`;
+  }
+}
+function navegarMesCaixa(delta){
+  const atual = qs('#cx-data')?.value || today().slice(0,7);
+  const [a, m] = atual.split('-').map(Number);
+  const d = new Date(a, m - 1 + delta, 1);
+  setCaixaMes(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+  loadCaixa(true);
+}
+
 const store = {
   get(k){
     try { return JSON.parse(localStorage.getItem(k)); } catch { return null; }
@@ -1294,6 +1371,14 @@ function todayLocalISO(){
 }
 function today(){ return todayLocalISO(); }
 
+// Data local em YYYY-MM-DD (nunca usar toISOString p/ datas: em Manaus UTC-4 vira o dia errado à noite)
+function localISO(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
 function fmtBR(iso){
   if(!iso) return '';
   const s = String(iso).slice(0,10);
@@ -1403,13 +1488,25 @@ function parseObsItens(obs){
   };
 }
 
+function _checarSessao(r){
+  if(r?.status === 'error' && /sess[aã]o expirada/i.test(r?.data?.message || '')){
+    store.del('sc_tok');
+    store.del('sc_ltok');
+    state.token = '';
+    state.longToken = '';
+    toast('Sua sessão expirou. Entre com a senha novamente.','err');
+    showLogin();
+  }
+  return r;
+}
+
 async function api(params){
   const url = new URL(API);
   Object.entries(params || {}).forEach(([k,v]) => {
     if(v !== undefined && v !== null) url.searchParams.set(k, String(v));
   });
   const r = await fetch(url.toString(), { method: 'GET' });
-  return r.json();
+  return _checarSessao(await r.json());
 }
 
 async function post(body){
@@ -1418,7 +1515,15 @@ async function post(body){
     body: JSON.stringify(body),
     headers: { 'Content-Type': 'text/plain' }
   });
-  return r.json();
+  return _checarSessao(await r.json());
+}
+
+// Trava global contra toque duplo em ações que gravam dinheiro
+let _acaoOcupada = false;
+async function comTrava(fn){
+  if(_acaoOcupada) return;
+  _acaoOcupada = true;
+  try{ await fn(); } finally { _acaoOcupada = false; }
 }
 
 function apiTimeout(params, ms=10000){
@@ -1828,6 +1933,8 @@ function bindGlobalEvents(){
   qs('#btn-open-plan').addEventListener('click', openDrawerPlan);
 
   qs('#btn-reload-caixa').addEventListener('click', () => loadCaixa(true));
+  qs('#cx-mes-prev').addEventListener('click', () => navegarMesCaixa(-1));
+  qs('#cx-mes-next').addEventListener('click', () => navegarMesCaixa(1));
   qs('#btn-reload-agenda').addEventListener('click', () => loadAgenda(true));
   qs('#btn-ext-unlock').addEventListener('click', desbloquearExtrato);
   qs('#btn-ext-ver-mes').addEventListener('click', loadExtrato);
@@ -1906,7 +2013,7 @@ window.addEventListener('load', async () => {
     });
 
     initExtSelectors();
-    qs('#cx-data').value = today().slice(0,7);
+    setCaixaMes(today().slice(0,7));
     qs('#ag-data').value = today();
 
     if(state.token){
@@ -2234,6 +2341,7 @@ window.abrirParcelasPlanejamento = abrirParcelasPlanejamento;
 
 async function baixarParcelaPlanejamento(id){
   if(!confirm('Confirmar baixa desta obrigação?')) return;
+  await comTrava(async () => {
   try{
     const r = await post({
       action:'pagarParcela',
@@ -2250,6 +2358,7 @@ async function baixarParcelaPlanejamento(id){
   }catch(e){
     toast('Erro ao baixar.','err');
   }
+  });
 }
 window.baixarParcelaPlanejamento = baixarParcelaPlanejamento;
 
@@ -2344,7 +2453,7 @@ function renderCred(){
   el.innerHTML = data.map(c => `
     <div class="cred-card">
       <div class="cred-hdr">
-        <div style="font-size:14px;font-weight:500">${c.clienteNome}</div>
+        <div style="font-size:16px;font-weight:500">${c.clienteNome}</div>
         <div style="display:flex;gap:8px;align-items:center">
           <span class="badge ${c.status === 'aberto' ? 'b-off' : 'b-on'}">${c.status}</span>
           <button class="btn-d" onclick="delFiado('${c.id}')" title="Excluir fiado">${svgDel}</button>
@@ -2373,7 +2482,7 @@ function _renderCaixaData(d, mes){
   const fel = qs('#cx-formas');
   fel.innerHTML = keys.length
     ? '<div class="slabel" style="margin-bottom:8px">Por forma de pagamento</div>' +
-      keys.map(k => `<div class="forma-row"><span style="font-size:12px;color:var(--dim)">${lbForma(k)}</span><span style="font-size:12px;font-weight:500">${fmt(pf[k])}</span></div>`).join('')
+      keys.map(k => `<div class="forma-row"><span style="font-size:14px;color:var(--dim)">${lbForma(k)}</span><span style="font-size:14px;font-weight:500">${fmt(pf[k])}</span></div>`).join('')
     : '';
 
   const allItems = (d.dias || []).flatMap(dia => dia.lancamentos || []);
@@ -2398,8 +2507,8 @@ function _renderCaixaData(d, mes){
     html += `
       <div>
         <div class="dia-hdr" onclick="toggleCaixaDia('${id}')">
-          <span style="font-size:12px;font-weight:500${isHoje ? ';color:var(--gold)' : ''}">${br}${isHoje ? ' · hoje' : ''}</span>
-          <span style="display:flex;gap:12px;font-size:12px;font-weight:600">
+          <span style="font-size:14px;font-weight:500${isHoje ? ';color:var(--gold)' : ''}">${br}${isHoje ? ' · hoje' : ''}</span>
+          <span style="display:flex;gap:12px;font-size:14px;font-weight:600">
             ${dia.entradas > 0 ? `<span style="color:var(--ok)">+${fmt(dia.entradas)}</span>` : ''}
             ${dia.saidas > 0 ? `<span style="color:var(--err)">-${fmt(dia.saidas)}</span>` : ''}
           </span>
@@ -2409,13 +2518,13 @@ function _renderCaixaData(d, mes){
             const isRet = l.isRetirada === 'true' || l.categoria === 'Retirada Pessoal';
             return `
               <div class="dia-item">
-                <div class="licon ${l.tipo}" style="width:28px;height:28px;font-size:12px;flex-shrink:0">${l.tipo === 'entrada' ? '↑' : '↓'}</div>
+                <div class="licon ${l.tipo}" style="width:28px;height:28px;font-size:14px;flex-shrink:0">${l.tipo === 'entrada' ? '↑' : '↓'}</div>
                 <div class="lbody" style="flex:1;min-width:0">
-                  <div class="lnome" style="font-size:12px">${l.clienteNome || l.itemNome || l.categoria || '—'}${isRet ? ' <span class="badge b-warn">PESSOAL</span>' : ''}</div>
+                  <div class="lnome" style="font-size:14px">${l.clienteNome || l.itemNome || l.categoria || '—'}${isRet ? ' <span class="badge b-warn">PESSOAL</span>' : ''}</div>
                   <div class="lmeta">${lbForma(l.formaPagamento)} ${renderItensMini(l.itemNome, l.observacoes)}</div>
                 </div>
                 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
-                  <div class="lval ${l.tipo}" style="font-size:13px">${l.tipo === 'saida' ? '-' : ''}${fmt(l.valor)}</div>
+                  <div class="lval ${l.tipo}" style="font-size:15px">${l.tipo === 'saida' ? '-' : ''}${fmt(l.valor)}</div>
                   <div style="display:flex;gap:2px">
                     <button class="btn-e" data-action="edit" data-id="${l.id}" data-date="${l.data}">${svgEdit}</button>
                     <button class="btn-d" data-action="del" data-id="${l.id}" data-date="${l.data}">${svgDel}</button>
@@ -2571,14 +2680,14 @@ async function loadAgendaPendentes(forceReload = false){
   }else{
     store.del(cacheKey);
   }
-  // Busca últimos 60 dias até ontem
+  // Busca últimos 60 dias até ontem (datas locais — toISOString virava o dia após as 20h em Manaus)
   const df = new Date(); df.setDate(df.getDate() - 1);
   const di = new Date(); di.setDate(di.getDate() - 60);
   try{
     const r = await api({
       action: 'getAgendamentos', token: state.token,
-      dataInicio: di.toISOString().slice(0,10),
-      dataFim:    df.toISOString().slice(0,10)
+      dataInicio: localISO(di),
+      dataFim:    localISO(df)
     });
     if(r.status === 'ok'){
       const pendentes = (r.data || []).filter(ag => ag.status === 'agendado');
@@ -2599,7 +2708,7 @@ function agCardHtml(ag, isPending = false){
     ? `<span class="badge" style="background:var(--err-bg);color:var(--err);border:1px solid var(--err)">Atrasado</span>`
     : `<span class="badge ${ag.status === 'concluido' ? 'b-on' : ag.status === 'cancelado' ? 'b-off' : 'b-info'}">${ag.status === 'concluido' ? 'Concluído' : ag.status === 'cancelado' ? 'Cancelado' : 'Agendado'}</span>`;
   const borderStyle = isPending ? 'border-color:var(--err);background:var(--err-bg)' : '';
-  const dataPrefix = isPending ? `<span style="font-size:10px;color:var(--err);font-weight:600">${fmtBR(String(ag.data).slice(0,10))} · </span>` : '';
+  const dataPrefix = isPending ? `<span style="font-size:13px;color:var(--err);font-weight:600">${fmtBR(String(ag.data).slice(0,10))} · </span>` : '';
   return `
     <div class="ag-card ${ag.status}" data-id="${ag.id}" style="cursor:pointer;${borderStyle}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -2610,7 +2719,7 @@ function agCardHtml(ag, isPending = false){
         </div>
         ${badge}
       </div>
-      ${Number(ag.valor) > 0 ? `<div style="font-family:'Playfair Display',serif;font-size:15px;color:var(--ok);margin-top:6px">${fmt(ag.valor)}</div>` : ''}
+      ${Number(ag.valor) > 0 ? `<div style="font-family:'Playfair Display',serif;font-size:17px;color:var(--ok);margin-top:6px">${fmt(ag.valor)}</div>` : ''}
     </div>
   `;
 }
@@ -2626,7 +2735,7 @@ function renderAgendaDia(el, list, dataBase, pendentes = []){
       <div style="margin-bottom:20px">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;padding:8px 12px;background:var(--err-bg);border:1px solid var(--err);border-radius:var(--r)">
           <svg viewBox="0 0 24 24" width="14" height="14" stroke="var(--err)" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span style="font-size:10px;color:var(--err);letter-spacing:1.5px;text-transform:uppercase;font-weight:600">${pendentes.length} pendente${pendentes.length > 1 ? 's' : ''} de dias anteriores — conclua ou reagende</span>
+          <span style="font-size:13px;color:var(--err);letter-spacing:1.5px;text-transform:uppercase;font-weight:600">${pendentes.length} pendente${pendentes.length > 1 ? 's' : ''} de dias anteriores — conclua ou reagende</span>
         </div>
         ${sorted.map(ag => agCardHtml(ag, true)).join('')}
       </div>
@@ -2654,7 +2763,7 @@ function renderAgendaDia(el, list, dataBase, pendentes = []){
       const isHoje = data === today();
       return `
         <div style="margin-bottom:20px">
-          <div style="font-size:10px;color:${isHoje ? 'var(--gold)' : 'var(--dim)'};letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:${isHoje ? '600' : '400'}">${br}${isHoje ? ' · HOJE' : ''}</div>
+          <div style="font-size:13px;color:${isHoje ? 'var(--gold)' : 'var(--dim)'};letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:${isHoje ? '600' : '400'}">${br}${isHoje ? ' · HOJE' : ''}</div>
           ${grupos[data].map(ag => agCardHtml(ag)).join('')}
         </div>
       `;
@@ -2704,7 +2813,7 @@ function renderAgendaSemana(el, list, dataBase){
     html += `<div style="border-right:1.5px solid var(--border);padding:4px 3px;min-height:48px;${isHoje ? 'background:rgba(154,111,30,.04)' : ''}">`;
 
     if(!ags.length){
-      html += `<div style="text-align:center;padding:14px 0;color:var(--dim);font-size:10px;opacity:.3">—</div>`;
+      html += `<div style="text-align:center;padding:14px 0;color:var(--dim);font-size:13px;opacity:.3">—</div>`;
     }else{
       ags.forEach(ag => {
         const clr = ag.status==='concluido' ? 'var(--ok)' : ag.status==='cancelado' ? 'var(--err)' : 'var(--info)';
@@ -2713,7 +2822,7 @@ function renderAgendaSemana(el, list, dataBase){
           style="position:relative;height:auto;top:auto;left:auto;right:auto;
                  background:${bg};border-left-color:${clr};color:${clr};margin-bottom:4px">
           <div class="gcal-event-hora">${ag.hora || '—'}</div>
-          <div style="font-size:10px;font-weight:500;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${ag.clienteNome || ''}</div>
+          <div style="font-size:13px;font-weight:500;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${ag.clienteNome || ''}</div>
           <div class="gcal-event-desc">${ag.servicos || ''}</div>
         </div>`;
       });
@@ -2832,14 +2941,14 @@ async function loadVencHomeLegacy(){
         `;
       }).join('');
     }else{
-      vel.innerHTML = `<div style="font-size:12px;color:var(--ok);padding:8px 0;font-weight:500">✅ Nenhum vencimento nos próximos 15 dias</div>`;
+      vel.innerHTML = `<div style="font-size:14px;color:var(--ok);padding:8px 0;font-weight:500">✅ Nenhum vencimento nos próximos 15 dias</div>`;
     }
 
     const ael = qs('#home-atrasados');
     if(atras.status === 'ok' && atras.data.length){
       ael.innerHTML = `
         <div style="background:var(--err-bg);border:1.5px solid var(--err);border-radius:var(--r);padding:12px 14px;margin-bottom:16px">
-          <div style="font-size:10px;color:var(--err);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:8px">⚠️ ${atras.data.length} obrigação(ões) em atraso</div>
+          <div style="font-size:13px;color:var(--err);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:8px">⚠️ ${atras.data.length} obrigação(ões) em atraso</div>
           ${atras.data.slice(0,3).map(v => `
             <div class="alert-bar">
               <div class="alert-bar-icon">🔴</div>
@@ -2889,13 +2998,13 @@ async function loadVencHome(){
     const vel = qs('#home-venc');
     vel.innerHTML = proximos.length
       ? proximos.slice(0,6).map(cardHtml).join('')
-      : `<div style="font-size:12px;color:var(--ok);padding:8px 0;font-weight:500">Nenhum vencimento nos próximos 15 dias</div>`;
+      : `<div style="font-size:14px;color:var(--ok);padding:8px 0;font-weight:500">Nenhum vencimento nos próximos 15 dias</div>`;
 
     const ael = qs('#home-atrasados');
     ael.innerHTML = atrasados.length
       ? `
         <div style="background:var(--err-bg);border:1.5px solid var(--err);border-radius:var(--r);padding:12px 14px;margin-bottom:16px">
-          <div style="font-size:10px;color:var(--err);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:8px">${atrasados.length} obrigação(ões) em atraso</div>
+          <div style="font-size:13px;color:var(--err);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:8px">${atrasados.length} obrigação(ões) em atraso</div>
           ${atrasados.slice(0,3).map(cardHtml).join('')}
         </div>
       `
@@ -2921,6 +3030,7 @@ async function baixarVencimento(id){
   const desc = item.descricao || item.clienteNome || 'este vencimento';
   if(!confirm(`Dar baixa em ${desc}?`)) return;
 
+  await comTrava(async () => {
   try{
     const body = item._tipo === 'despesa'
       ? {
@@ -2948,6 +3058,7 @@ async function baixarVencimento(id){
   }catch(e){
     toast('Erro ao baixar.','err');
   }
+  });
 }
 window.baixarVencimento = baixarVencimento;
 
@@ -2996,6 +3107,7 @@ function renderExtrato(d, el){
   let html = `<div class="ext-header"><div class="ext-label">${d.label || 'Extrato'}</div><div class="ext-sub">${d.total || 0} lançamentos</div></div>`;
   const resOp = d.resultadoOp || 0;
   const dizimo = Math.max(0, resOp) * 0.10;
+  const pacto = dizimo / 2;
 
   html += `
     <div class="ext-rg">
@@ -3008,13 +3120,18 @@ function renderExtrato(d, el){
     </div>
     ${dizimo > 0 ? `
       <div style="background:var(--info-bg);border:1.5px solid var(--info);border-radius:var(--r);padding:14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
-        <div><div style="font-size:9px;color:var(--info);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:2px">🙏 Dízimo (10%)</div><div style="font-size:11px;color:var(--dim)">Sobre o resultado operacional</div></div>
+        <div><div style="font-size:13px;color:var(--info);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:2px">🙏 Dízimo (10%)</div><div style="font-size:14px;color:var(--dim)">Sobre o resultado operacional</div></div>
         <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--info);font-weight:600">${fmt(dizimo)}</div>
+      </div>
+      <div style="background:var(--info-bg);border:1.5px solid var(--info);border-radius:var(--r);padding:14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:13px;color:var(--info);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:2px">🤝 Pacto (5%)</div><div style="font-size:14px;color:var(--dim)">Metade do valor do dízimo</div></div>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--info);font-weight:600">${fmt(pacto)}</div>
       </div>
     ` : ''}
     <div class="ext-rg" style="margin-bottom:12px">
       <div class="ext-rc"><div class="ext-rc-label">Retiradas Pessoais</div><div class="ext-rc-val warn">${fmt(d.retiradas || 0)}</div></div>
       <div class="ext-rc"><div class="ext-rc-label">Dízimo estimado</div><div class="ext-rc-val" style="color:var(--info)">${fmt(dizimo)}</div></div>
+      <div class="ext-rc"><div class="ext-rc-label">Pacto estimado</div><div class="ext-rc-val" style="color:var(--info)">${fmt(pacto)}</div></div>
     </div>
   `;
 
@@ -3047,8 +3164,8 @@ function renderExtrato(d, el){
       html += `
         <div>
           <div class="dia-hdr" onclick="toggleDia('dd${i}')">
-            <span style="font-size:12px;color:var(--dim);font-weight:500">${br}</span>
-            <span style="display:flex;gap:12px;font-size:12px;font-weight:600">
+            <span style="font-size:14px;color:var(--dim);font-weight:500">${br}</span>
+            <span style="display:flex;gap:12px;font-size:14px;font-weight:600">
               <span style="color:var(--ok)">+${fmt(dia.entradas)}</span>
               ${dia.saidas > 0 ? `<span style="color:var(--err)">-${fmt(dia.saidas)}</span>` : ''}
             </span>
@@ -3056,12 +3173,12 @@ function renderExtrato(d, el){
           <div class="dia-items" id="dd${i}" style="display:${i === 0 ? 'block' : 'none'}">
             ${(dia.lancamentos || []).map(l => `
               <div class="dia-item">
-                <div class="licon ${l.tipo}" style="width:28px;height:28px;font-size:12px">${l.tipo === 'entrada' ? '↑' : '↓'}</div>
+                <div class="licon ${l.tipo}" style="width:28px;height:28px;font-size:14px">${l.tipo === 'entrada' ? '↑' : '↓'}</div>
                 <div class="lbody">
-                  <div class="lnome" style="font-size:12px">${l.itemNome || l.categoria || '—'}${l.clienteNome ? ' · ' + l.clienteNome : ''}</div>
+                  <div class="lnome" style="font-size:14px">${l.itemNome || l.categoria || '—'}${l.clienteNome ? ' · ' + l.clienteNome : ''}</div>
                   <div class="lmeta">${lbForma(l.formaPagamento)}</div>
                 </div>
-                <div class="lval ${l.tipo}" style="font-size:14px">${l.tipo === 'saida' ? '-' : ''}${fmt(l.valor)}</div>
+                <div class="lval ${l.tipo}" style="font-size:16px">${l.tipo === 'saida' ? '-' : ''}${fmt(l.valor)}</div>
               </div>
             `).join('')}
           </div>
@@ -3279,7 +3396,7 @@ async function importarDaAgenda() {
 }
 
 async function verHist(clienteId, nome){
-  openDrawer(`<div class="dtitle">Histórico</div><div style="color:var(--dim);margin-bottom:16px">${nome}</div><div style="color:var(--dim);font-size:12px">Carregando…</div>`);
+  openDrawer(`<div class="dtitle">Histórico</div><div style="color:var(--dim);margin-bottom:16px">${nome}</div><div style="color:var(--dim);font-size:14px">Carregando…</div>`);
 
   try{
     const [hist, cred] = await Promise.all([
@@ -3287,12 +3404,12 @@ async function verHist(clienteId, nome){
       api({ action:'getCrediario', token:state.token, clienteId })
     ]);
 
-    let html = `<div class="dtitle">Histórico</div><div style="font-size:12px;color:var(--dim);margin-bottom:16px">${nome}</div>`;
+    let html = `<div class="dtitle">Histórico</div><div style="font-size:14px;color:var(--dim);margin-bottom:16px">${nome}</div>`;
 
     if(cred.status === 'ok' && cred.data.length){
       const c = cred.data.find(x => x.status === 'aberto');
       if(c){
-        html += `<div style="background:var(--err-bg);border:1.5px solid var(--err);border-radius:var(--r);padding:12px;margin-bottom:16px;display:flex;justify-content:space-between"><span style="color:var(--err);font-size:12px;font-weight:500">Fiado em aberto</span><span style="font-family:'Playfair Display',serif;font-size:18px;color:var(--err);font-weight:600">${fmt(c.saldoDevedor)}</span></div>`;
+        html += `<div style="background:var(--err-bg);border:1.5px solid var(--err);border-radius:var(--r);padding:12px;margin-bottom:16px;display:flex;justify-content:space-between"><span style="color:var(--err);font-size:14px;font-weight:500">Fiado em aberto</span><span style="font-family:'Playfair Display',serif;font-size:18px;color:var(--err);font-weight:600">${fmt(c.saldoDevedor)}</span></div>`;
       }
     }
 
@@ -3301,10 +3418,10 @@ async function verHist(clienteId, nome){
       html += hist.data.slice().reverse().map(h => `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
           <div>
-            <div style="font-size:13px;font-weight:500">${h.itemNome || h.categoria || '—'}</div>
-            <div style="font-size:10px;color:var(--dim)">${fmtBR(String(h.data).slice(0,10))} · ${lbForma(h.formaPagamento)}</div>
+            <div style="font-size:15px;font-weight:500">${h.itemNome || h.categoria || '—'}</div>
+            <div style="font-size:13px;color:var(--dim)">${fmtBR(String(h.data).slice(0,10))} · ${lbForma(h.formaPagamento)}</div>
           </div>
-          <div style="font-family:'Playfair Display',serif;font-size:15px;color:var(--ok);font-weight:600">${fmt(h.valor)}</div>
+          <div style="font-family:'Playfair Display',serif;font-size:17px;color:var(--ok);font-weight:600">${fmt(h.valor)}</div>
         </div>
       `).join('');
     }else{
@@ -3737,15 +3854,15 @@ function renderAgendamentoServicos(){
   syncAgendamentoServicosInput();
 
   if(!state.ui.agServicos?.length){
-    wrap.innerHTML = '<div style="font-size:11px;color:var(--dim)">Nenhum serviço adicionado.</div>';
+    wrap.innerHTML = '<div style="font-size:14px;color:var(--dim)">Nenhum serviço adicionado.</div>';
     return;
   }
 
   wrap.innerHTML = state.ui.agServicos.map((item, idx) => `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;margin-top:6px">
       <div style="min-width:0">
-        <div style="font-size:13px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.nome}</div>
-        <div style="font-size:10px;color:var(--dim)">${item.duracaoMin || 0} min</div>
+        <div style="font-size:15px;color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.nome}</div>
+        <div style="font-size:13px;color:var(--dim)">${item.duracaoMin || 0} min</div>
       </div>
       <button type="button" class="btn-remove-item" onclick="removeAgendamentoServico(${idx})">Remover</button>
     </div>
@@ -3777,10 +3894,10 @@ function abrirSeletorServicoAgendamento(){
   let html = '<div style="font-family:Playfair Display,serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:16px">Adicionar serviço</div>';
 
   if(!svcOpts.length){
-    html += '<div style="color:var(--dim);font-size:12px;padding:12px 0">Nenhum serviço cadastrado.</div>';
+    html += '<div style="color:var(--dim);font-size:14px;padding:12px 0">Nenhum serviço cadastrado.</div>';
   }else{
     svcOpts.forEach(s => {
-      html += `<div onclick="addAgendamentoServicoById('${s.id}');closeModal()" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:15px;color:var(--text);font-weight:500">${s.nome}</span><span style="color:var(--dim);font-size:12px">${s.duracaoMin || 0} min</span></div>`;
+      html += `<div onclick="addAgendamentoServicoById('${s.id}');closeModal()" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${s.nome}</span><span style="color:var(--dim);font-size:14px">${s.duracaoMin || 0} min</span></div>`;
     });
   }
 
@@ -3854,7 +3971,7 @@ function openDrawerAgend(){
     <div class="fg">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <span class="lbl" style="margin:0">Serviços</span>
-        <button type="button" id="btn-add-ag-svc" style="background:var(--gold-bg);border:1.5px solid var(--gold-dk);color:var(--gold-dk);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;letter-spacing:.5px;cursor:pointer">＋ Adicionar</button>
+        <button type="button" id="btn-add-ag-svc" style="background:var(--gold-bg);border:1.5px solid var(--gold-dk);color:var(--gold-dk);border-radius:8px;padding:4px 10px;font-size:14px;font-weight:600;letter-spacing:.5px;cursor:pointer">＋ Adicionar</button>
       </div>
       <input id="ag-svc" type="text" class="inp" placeholder="Selecione um ou mais serviços" readonly/>
       <div id="ag-svc-tags" style="margin-top:6px"></div>
@@ -3915,7 +4032,7 @@ function editAgend(ag){
     <div class="fg">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <span class="lbl" style="margin:0">Serviços</span>
-        <button type="button" id="btn-add-ag-svc" style="background:var(--gold-bg);border:1.5px solid var(--gold-dk);color:var(--gold-dk);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;letter-spacing:.5px;cursor:pointer">＋ Adicionar</button>
+        <button type="button" id="btn-add-ag-svc" style="background:var(--gold-bg);border:1.5px solid var(--gold-dk);color:var(--gold-dk);border-radius:8px;padding:4px 10px;font-size:14px;font-weight:600;letter-spacing:.5px;cursor:pointer">＋ Adicionar</button>
       </div>
       <input id="ag-svc" type="text" class="inp" value="${ag.servicos || ''}" readonly/>
       <div id="ag-svc-tags" style="margin-top:6px"></div>
@@ -4017,30 +4134,30 @@ function abrirAcaoAgendamento(ag){
   const podeConcluir = ag.status === 'agendado';
   const isPastPending = podeConcluir && String(ag.data).slice(0,10) < today();
   const alertHtml = isPastPending ? `
-    <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--err-bg);border:1px solid var(--err);border-radius:var(--r);margin-bottom:14px;font-size:11px;color:var(--err);font-weight:600">
+    <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--err-bg);border:1px solid var(--err);border-radius:var(--r);margin-bottom:14px;font-size:14px;color:var(--err);font-weight:600">
       <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       Em aberto desde ${fmtBR(String(ag.data).slice(0,10))} — conclua ou reagende
     </div>` : '';
   openDrawer(`
     <div class="dtitle">${ag.clienteNome || '—'}</div>
     ${alertHtml}
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:20px;font-size:13px;color:var(--dim);line-height:1.8">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:20px;font-size:15px;color:var(--dim);line-height:1.8">
       <div style="color:var(--dark);font-weight:500">${ag.servicos || '—'}</div>
       <div>${fmtBR(String(ag.data).slice(0,10))}${ag.hora ? ' · ' + ag.hora : ''} · ${ag.duracaoMin || 0}min${ag.colaboradorNome ? ' · ' + ag.colaboradorNome : ''}</div>
       <div style="margin-top:4px"><span class="badge ${ag.status === 'concluido' ? 'b-on' : ag.status === 'cancelado' ? 'b-off' : 'b-info'}">${ag.status === 'concluido' ? 'Concluído' : ag.status === 'cancelado' ? 'Cancelado' : 'Agendado'}</span></div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
-      ${podeConcluir ? `<button class="btn-save" id="btn-acao-concluir" style="padding:16px;font-size:15px">
+      ${podeConcluir ? `<button class="btn-save" id="btn-acao-concluir" style="padding:16px;font-size:17px">
         <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><polyline points="20 6 9 17 4 12"/></svg>
         Concluir atendimento
       </button>` : ''}
-      <button class="btn-sec" id="btn-acao-editar" style="padding:14px;font-size:14px">
+      <button class="btn-sec" id="btn-acao-editar" style="padding:14px;font-size:16px">
         <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         ${isPastPending ? 'Reagendar / Editar' : 'Editar agendamento'}
       </button>
     </div>
     <div style="margin-top:10px">
-      <button class="btn-sec" id="btn-acao-cancel" style="width:100%;padding:10px;font-size:13px;color:var(--dim)">Fechar</button>
+      <button class="btn-sec" id="btn-acao-cancel" style="width:100%;padding:10px;font-size:15px;color:var(--dim)">Fechar</button>
     </div>
   `);
   qs('#btn-acao-cancel').addEventListener('click', closeDrawer);
@@ -4055,11 +4172,11 @@ function concluirAgend(ag){
     <div class="fg">
       <span class="lbl">Lançar no financeiro em qual data?</span>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--bg4);font-size:13px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--bg4);font-size:15px">
           <input type="radio" name="cmd-data-choice" value="agendamento" checked style="accent-color:var(--gold-dk);width:16px;height:16px">
           Data do agendamento — <strong>${fmtBR(agDataISO)}</strong>
         </label>
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--bg4);font-size:13px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--bg4);font-size:15px">
           <input type="radio" name="cmd-data-choice" value="hoje" style="accent-color:var(--gold-dk);width:16px;height:16px">
           Hoje — <strong>${fmtBR(today())}</strong>
         </label>
@@ -4068,18 +4185,18 @@ function concluirAgend(ag){
   ` : '';
   openDrawer(`
     <div class="dtitle">Concluir Atendimento</div>
-    <div style="background:var(--gold-bg);border:1px solid var(--gold-dk);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--dark);line-height:1.6">
+    <div style="background:var(--gold-bg);border:1px solid var(--gold-dk);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:14px;color:var(--dark);line-height:1.6">
       Confirme os dados abaixo. A entrada será registrada no caixa automaticamente.
     </div>
     ${dateSelectorHtml}
     <div class="fg">
       <span class="lbl">Cliente</span>
-      <div style="background:var(--bg4);border:1.5px solid var(--border);border-radius:var(--r);padding:11px 13px;color:var(--dim);font-size:14px">${ag.clienteNome || '—'}</div>
+      <div style="background:var(--bg4);border:1.5px solid var(--border);border-radius:var(--r);padding:11px 13px;color:var(--dim);font-size:16px">${ag.clienteNome || '—'}</div>
     </div>
     <div class="fg">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <span class="lbl" style="margin:0">Serviços realizados</span>
-        <button type="button" id="btn-add-item-cmd" style="background:var(--gold-bg);border:1.5px solid var(--gold-dk);color:var(--gold-dk);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;letter-spacing:.5px;cursor:pointer">＋ Adicionar</button>
+        <button type="button" id="btn-add-item-cmd" style="background:var(--gold-bg);border:1.5px solid var(--gold-dk);color:var(--gold-dk);border-radius:8px;padding:4px 10px;font-size:14px;font-weight:600;letter-spacing:.5px;cursor:pointer">＋ Adicionar</button>
       </div>
       <input id="cmd-svc" type="text" class="inp" value="${ag.servicos || ''}" placeholder="Nome dos serviços…"/>
       <div id="cmd-itens-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
@@ -4158,13 +4275,21 @@ async function salvarComanda(ag){
       data: lancDataISO
     };
 
-    const [r1, r2] = await Promise.all([
-      post({ action:'saveAgendamento', token:state.token, data: agData }),
-      post({ action:'saveLancamento', token:state.token, data: lancData })
-    ]);
+    // Sequencial para não duplicar: primeiro conclui o agendamento, depois lança no caixa
+    const r1 = await post({ action:'saveAgendamento', token:state.token, data: agData });
+    if(r1.status !== 'ok'){
+      toast(r1.data?.message || 'Erro ao concluir o atendimento. Tente de novo.','err');
+      btnSv(btn, false, 'Confirmar e registrar');
+      return;
+    }
 
-    if(r1.status !== 'ok' || r2.status !== 'ok'){
-      toast('Erro ao registrar.','err');
+    let r2 = await post({ action:'saveLancamento', token:state.token, data: lancData }).catch(() => ({ status:'err' }));
+    if(r2.status !== 'ok'){
+      // tenta 1 vez de novo automaticamente
+      r2 = await post({ action:'saveLancamento', token:state.token, data: lancData }).catch(() => ({ status:'err' }));
+    }
+    if(r2.status !== 'ok'){
+      toast('Atendimento concluído, mas o caixa NÃO foi registrado. Lance a entrada manualmente no Caixa.','err');
       btnSv(btn, false, 'Confirmar e registrar');
       return;
     }
@@ -4194,20 +4319,20 @@ function abrirSeletorItem(){
   const svcOpts = state.db.servicos.filter(s => isAtivo(s.ativo));
   const prdOpts = state.db.produtos.filter(p => isAtivo(p.ativo));
   let html = '<div style="font-family:Playfair Display,serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:16px">Adicionar item</div>';
-  html += '<div style="font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">SERVIÇOS</div>';
+  html += '<div style="font-size:13px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">SERVIÇOS</div>';
 
   svcOpts.forEach(s => {
     const preco = parseFloat(s.preco) || 0;
-    html += `<div onclick="addItemDireto(this)" data-id="${s.id}" data-nome="${String(s.nome).replace(/"/g,'&quot;')}" data-tipo="servico" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:15px;color:var(--text);font-weight:500">${s.nome}</span><span style="color:var(--ok);font-weight:600;font-size:14px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
+    html += `<div onclick="addItemDireto(this)" data-id="${s.id}" data-nome="${String(s.nome).replace(/"/g,'&quot;')}" data-tipo="servico" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${s.nome}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
   });
-  if(!svcOpts.length) html += '<div style="color:var(--dim);font-size:12px;padding:12px">Nenhum serviço cadastrado</div>';
+  if(!svcOpts.length) html += '<div style="color:var(--dim);font-size:14px;padding:12px">Nenhum serviço cadastrado</div>';
 
-  html += '<div style="font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin:14px 0 8px">PRODUTOS</div>';
+  html += '<div style="font-size:13px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin:14px 0 8px">PRODUTOS</div>';
   prdOpts.forEach(p => {
     const preco = parseFloat(p.preco) || 0;
-    html += `<div onclick="addItemDireto(this)" data-id="${p.id}" data-nome="${String(p.nome).replace(/"/g,'&quot;')}" data-tipo="produto" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:15px;color:var(--text);font-weight:500">${p.nome}</span><span style="color:var(--ok);font-weight:600;font-size:14px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
+    html += `<div onclick="addItemDireto(this)" data-id="${p.id}" data-nome="${String(p.nome).replace(/"/g,'&quot;')}" data-tipo="produto" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${p.nome}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
   });
-  if(!prdOpts.length) html += '<div style="color:var(--dim);font-size:12px;padding:12px">Nenhum produto cadastrado</div>';
+  if(!prdOpts.length) html += '<div style="color:var(--dim);font-size:14px;padding:12px">Nenhum produto cadastrado</div>';
 
   html += '<button onclick="closeModal()" class="btn-sec" style="width:100%;margin-top:16px">Fechar</button>';
   openModal(html);
@@ -4217,18 +4342,18 @@ function abrirSeletorItemComanda(){
   const svcOpts = state.db.servicos.filter(s => isAtivo(s.ativo));
   const prdOpts = state.db.produtos.filter(p => isAtivo(p.ativo));
   let html = '<div style="font-family:Playfair Display,serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:16px">Adicionar item</div>';
-  html += '<div style="font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">SERVIÇOS</div>';
+  html += '<div style="font-size:13px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">SERVIÇOS</div>';
   svcOpts.forEach(s => {
     const preco = parseFloat(s.preco) || 0;
-    html += `<div onclick="addItemComanda(this)" data-nome="${String(s.nome).replace(/"/g,'&quot;')}" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:15px;color:var(--text);font-weight:500">${s.nome}</span><span style="color:var(--ok);font-weight:600;font-size:14px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
+    html += `<div onclick="addItemComanda(this)" data-nome="${String(s.nome).replace(/"/g,'&quot;')}" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${s.nome}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
   });
-  if(!svcOpts.length) html += '<div style="color:var(--dim);font-size:12px;padding:12px">Nenhum serviço cadastrado</div>';
-  html += '<div style="font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin:14px 0 8px">PRODUTOS</div>';
+  if(!svcOpts.length) html += '<div style="color:var(--dim);font-size:14px;padding:12px">Nenhum serviço cadastrado</div>';
+  html += '<div style="font-size:13px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;margin:14px 0 8px">PRODUTOS</div>';
   prdOpts.forEach(p => {
     const preco = parseFloat(p.preco) || 0;
-    html += `<div onclick="addItemComanda(this)" data-nome="${String(p.nome).replace(/"/g,'&quot;')}" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:15px;color:var(--text);font-weight:500">${p.nome}</span><span style="color:var(--ok);font-weight:600;font-size:14px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
+    html += `<div onclick="addItemComanda(this)" data-nome="${String(p.nome).replace(/"/g,'&quot;')}" data-preco="${preco}" style="padding:16px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)"><span style="font-size:17px;color:var(--text);font-weight:500">${p.nome}</span><span style="color:var(--ok);font-weight:600;font-size:16px">${preco > 0 ? fmt(preco) : ''}</span></div>`;
   });
-  if(!prdOpts.length) html += '<div style="color:var(--dim);font-size:12px;padding:12px">Nenhum produto cadastrado</div>';
+  if(!prdOpts.length) html += '<div style="color:var(--dim);font-size:14px;padding:12px">Nenhum produto cadastrado</div>';
   html += '<button onclick="closeModal()" class="btn-sec" style="width:100%;margin-top:16px">Fechar</button>';
   openModal(html);
 }
@@ -4254,7 +4379,7 @@ function addItemComanda(el){
   const tagsEl = qs('#cmd-itens-tags');
   if(tagsEl){
     const tag = document.createElement('span');
-    tag.style.cssText = 'background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:500';
+    tag.style.cssText = 'background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok);border-radius:20px;padding:3px 10px;font-size:14px;font-weight:500';
     tag.textContent = preco > 0 ? `${nome} · ${fmt(preco)}` : nome;
     tagsEl.appendChild(tag);
   }
@@ -4305,7 +4430,7 @@ function renderItens(){
   if(!el) return;
 
   if(!state.ui.itensLanc.length){
-    el.innerHTML = '<div style="font-size:12px;color:var(--dim);text-align:center;padding:8px">Nenhum item adicionado ainda</div>';
+    el.innerHTML = '<div style="font-size:14px;color:var(--dim);text-align:center;padding:8px">Nenhum item adicionado ainda</div>';
     atualizarTotal();
     return;
   }
@@ -4492,7 +4617,7 @@ function openQuickClienteModal(inputSel = '#f-cli-search', selectSel = '#f-cli',
   const d = draft || getQuickClienteDraft(inputSel);
   openModal(`
     <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:8px">Nova Cliente</div>
-    <div style="font-size:11px;color:var(--dim);margin-bottom:16px">Informe apenas o essencial agora.</div>
+    <div style="font-size:14px;color:var(--dim);margin-bottom:16px">Informe apenas o essencial agora.</div>
     <div class="fg"><span class="lbl">Nome *</span><input id="qcli-nome" type="text" class="inp" value="${d.nome || ''}"/></div>
     <div class="fg"><span class="lbl">Telefone</span><input id="qcli-tel" type="tel" class="inp" placeholder="(00) 00000-0000" maxlength="15" value="${d.telefone || ''}"/></div>
     <div class="fg"><span class="lbl">Data de nascimento</span><input id="qcli-aniv" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" value="${d.aniversario || ''}"/></div>
@@ -4689,7 +4814,7 @@ function openDrawerLanc(){
       </div>
 
       <div id="f-fiado-expand" style="display:none;background:var(--bg3);border:1.5px solid var(--gold-dk);border-radius:var(--r);padding:14px;margin-bottom:2px">
-        <div style="font-size:10px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:12px">📋 Detalhes do Fiado</div>
+        <div style="font-size:13px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:12px">📋 Detalhes do Fiado</div>
         <div class="form-row">
           <div class="fg"><span class="lbl">Valor total *</span><input id="ff-total" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
           <div class="fg"><span class="lbl">Entrada (R$)</span><input id="ff-entrada" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
@@ -4699,7 +4824,7 @@ function openDrawerLanc(){
           <div class="fg"><span class="lbl">1ª venc.</span><input id="ff-venc1" type="text" class="inp" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"/></div>
         </div>
         <div class="fg"><span class="lbl">Forma da entrada</span><select id="ff-forma-ent"><option value="dinheiro">Dinheiro</option><option value="pix">PIX</option><option value="debito">Débito</option><option value="credito">Crédito</option></select></div>
-        <div id="ff-resumo" style="display:none;font-size:12px;margin-bottom:10px"></div>
+        <div id="ff-resumo" style="display:none;font-size:14px;margin-bottom:10px"></div>
         <div id="parcelas-container"></div>
       </div>
     </div>
@@ -4763,7 +4888,7 @@ function editLanc(l){
   if(editItensJson){
     try{
       const its = JSON.parse(editItensJson);
-      itensInfo = `<div class="info-box" style="font-size:12px">🧾 <strong>Itens deste lançamento:</strong> ${escAttr(its.map(i => i.nome).join(', '))}<br><span style="color:var(--dim)">Eles serão mantidos ao salvar. Para trocar os itens, exclua e lance novamente.</span></div>`;
+      itensInfo = `<div class="info-box" style="font-size:14px">🧾 <strong>Itens deste lançamento:</strong> ${escAttr(its.map(i => i.nome).join(', '))}<br><span style="color:var(--dim)">Eles serão mantidos ao salvar. Para trocar os itens, exclua e lance novamente.</span></div>`;
     }catch(_){}
   }
 
@@ -4894,8 +5019,7 @@ async function saveLanc(){
           closeDrawer();
           toast('Fiado registrado!','ok');
 
-          const di = qs('#cx-data');
-          if(di) di.value = (qs('#f-data')?.value || today()).slice(0,7);
+          setCaixaMes((qs('#f-data')?.value || today()).slice(0,7));
 
           await Promise.all([loadCaixa(true), updateStats(), loadCred(), loadVencHome()]);
         }catch(e){
@@ -4966,8 +5090,7 @@ async function saveLanc(){
 
     closeDrawer();
     toast(wasEdit ? 'Atualizado!' : 'Registrado!','ok');
-    const dataInp = qs('#cx-data');
-    if(dataInp) dataInp.value = (data.data || today()).slice(0,7);
+    setCaixaMes((data.data || today()).slice(0,7));
     await Promise.all([loadCaixa(true), updateStats()]);
   }catch(e){
     toast('Erro de conexão.','err');
@@ -4977,6 +5100,7 @@ async function saveLanc(){
 
 async function delLanc(id){
   if(!confirm('Excluir este lançamento?')) return;
+  await comTrava(async () => {
   try{
     const r = await post({ action:'deleteLancamento', token:state.token, id });
     if(r.status !== 'ok') return toast('Erro.','err');
@@ -4985,6 +5109,7 @@ async function delLanc(id){
   }catch(e){
     toast('Erro.','err');
   }
+  });
 }
 
 function openDrawerFiadoLanc(){
@@ -5008,7 +5133,7 @@ function openDrawerFiadoLanc(){
       <div class="fg"><span class="lbl">Data do fiado</span><input id="ff-data" type="date" class="inp"/></div>
       <div class="fg"><span class="lbl">Forma da entrada</span><select id="ff-forma-ent"><option value="dinheiro">Dinheiro</option><option value="pix">PIX</option><option value="debito">Débito</option><option value="credito">Crédito</option></select></div>
     </div>
-    <div id="ff-resumo" style="background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:14px;font-size:12px;display:none"></div>
+    <div id="ff-resumo" style="background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:14px;font-size:14px;display:none"></div>
     <div id="parcelas-container"></div>
     <div class="fg"><span class="lbl">Observações</span><input id="ff-obs" type="text" class="inp" placeholder="Opcional…"/></div>
     <div class="dfooter">
@@ -5145,7 +5270,7 @@ async function saveFiado(){
 function abrirPgtoFiadoLegacy(id, nome, saldo, numParc){
   openModal(`
     <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:4px">Receber Pagamento</div>
-    <div style="font-size:12px;color:var(--dim);margin-bottom:4px">${nome}</div>
+    <div style="font-size:14px;color:var(--dim);margin-bottom:4px">${nome}</div>
     <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--err);font-weight:600;margin-bottom:20px">Saldo: ${fmt(saldo)}</div>
     <div class="fg"><span class="lbl">Valor recebido *</span><input id="pg-val" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
     <div class="fg"><span class="lbl">Nº da parcela</span><input id="pg-parc" type="number" class="inp" min="1" max="${numParc}" placeholder="Ex: 1"/></div>
@@ -5166,6 +5291,7 @@ async function registrarPgtoFiado(id){
   const btn = qs('#modal-box .btn-save');
   btnSv(btn, true);
 
+  await comTrava(async () => {
   try{
     const r = await post({
       action:'pagarCrediario',
@@ -5191,6 +5317,7 @@ async function registrarPgtoFiado(id){
     toast('Erro.','err');
     btnSv(btn, false);
   }
+  });
 }
 
 async function delFiado(id){
@@ -5198,6 +5325,7 @@ async function delFiado(id){
   const nome = c?.clienteNome ? ` de ${c.clienteNome}` : '';
   if(!confirm(`Excluir o fiado${nome}? As parcelas dele também serão excluídas.\n\nAtenção: pagamentos já lançados no Caixa NÃO são apagados — se precisar, exclua-os pela tela do Caixa.`)) return;
 
+  await comTrava(async () => {
   try{
     const r = await post({ action:'deleteCrediario', token:state.token, id });
     if(r.status !== 'ok') return toast(r.data?.message || 'Erro.','err');
@@ -5206,6 +5334,7 @@ async function delFiado(id){
   }catch(e){
     toast('Erro.','err');
   }
+  });
 }
 window.delFiado = delFiado;
 
@@ -5225,7 +5354,7 @@ async function abrirPgtoFiado(id, nome, saldo, numParc){
 
   openModal(`
     <div style="font-family:'Playfair Display',serif;font-size:20px;font-style:italic;color:var(--dark);margin-bottom:4px">Receber Pagamento</div>
-    <div style="font-size:12px;color:var(--dim);margin-bottom:4px">${nome}</div>
+    <div style="font-size:14px;color:var(--dim);margin-bottom:4px">${nome}</div>
     <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--err);font-weight:600;margin-bottom:20px">Saldo: ${fmt(saldo)}</div>
     <div class="fg"><span class="lbl">Parcela</span>${parcelaOptions}</div>
     <div class="fg"><span class="lbl">Valor recebido *</span><input id="pg-val" type="text" class="inp" inputmode="numeric" placeholder="0,00"/></div>
