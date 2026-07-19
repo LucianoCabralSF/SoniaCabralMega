@@ -748,6 +748,26 @@ function upsertByIdUnlocked_(sheetName, record) {
   return { id: id, item: rowObj };
 }
 
+function getRowObjectById_(sheetName, id) {
+  const cleanId = cleanId_(id);
+  if (!cleanId) return null;
+  const rowNum = rowNumForId_(sheetName, cleanId);
+  if (!rowNum) return null;
+  const headers = SCHEMAS[sheetName];
+  const values = getSheet(sheetName).getRange(rowNum, 1, 1, headers.length).getValues();
+  return objectifyRows_(headers, values)[0] || null;
+}
+
+function restoreRowObjectUnlocked_(sheetName, snapshot) {
+  if (!snapshot || !snapshot.id) return;
+  const rowNum = rowNumForId_(sheetName, snapshot.id);
+  if (!rowNum) return;
+  const headers = SCHEMAS[sheetName];
+  getSheet(sheetName).getRange(rowNum, 1, 1, headers.length)
+    .setValues([headers.map(header => snapshot[header] == null ? '' : snapshot[header])]);
+  invalidateSheetCache_(sheetName);
+}
+
 function softDeleteUnlocked_(sheetName, id) {
   const s = getSheet(sheetName);
   const rowNum = rowNumForId_(sheetName, id);
@@ -888,8 +908,12 @@ function listarRelacionamento_(params) {
   const clientById = {};
   const campaignById = {};
   const lastAppointmentByClient = {};
+  const activeAppointmentIds = {};
   clients.forEach(function (client) { clientById[String(client.id)] = client; });
   campaigns.forEach(function (campaign) { campaignById[String(campaign.id)] = campaign; });
+  appointments.forEach(function (appointment) {
+    activeAppointmentIds[String(appointment.id)] = true;
+  });
   appointments.filter(function (appointment) {
     return appointment.status === 'concluido' && appointment.clienteId;
   }).forEach(function (appointment) {
@@ -905,9 +929,14 @@ function listarRelacionamento_(params) {
   let list = getCachedRows_('relacionamento').map(function (item) {
     const client = clientById[String(item.clienteId)] || {};
     const lastAppointment = lastAppointmentByClient[String(item.clienteId)] || {};
+    const sourceMatch = String(item.referenciaId || '').match(/^retorno:(.+)$/);
+    const sourceMissing = item.origem === 'retorno' && sourceMatch && !activeAppointmentIds[sourceMatch[1]];
+    const effectiveItem = sourceMissing
+      ? Object.assign({}, item, { encerramentoMotivo:'origem_excluida' })
+      : item;
     const phone = normalizarTelefoneWhatsApp_(client.telefone);
     const canContact = client.naoContatar !== 'true' && !!phone;
-    const baseQueue = filaRelacionamento_(item, today());
+    const baseQueue = filaRelacionamento_(effectiveItem, today());
     let queue = baseQueue;
     if (baseQueue !== 'encerrado' && !canContact) queue = 'inapto';
     else if (baseQueue !== 'encerrado' && item.origem === 'aniversario') queue = 'aniversario';
@@ -934,7 +963,7 @@ function listarRelacionamento_(params) {
       .replace(/\{ultimoServico\}/g, lastAppointment.servicos || '')
       .replace(/\{dataAlvo\}/g, fmtBR(normDate(item.dataAlvo))), 2000);
 
-    return Object.assign({}, item, {
+    return Object.assign({}, effectiveItem, {
       fila:queue,
       diasAtraso:delay,
       telefoneWhatsApp:phone,
@@ -1278,6 +1307,123 @@ function salvarEtapaRelacionamento_(body) {
 }
 
 // ── Caixa ─────────────────────────────────────────────────────
+function agendamentoIdDoCaixa_(cash) {
+  const match = String(cash && cash.itemId || '').match(/^agcash:([A-Za-z0-9:_-]+)$/);
+  return match ? match[1] : '';
+}
+
+function caixaVinculadoAoAgendamento_(appointmentId) {
+  return findCashByItemId_('agcash:' + String(appointmentId || ''));
+}
+
+function sincronizarCaixaComAgendamentoUnlocked_(cash) {
+  const appointmentId = agendamentoIdDoCaixa_(cash);
+  if (!appointmentId) return { skipped:true };
+  const appointment = getCachedRows_('agendamentos').find(function (item) {
+    return String(item.id) === appointmentId;
+  });
+  if (!appointment) return { error:'O agendamento vinculado ao caixa não existe mais.' };
+  return saveAgendamentoUnlocked_(Object.assign({}, appointment, {
+    clienteId:cash.clienteId || '',
+    clienteNome:cleanText_(cash.clienteNome, 120),
+    servicos:cleanText_(cash.itemNome, 1000),
+    valor:cash.valor
+  }));
+}
+
+function sincronizarAgendamentoComCaixaUnlocked_(appointment) {
+  const cash = caixaVinculadoAoAgendamento_(appointment && appointment.id);
+  if (!cash) return { skipped:true };
+  return saveLancamentoUnlocked_(Object.assign({}, cash, {
+    itemId:'agcash:' + appointment.id,
+    itemTipo:'agendamento',
+    tipo:'entrada',
+    clienteId:appointment.clienteId || '',
+    clienteNome:cleanText_(appointment.clienteNome, 120),
+    itemNome:cleanText_(appointment.servicos, 500),
+    valor:appointment.valor,
+    isRetirada:false
+  }));
+}
+
+function etapaAnteriorDoVinculo_(appointmentId) {
+  const event = getCachedRows_('relacionamento_eventos').find(function (item) {
+    return String(item.idempotencyKey) === 'auto:agendou:' + String(appointmentId || '');
+  });
+  return event && ['contatada','respondeu'].indexOf(String(event.etapaAnterior)) >= 0
+    ? String(event.etapaAnterior)
+    : 'contatada';
+}
+
+function deleteAgendamentoVinculadoUnlocked_(id) {
+  const appointmentId = cleanId_(id);
+  if (!appointmentId) return { error:'Agendamento inválido.' };
+  const appointment = getRowObjectById_('agendamentos', appointmentId);
+  const cash = caixaVinculadoAoAgendamento_(appointmentId);
+  const generatedReturn = getCachedRows_('relacionamento').find(function (item) {
+    return item.origem === 'retorno' && String(item.referenciaId) === 'retorno:' + appointmentId;
+  });
+  const priorOpportunity = appointment && appointment.oportunidadeId
+    ? oportunidadeRelacionamentoPorId_(appointment.oportunidadeId)
+    : null;
+  if (!appointment && !cash && !generatedReturn) return { error:'Agendamento não encontrado.' };
+
+  const snapshots = [
+    appointment && { sheet:'agendamentos', item:Object.assign({}, appointment) },
+    cash && { sheet:'caixa', item:Object.assign({}, cash) },
+    generatedReturn && { sheet:'relacionamento', item:Object.assign({}, generatedReturn) },
+    priorOpportunity && { sheet:'relacionamento', item:Object.assign({}, priorOpportunity) }
+  ].filter(Boolean);
+  const timestamp = nowIso();
+
+  try {
+    if (priorOpportunity && String(priorOpportunity.agendamentoId || '') === appointmentId) {
+      const previousStage = etapaAnteriorDoVinculo_(appointmentId);
+      const restored = upsertByIdUnlocked_('relacionamento', Object.assign({}, priorOpportunity, {
+        etapa:previousStage,
+        agendamentoId:'',
+        agendouEm:'',
+        retornouEm:''
+      }));
+      if (restored.error) throw new Error(restored.error);
+      const event = registrarEventoRelacionamentoUnlocked_({
+        idempotencyKey:'auto:desvinculo:' + appointmentId,
+        oportunidadeId:priorOpportunity.id,
+        clienteId:priorOpportunity.clienteId,
+        tipo:'desvinculo_exclusao',
+        etapaAnterior:priorOpportunity.etapa,
+        etapaNova:previousStage,
+        origemAlteracao:'automatica',
+        observacoes:'Agendamento e lançamento vinculados foram excluídos.'
+      });
+      if (event.error) throw new Error(event.error);
+    }
+    if (generatedReturn) markRowDeletedUnlocked_('relacionamento', generatedReturn.id, timestamp);
+    if (cash) markRowDeletedUnlocked_('caixa', cash.id, timestamp);
+    if (appointment) markRowDeletedUnlocked_('agendamentos', appointment.id, timestamp);
+    if (typeof cancelarLembretesAgendamentoUnlocked_ === 'function') {
+      cancelarLembretesAgendamentoUnlocked_(appointmentId, 'origem_excluida');
+    }
+    if (cash && cash.data) invalidateCaixaCaches_(normDate(cash.data));
+    return {
+      deletedAppointmentId:appointmentId,
+      deletedCashId:cash && cash.id || '',
+      deletedReturnId:generatedReturn && generatedReturn.id || ''
+    };
+  } catch (error) {
+    snapshots.forEach(function (snapshot) {
+      restoreRowObjectUnlocked_(snapshot.sheet, snapshot.item);
+    });
+    throw error;
+  }
+}
+
+function deleteAgendamentoVinculado_(id) {
+  return withDocumentLock_(function () {
+    return deleteAgendamentoVinculadoUnlocked_(id);
+  });
+}
+
 function validarRecomendacaoRetorno_(appointment, recommendation) {
   appointment = appointment || {};
   if (typeof recommendation === 'undefined') {
@@ -1521,22 +1667,41 @@ function saveLancamentoUnlocked_(d) {
 }
 
 function saveLancamento(d) {
-  return withDocumentLock_(() => saveLancamentoUnlocked_(d));
+  d = d || {};
+  return withDocumentLock_(function () {
+    const previous = d.id
+      ? getCachedRows_('caixa').find(item => String(item.id) === String(d.id)) || null
+      : null;
+    const linkedAppointmentId = agendamentoIdDoCaixa_(previous);
+    const payload = Object.assign({}, d);
+    if (linkedAppointmentId) {
+      payload.itemId = 'agcash:' + linkedAppointmentId;
+      payload.itemTipo = 'agendamento';
+      payload.tipo = 'entrada';
+      payload.isRetirada = false;
+    }
+    const saved = saveLancamentoUnlocked_(payload);
+    if (saved.error || !linkedAppointmentId) return saved;
+    const synchronized = sincronizarCaixaComAgendamentoUnlocked_(saved.item || payload);
+    if (synchronized && synchronized.error) {
+      if (previous) restoreRowObjectUnlocked_('caixa', previous);
+      return synchronized;
+    }
+    saved.linkedAppointmentId = linkedAppointmentId;
+    return saved;
+  });
 }
 
 function deleteLancamento_(id) {
-  const lock = LockService.getDocumentLock();
-  lock.waitLock(30000);
-  try {
-    const rowNum = rowNumForId_('caixa', id);
-    if (!rowNum) return { error: 'Lançamento não encontrado.' };
-    const data = normDate(getSheet('caixa').getRange(rowNum, SCHEMAS.caixa.indexOf('data') + 1).getValue());
-    const deleted = softDeleteUnlocked_('caixa', id);
-    if (!deleted.error && data) invalidateCaixaCaches_(data);
-    return deleted;
-  } finally {
-    lock.releaseLock();
-  }
+  return withDocumentLock_(function () {
+    const cash = getRowObjectById_('caixa', id);
+    if (!cash) return { error:'Lançamento não encontrado.' };
+    const appointmentId = agendamentoIdDoCaixa_(cash);
+    if (appointmentId) return deleteAgendamentoVinculadoUnlocked_(appointmentId);
+    markRowDeletedUnlocked_('caixa', cash.id, nowIso());
+    if (cash.data) invalidateCaixaCaches_(normDate(cash.data));
+    return { deleted:cash.id };
+  });
 }
 
 function getHistoricoCliente(e) {
@@ -2041,17 +2206,15 @@ function saveAgendamento(d) {
   d = d || {};
   return withDocumentLock_(function () {
     const requestedStatus = d.status || 'agendado';
+    const currentAppointment = d.id ? getRowObjectById_('agendamentos', d.id) : null;
 
     if (!d.id && requestedStatus === 'concluido') {
       return { error: 'Conclua o atendimento pela ação própria para registrar também a entrada no caixa.' };
     }
 
     if (d.id) {
-      const rowNum = rowNumForId_('agendamentos', d.id);
-      if (!rowNum) return { error: 'Agendamento não encontrado.' };
-
-      const statusCol = SCHEMAS.agendamentos.indexOf('status') + 1;
-      const currentStatus = String(getSheet('agendamentos').getRange(rowNum, statusCol).getValue() || 'agendado');
+      if (!currentAppointment || currentAppointment.deletadoEm) return { error:'Agendamento não encontrado.' };
+      const currentStatus = String(currentAppointment.status || 'agendado');
       if (currentStatus !== 'concluido' && requestedStatus === 'concluido') {
         return { error: 'Conclua o atendimento pela ação própria para registrar também a entrada no caixa.' };
       }
@@ -2060,14 +2223,25 @@ function saveAgendamento(d) {
       }
     }
 
-    const saved = saveAgendamentoUnlocked_(d);
-    if (saved.error || requestedStatus !== 'agendado') return saved;
+    const payload = Object.assign({}, currentAppointment || {}, d);
+    const saved = saveAgendamentoUnlocked_(payload);
+    if (saved.error) return saved;
+    if (requestedStatus === 'concluido') {
+      const synchronized = sincronizarAgendamentoComCaixaUnlocked_(saved.item || payload);
+      if (synchronized && synchronized.error) {
+        if (currentAppointment) restoreRowObjectUnlocked_('agendamentos', currentAppointment);
+        return synchronized;
+      }
+      saved.linkedCashId = synchronized && synchronized.id || '';
+      return saved;
+    }
+    if (requestedStatus !== 'agendado') return saved;
 
     let relationship = { ok:true };
     try {
-      const linked = vincularOportunidadeAoAgendamentoUnlocked_(saved.item || d);
+      const linked = vincularOportunidadeAoAgendamentoUnlocked_(saved.item || payload);
       if (linked && linked.error) throw new Error(linked.error);
-      const spontaneous = linked ? null : encerrarPendentesPorAgendamentoEspontaneoUnlocked_(saved.item || d);
+      const spontaneous = linked ? null : encerrarPendentesPorAgendamentoEspontaneoUnlocked_(saved.item || payload);
       relationship = {
         ok:true,
         opportunityId:linked && (linked.id || linked.item && linked.item.id) || '',
@@ -2664,7 +2838,7 @@ function doPost(e) {
       case 'logout':             return result(logoutToken_(t));
       case 'verificarSenha':     return ok({ valido: validateSenha(b.senha) });
       case 'deleteRow':          return result(deleteRow(b.sheet, b.id));
-      case 'deleteAgendamento':  return result(softDelete_('agendamentos', b.id));
+      case 'deleteAgendamento':  return result(deleteAgendamentoVinculado_(b.id));
       case 'deleteLancamento':   return result(deleteLancamento_(b.id));
       case 'deleteCrediario':    return result(deleteCrediario(b.id));
       case 'confirmarContato':   return result(confirmarContato_(b));

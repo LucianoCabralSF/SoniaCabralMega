@@ -87,10 +87,10 @@ test('appointment completion and cash entry share one locked backend operation',
   assert.match(html, /ag\.status === 'concluido' \? 'disabled'/);
 });
 
-test('appointment and cash deletions use their explicit soft-delete routes', () => {
-  assert.match(backend, /case 'deleteAgendamento':\s+return result\(softDelete_\('agendamentos', b\.id\)\)/);
+test('appointment and cash deletions use the linked cascade routes', () => {
+  assert.match(backend, /case 'deleteAgendamento':\s+return result\(deleteAgendamentoVinculado_\(b\.id\)\)/);
   assert.match(backend, /case 'deleteLancamento':\s+return result\(deleteLancamento_\(b\.id\)\)/);
-  assert.match(backend, /function deleteLancamento_\(/);
+  assert.match(backend, /function deleteLancamento_\([\s\S]{0,900}deleteAgendamentoVinculadoUnlocked_/);
 });
 
 test('planning installment rollback includes a failed cash write', () => {
